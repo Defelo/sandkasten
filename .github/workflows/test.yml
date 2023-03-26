@@ -23,6 +23,9 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain }}
+      - name: cargo generate-lockfile
+        if: hashFiles('Cargo.lock') == ''
+        run: cargo generate-lockfile
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
       - name: cargo test --locked
@@ -43,6 +46,9 @@ jobs:
           components: llvm-tools-preview
       - name: cargo install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
+      - name: cargo generate-lockfile
+        if: hashFiles('Cargo.lock') == ''
+        run: cargo generate-lockfile
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
       - name: cargo llvm-cov
