@@ -37,7 +37,18 @@
     packages.${system} = rec {
       rust = pkgs.rustPlatform.buildRustPackage {
         name = "sandkasten";
-        src = ./.;
+        src = pkgs.stdenv.mkDerivation {
+          name = "sandkasten-src";
+          src = ./src;
+          installPhase = let
+            files = {
+              "Cargo.toml" = ./Cargo.toml;
+              "Cargo.lock" = ./Cargo.lock;
+              src = ./src;
+            };
+          in
+            builtins.foldl' (acc: k: acc + " && ln -s ${files.${k}} $out/${k}") "mkdir -p $out" (builtins.attrNames files);
+        };
         cargoLock.lockFile = ./Cargo.lock;
       };
       docker = pkgs.dockerTools.buildLayeredImage {
