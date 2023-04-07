@@ -1,4 +1,5 @@
 use poem_openapi::Object;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Object)]
@@ -27,7 +28,7 @@ pub struct RunProgramRequest {
     pub run_limits: Limits,
 }
 
-#[derive(Debug, Clone, Object)]
+#[derive(Debug, Clone, Object, Serialize)]
 pub struct File {
     pub name: String,
     pub content: String,
@@ -45,7 +46,7 @@ pub struct CreateResult {
     pub compile_result: Option<RunResult>,
 }
 
-#[derive(Debug, Clone, Object)]
+#[derive(Debug, Clone, Object, Serialize, Deserialize)]
 pub struct RunResult {
     pub status: i32,
     pub stdout: String,
