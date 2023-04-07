@@ -3,23 +3,9 @@
     nixpkgs.url = "github:NixOS/nixpkgs/release-22.11";
   };
 
-  outputs = {
-    # self,
-    nixpkgs,
-    ...
-  }: let
+  outputs = {nixpkgs, ...}: let
     system = "x86_64-linux";
     pkgs = import nixpkgs {inherit system;};
-    # packages = {
-    #   python311 = {
-    #     package = pkgs.python311;
-    #     run = "python";
-    #   };
-    #   python39 = {
-    #     package = pkgs.python39;
-    #     run = "python";
-    #   };
-    # };
     packages = {
       python = {
         name = "Python";
@@ -48,29 +34,27 @@
         packages;
     });
   in {
-    packages.${system}.default = pkgs.dockerTools.buildLayeredImage {
-      name = "sandkasten";
-      tag = "latest";
-      contents = with pkgs; [
-        nsjail
-        coreutils-full
-        # (pkgs.stdenv.mkDerivation {
-        #   name = "packages";
-        #   src = self;
-        #   nativeBuildInputs = [pkgs.makeWrapper];
-        #   installPhase =
-        #     "mkdir -p $out/bin"
-        #     + builtins.foldl' (acc: k: let
-        #       script = pkgs.writeShellScript "${k}-run.sh" packages.${k}.run;
-        #     in
-        #       acc + " && cp ${script} $out/bin/${k}-run.sh") "" (builtins.attrNames packages);
-        #   postFixup = builtins.foldl' (acc: k: acc + " && wrapProgram $out/bin/${k}-run.sh --set PATH ${pkgs.lib.makeBinPath [packages.${k}.package]}") "true" (builtins.attrNames packages);
-        # })
-      ];
-      config = {
-        User = "65534:65534";
-        Entrypoint = ["${pkgs.bash}/bin/bash"];
+    packages.${system} = rec {
+      rust = pkgs.rustPlatform.buildRustPackage {
+        name = "sandkasten";
+        src = ./.;
+        cargoLock.lockFile = ./Cargo.lock;
       };
+      docker = pkgs.dockerTools.buildLayeredImage {
+        name = "ghcr.io/defelo/sandkasten";
+        tag = "latest";
+        contents = with pkgs; [
+          nsjail
+          coreutils-full
+          bash
+        ];
+        config = {
+          User = "65534:65534";
+          Entrypoint = ["${rust}/bin/sandkasten"];
+          Env = ["ENVIRONMENTS_CONFIG_PATH=${environments}"];
+        };
+      };
+      default = docker;
     };
     devShells.${system}.default = pkgs.mkShell {
       buildInputs = [pkgs.nsjail];
