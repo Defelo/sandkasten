@@ -88,8 +88,11 @@ impl Api {
     /// Delete a program.
     #[oai(path = "/programs/:program_id", method = "delete")]
     async fn delete_program(&self, program_id: Path<Uuid>) -> DeleteProgram::Response {
-        delete_program(&self.config, &self.environments, program_id.0).await?;
-        DeleteProgram::ok()
+        match delete_program(&self.config, program_id.0).await {
+            Ok(_) => DeleteProgram::ok(),
+            Err(crate::program::DeleteProgramError::ProgramNotFound) => DeleteProgram::not_found(),
+            Err(err) => Err(err.into()),
+        }
     }
 }
 

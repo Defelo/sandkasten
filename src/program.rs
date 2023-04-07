@@ -88,12 +88,13 @@ pub async fn run_program(
 }
 
 /// Delete a program's directly and all its contents.
-pub async fn delete_program(
-    config: &Config,
-    environments: &Environments,
-    program_id: Uuid,
-) -> anyhow::Result<()> {
-    todo!()
+pub async fn delete_program(config: &Config, program_id: Uuid) -> Result<(), DeleteProgramError> {
+    let path = config.programs_dir.join(program_id.to_string());
+    if !fs::try_exists(&path).await? {
+        return Err(DeleteProgramError::ProgramNotFound);
+    }
+    fs::remove_dir_all(path).await?;
+    Ok(())
 }
 
 // TODO Delete all programs that have not been run recently.
@@ -110,6 +111,14 @@ pub enum CreateProgramError {
     CompilationFailed(RunResult),
     #[error("postcard error: {0}")]
     PostcardError(#[from] postcard::Error),
+}
+
+#[derive(Debug, Error)]
+pub enum DeleteProgramError {
+    #[error("program does not exist")]
+    ProgramNotFound,
+    #[error("io error: {0}")]
+    IOError(#[from] std::io::Error),
 }
 
 async fn store_program(
