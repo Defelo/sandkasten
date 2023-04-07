@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use key_lock::KeyLock;
 use poem_ext::response;
 use poem_openapi::{param::Path, payload::Json, OpenApi};
 use uuid::Uuid;
@@ -16,6 +17,7 @@ use crate::{
 pub struct Api {
     pub config: Config,
     pub environments: Environments,
+    pub compile_lock: KeyLock<Uuid>,
 }
 
 #[OpenApi(tag = "Tags::Main")]
@@ -61,7 +63,7 @@ impl Api {
     /// Upload and compile a program.
     #[oai(path = "/programs", method = "post")]
     async fn create_program(&self, data: Json<CreateProgramRequest>) -> CreateProgram::Response {
-        match create_program(&self.config, &self.environments, data.0).await {
+        match create_program(&self.config, &self.environments, data.0, &self.compile_lock).await {
             Ok(result) => CreateProgram::ok(result),
             Err(CreateProgramError::EnvironmentNotFound(_)) => {
                 CreateProgram::environment_not_found()

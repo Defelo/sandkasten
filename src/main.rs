@@ -26,6 +26,7 @@ async fn main() -> anyhow::Result<()> {
         Api {
             config: config.clone(),
             environments,
+            compile_lock: Default::default(),
         },
         "Sandkasten",
         env!("CARGO_PKG_VERSION"),

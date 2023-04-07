@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use key_lock::KeyLock;
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 use tokio::fs;
@@ -19,6 +20,7 @@ pub async fn create_program(
     config: &Config,
     environments: &Environments,
     data: CreateProgramRequest,
+    compile_lock: &KeyLock<Uuid>,
 ) -> Result<CreateResult, CreateProgramError> {
     let env = environments.environments.get(&data.environment).ok_or(
         CreateProgramError::EnvironmentNotFound(data.environment.clone()),
@@ -38,9 +40,11 @@ pub async fn create_program(
             .take(16)
             .fold(0, |acc, x| (acc << 8) | x as u128),
     );
+    let _guard = compile_lock.lock(id).await;
 
     let path = config.programs_dir.join(id.to_string());
     if fs::try_exists(path.join("environment")).await? {
+        drop(_guard);
         let compile_result = if env.compile_script.is_some() {
             let serialized = fs::read(path.join("compile_result")).await?;
             Some(postcard::from_bytes(&serialized)?)
