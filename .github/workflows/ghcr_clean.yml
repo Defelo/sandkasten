@@ -1,0 +1,26 @@
+name: ghcr_clean
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  workflow_run:
+    workflows: [docker]
+    types: [completed]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ghcr_clean:
+    name: ghcr_clean
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old containers
+        uses: snok/container-retention-policy@v2
+        with:
+          image-names: sandkasten
+          cut-off: now UTC
+          account-type: personal
+          # org-name: my-org
+          untagged-only: true
+          token: ${{ secrets.GHCR_TOKEN }}
