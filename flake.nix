@@ -25,13 +25,13 @@
         name = "Python";
         version = pkgs.python311.version;
         compile_script = null;
-        run_script = ''${pkgs.python311}/bin/python "$@"'';
+        run_script = ''${pkgs.python311}/bin/python "/program/$MAIN" "$@"'';
       };
       rust = {
         name = "Rust";
         version = pkgs.rustc.version;
         compile_script = ''PATH=${pkgs.gcc}/bin/ ${pkgs.rustc}/bin/rustc -O -o /out/binary "$1"'';
-        run_script = ''shift; ./binary "$@"'';
+        run_script = ''/program/binary "$@"'';
       };
     };
     environments = pkgs.writeText "environments.json" (builtins.toJSON {
@@ -74,6 +74,7 @@
     };
     devShells.${system}.default = pkgs.mkShell {
       buildInputs = [pkgs.nsjail];
+      RUST_LOG = "info,sandkasten=trace,difft=off";
       CONFIG_PATH = ".config.toml";
       ENVIRONMENTS_CONFIG_PATH = environments;
     };

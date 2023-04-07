@@ -20,4 +20,7 @@ pub struct Config {
 
     pub programs_dir: PathBuf,
     pub jobs_dir: PathBuf,
+
+    pub program_ttl: u64,             // in seconds
+    pub prune_programs_interval: u64, // in seconds
 }

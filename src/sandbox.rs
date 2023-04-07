@@ -10,6 +10,7 @@ pub struct RunConfig<'a> {
     pub nsjail: &'a str,
     pub program: &'a str,
     pub args: &'a [&'a str],
+    pub envvars: &'a [(&'a str, &'a str)],
     pub cwd: &'a str,
     pub stdin: Option<&'a str>,
     pub mounts: &'a [Mount<'a>],
@@ -60,6 +61,10 @@ impl RunConfig<'_> {
             .args(["--rlimit_fsize", &self.limits.filesize.to_string()])
             .args(["--rlimit_nofile", &self.limits.file_descriptors.to_string()])
             .args(["--rlimit_nproc", &self.limits.processes.to_string()]);
+
+        for &(name, value) in self.envvars {
+            cmd.arg("-E").arg(format!("{name}={value}"));
+        }
 
         for Mount { dest, typ } in self.mounts {
             match typ {

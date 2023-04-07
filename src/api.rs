@@ -8,9 +8,13 @@ use uuid::Uuid;
 use crate::{
     config::Config,
     environments::Environments,
-    program::{create_program, delete_program, run_program, CreateProgramError},
+    program::{
+        create_program, delete_program, run_program, CreateProgramError, DeleteProgramError,
+        RunProgramError,
+    },
     schemas::{
-        CreateProgramRequest, CreateResult, Environment, RunProgramRequest, RunRequest, RunResult,
+        CreateProgramRequest, CreateResult, CreateRunResult, Environment, RunProgramRequest,
+        RunRequest, RunResult,
     },
 };
 
@@ -45,19 +49,32 @@ impl Api {
     /// Upload and immediately run a program.
     #[oai(path = "/run", method = "post")]
     async fn run(&self, data: Json<RunRequest>) -> Run::Response {
-        // match create_program(&self.config, &self.environments, data.0.create).await {
-        //     Ok(result) => Run::ok(
-        //         run_program(
-        //             &self.config,
-        //             &self.environments,
-        //             result.program_id,
-        //             data.0.run,
-        //         )
-        //         .await?,
-        //     ),
-        //     Err(CreateProgramError::EnvironmentNotFound(_) => Run::)
-        // }
-        todo!()
+        let CreateResult {
+            program_id,
+            compile_result,
+        } = match create_program(
+            &self.config,
+            &self.environments,
+            data.0.create,
+            &self.compile_lock,
+        )
+        .await
+        {
+            Ok(result) => result,
+            Err(CreateProgramError::EnvironmentNotFound(_)) => return Run::environment_not_found(),
+            Err(CreateProgramError::CompilationFailed(result)) => {
+                return Run::compile_error(result)
+            }
+            Err(err) => return Err(err.into()),
+        };
+
+        match run_program(&self.config, &self.environments, program_id, data.0.run).await {
+            Ok(run_result) => Run::ok(CreateRunResult {
+                create: compile_result,
+                run: run_result,
+            }),
+            Err(err) => Err(err.into()),
+        }
     }
 
     /// Upload and compile a program.
@@ -82,7 +99,11 @@ impl Api {
         program_id: Path<Uuid>,
         data: Json<RunProgramRequest>,
     ) -> RunProgram::Response {
-        RunProgram::ok(run_program(&self.config, &self.environments, program_id.0, data.0).await?)
+        match run_program(&self.config, &self.environments, program_id.0, data.0).await {
+            Ok(result) => RunProgram::ok(result),
+            Err(RunProgramError::ProgramNotFound) => RunProgram::not_found(),
+            Err(err) => Err(err.into()),
+        }
     }
 
     /// Delete a program.
@@ -90,7 +111,7 @@ impl Api {
     async fn delete_program(&self, program_id: Path<Uuid>) -> DeleteProgram::Response {
         match delete_program(&self.config, program_id.0).await {
             Ok(_) => DeleteProgram::ok(),
-            Err(crate::program::DeleteProgramError::ProgramNotFound) => DeleteProgram::not_found(),
+            Err(DeleteProgramError::ProgramNotFound) => DeleteProgram::not_found(),
             Err(err) => Err(err.into()),
         }
     }
@@ -102,7 +123,7 @@ response!(ListEnvironments = {
 
 response!(Run = {
     /// Code has been executed successfully.
-    Ok(200) => RunResult,
+    Ok(200) => CreateRunResult,
     /// Environment does not exist.
     EnvironmentNotFound(404, error),
     /// Code could not be compiled.

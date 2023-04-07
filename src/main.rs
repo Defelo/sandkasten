@@ -1,9 +1,11 @@
+use std::time::Duration;
+
 use poem::{listener::TcpListener, middleware::Tracing, EndpointExt, Route, Server};
 use poem_ext::panic_handler::PanicHandler;
 use poem_openapi::OpenApiService;
-use tracing::info;
+use tracing::{error, info};
 
-use crate::api::Api;
+use crate::{api::Api, program::prune_programs};
 
 mod api;
 mod config;
@@ -21,6 +23,20 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Loading environments");
     let environments = environments::load()?;
+
+    tokio::spawn({
+        let config = config.clone();
+        async move {
+            let mut interval =
+                tokio::time::interval(Duration::from_secs(config.prune_programs_interval));
+            loop {
+                interval.tick().await;
+                if let Err(err) = prune_programs(&config).await {
+                    error!("pruning old programs failed: {err}");
+                }
+            }
+        }
+    });
 
     let api_service = OpenApiService::new(
         Api {
