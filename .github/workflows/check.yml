@@ -1,0 +1,101 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  fmt:
+    name: fmt (stable)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: cargo fmt --check
+        run: cargo fmt --check
+
+  clippy:
+    name: clippy (${{ matrix.toolchain }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [stable, beta]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install ${{ matrix.toolchain }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: clippy
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: cargo clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  doc:
+    runs-on: ubuntu-latest
+    name: doc (nightly)
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install nightly
+        uses: dtolnay/rust-toolchain@nightly
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: cargo doc
+        run: cargo doc --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: --cfg docsrs
+
+  hack:
+    name: hack (stable)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: cargo install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: cargo hack
+        run: cargo hack --feature-powerset check
+
+  msrv:
+    name: msrv (${{ matrix.msrv }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        msrv: [1.56.1]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install ${{ matrix.msrv }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.msrv }}
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: cargo +${{ matrix.msrv }} check
+        run: cargo check
