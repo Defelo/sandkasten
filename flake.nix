@@ -6,20 +6,7 @@
   outputs = {nixpkgs, ...}: let
     system = "x86_64-linux";
     pkgs = import nixpkgs {inherit system;};
-    packages = {
-      python = {
-        name = "Python";
-        version = pkgs.python311.version;
-        compile_script = null;
-        run_script = ''${pkgs.python311}/bin/python "/program/$MAIN" "$@"'';
-      };
-      rust = {
-        name = "Rust";
-        version = pkgs.rustc.version;
-        compile_script = ''PATH=${pkgs.gcc}/bin/ ${pkgs.rustc}/bin/rustc -O -o /out/binary "$1"'';
-        run_script = ''/program/binary "$@"'';
-      };
-    };
+    packages = import ./packages {inherit pkgs;};
     environments = pkgs.writeText "environments.json" (builtins.toJSON {
       nsjail_path = "${pkgs.nsjail}/bin/nsjail";
       environments =
