@@ -9,6 +9,7 @@
     packages = import ./packages {inherit pkgs;};
     environments = pkgs.writeText "environments.json" (builtins.toJSON {
       nsjail_path = "${pkgs.nsjail}/bin/nsjail";
+      time_path = "${pkgs.time}/bin/time";
       environments =
         builtins.mapAttrs (k: v: {
           inherit (v) name version;

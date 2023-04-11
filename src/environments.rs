@@ -16,6 +16,7 @@ pub fn load() -> Result<Environments, ConfigError> {
 pub struct Environments {
     pub environments: HashMap<String, Environment>,
     pub nsjail_path: String,
+    pub time_path: String,
 }
 
 #[derive(Debug, Deserialize)]

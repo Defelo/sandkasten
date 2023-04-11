@@ -46,7 +46,7 @@ pub async fn build_program(
     let _guard = compile_lock.lock(id).await;
 
     let path = config.programs_dir.join(id.to_string());
-    if fs::try_exists(path.join("environment")).await? {
+    if fs::try_exists(path.join("compile_result")).await? {
         drop(_guard);
         let compile_result = if env.compile_script.is_some() {
             let serialized = fs::read(path.join("compile_result")).await?;
@@ -108,11 +108,13 @@ pub async fn run_program(
     Ok(with_tempdir(
         config.jobs_dir.join(Uuid::new_v4().to_string()),
         |tmpdir| async move {
+            fs::create_dir_all(tmpdir.join("box")).await?;
             for file in &data.files {
-                fs::write(tmpdir.join(&file.name), &file.content).await?;
+                fs::write(tmpdir.join("box").join(&file.name), &file.content).await?;
             }
             execute_program(
                 &environments.nsjail_path,
+                &environments.time_path,
                 &run_script,
                 &main_file,
                 &data,
@@ -234,11 +236,13 @@ async fn store_program(
         let result = with_tempdir(
             config.jobs_dir.join(Uuid::new_v4().to_string()),
             |tmpdir| async move {
+                fs::create_dir_all(tmpdir.join("box")).await?;
                 for file in &data.files {
-                    fs::write(tmpdir.join(&file.name), &file.content).await?;
+                    fs::write(tmpdir.join("box").join(&file.name), &file.content).await?;
                 }
                 compile_program(
                     &environments.nsjail_path,
+                    &environments.time_path,
                     compile_script,
                     &data,
                     path,
@@ -265,6 +269,7 @@ async fn store_program(
 
 async fn compile_program(
     nsjail: &str,
+    time: &str,
     compile_script: &str,
     data: &BuildProgramRequest,
     path: &Path,
@@ -272,6 +277,8 @@ async fn compile_program(
 ) -> Result<RunResult, RunError> {
     RunConfig {
         nsjail,
+        time,
+        tmpdir,
         program: compile_script,
         args: &data
             .files
@@ -289,7 +296,7 @@ async fn compile_program(
             Mount {
                 dest: "/box",
                 typ: MountType::ReadOnly {
-                    src: &tmpdir.display().to_string(),
+                    src: &tmpdir.join("box").display().to_string(),
                 },
             },
             Mount {
@@ -318,6 +325,7 @@ async fn compile_program(
 
 async fn execute_program(
     nsjail: &str,
+    time: &str,
     run_script: &str,
     main_file: &str,
     data: &RunProgramRequest,
@@ -326,6 +334,8 @@ async fn execute_program(
 ) -> Result<RunResult, RunError> {
     RunConfig {
         nsjail,
+        time,
+        tmpdir,
         program: run_script,
         args: &data.args.iter().map(|f| f.as_str()).collect::<Vec<_>>(),
         envvars: &[("MAIN", main_file)],
@@ -345,7 +355,7 @@ async fn execute_program(
             Mount {
                 dest: "/box",
                 typ: MountType::ReadWrite {
-                    src: &tmpdir.display().to_string(),
+                    src: &tmpdir.join("box").display().to_string(),
                 },
             },
             Mount {

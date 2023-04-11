@@ -58,6 +58,8 @@ pub struct RunResult {
     pub status: i32,
     pub stdout: String,
     pub stderr: String,
+    pub time: f32,
+    pub memory: u64,
 }
 
 #[derive(Debug, Clone, Object)]

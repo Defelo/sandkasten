@@ -8,6 +8,8 @@ use crate::schemas::RunResult;
 
 pub struct RunConfig<'a> {
     pub nsjail: &'a str,
+    pub time: &'a str,
+    pub tmpdir: &'a Path,
     pub program: &'a str,
     pub args: &'a [&'a str],
     pub envvars: &'a [(&'a str, &'a str)],
@@ -52,8 +54,16 @@ pub struct Limits {
 
 impl RunConfig<'_> {
     pub async fn run(&self) -> Result<RunResult, RunError> {
-        let mut cmd = tokio::process::Command::new(self.nsjail);
+        let time_path = self.tmpdir.join("time");
+        fs::write(&time_path, Vec::new()).await?;
+
+        let mut cmd = tokio::process::Command::new(self.time);
         cmd.arg("-q")
+            .args(["-f", "%e %M %x"])
+            .args(["-o", &time_path.display().to_string()])
+            .arg("--")
+            .arg(self.nsjail)
+            .arg("-q")
             .args(["--cwd", self.cwd])
             .args(["--max_cpus", &self.limits.cpus.to_string()])
             .args(["--time_limit", &self.limits.time.to_string()])
@@ -92,14 +102,26 @@ impl RunConfig<'_> {
         }
 
         let output = child.wait_with_output().await?;
-        let status = output.status.code().unwrap();
         let stdout = String::from_utf8(output.stdout)?;
         let stderr: String = String::from_utf8(output.stderr)?;
+
+        let time_file = fs::read_to_string(time_path).await?;
+        let mut tf = time_file.split_whitespace();
+        let (time, memory, status) = (|| {
+            Some((
+                tf.next()?.parse().ok()?,
+                tf.next()?.parse().ok()?,
+                tf.next()?.parse().ok()?,
+            ))
+        })()
+        .ok_or(RunError::InvalidTimeFile)?;
 
         Ok(RunResult {
             status,
             stdout,
             stderr,
+            time,
+            memory,
         })
     }
 }
@@ -110,6 +132,8 @@ pub enum RunError {
     IOError(#[from] std::io::Error),
     #[error("string is not valid utf-8: {0}")]
     StringConversionError(#[from] FromUtf8Error),
+    #[error("time file has not been created correctly")]
+    InvalidTimeFile,
 }
 
 pub async fn with_tempdir<P, A>(
