@@ -68,6 +68,7 @@ impl Api {
 
         match run_program(&self.config, &self.environments, program_id, data.0.run).await {
             Ok(run_result) => Run::ok(BuildRunResult {
+                program_id,
                 build: compile_result,
                 run: run_result,
             }),

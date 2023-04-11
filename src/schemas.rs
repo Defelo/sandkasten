@@ -42,6 +42,7 @@ pub struct Limits {
 
 #[derive(Debug, Clone, Object)]
 pub struct BuildRunResult {
+    pub program_id: Uuid,
     pub build: Option<RunResult>,
     pub run: RunResult,
 }
