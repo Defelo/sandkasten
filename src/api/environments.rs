@@ -5,7 +5,7 @@ use poem_openapi::OpenApi;
 
 use crate::{
     environments::Environments,
-    schemas::{Environment, ListEnvironmentsResponse},
+    schemas::environments::{Environment, ListEnvironmentsResponse},
 };
 
 use super::Tags;

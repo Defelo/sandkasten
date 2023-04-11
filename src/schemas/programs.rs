@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-
-use poem_openapi::{types::Example, NewType, Object};
+use poem_openapi::Object;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -86,41 +84,4 @@ pub struct RunResult {
     pub time: u64,
     /// The amount of memory the process used (in **KB**)
     pub memory: u64,
-}
-
-/// A package that can build and run programs.
-#[derive(Debug, Object)]
-pub struct Environment {
-    pub name: String,
-    pub version: String,
-}
-
-#[derive(Debug, NewType)]
-#[oai(
-    from_parameter = false,
-    from_multipart = false,
-    to_header = false,
-    example = true
-)]
-pub struct ListEnvironmentsResponse(pub HashMap<String, Environment>);
-
-impl Example for ListEnvironmentsResponse {
-    fn example() -> Self {
-        Self(HashMap::from([
-            (
-                "rust".into(),
-                Environment {
-                    name: "Rust".into(),
-                    version: "1.64.0".into(),
-                },
-            ),
-            (
-                "python".into(),
-                Environment {
-                    name: "Python".into(),
-                    version: "3.11.1".into(),
-                },
-            ),
-        ]))
-    }
 }

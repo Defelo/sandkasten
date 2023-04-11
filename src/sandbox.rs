@@ -4,7 +4,7 @@ use thiserror::Error;
 use tokio::{fs, io::AsyncWriteExt};
 use tracing::error;
 
-use crate::schemas::RunResult;
+use crate::schemas::programs::RunResult;
 
 pub struct RunConfig<'a> {
     pub nsjail: &'a str,

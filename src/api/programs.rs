@@ -12,7 +12,7 @@ use crate::{
         build_program, delete_program, run_program, BuildProgramError, DeleteProgramError,
         RunProgramError,
     },
-    schemas::{
+    schemas::programs::{
         BuildProgramRequest, BuildResult, BuildRunResult, RunProgramRequest, RunRequest, RunResult,
     },
 };

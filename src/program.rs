@@ -14,7 +14,7 @@ use crate::{
     config::Config,
     environments::{Environment, Environments},
     sandbox::{with_tempdir, Limits, Mount, MountType, RunConfig, RunError},
-    schemas::{BuildProgramRequest, BuildResult, RunProgramRequest, RunResult},
+    schemas::programs::{BuildProgramRequest, BuildResult, RunProgramRequest, RunResult},
 };
 
 /// Store (and compile) the uploaded program into a directory in the local fs. Return a unique
