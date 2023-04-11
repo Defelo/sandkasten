@@ -1,0 +1,35 @@
+diff --git a/src/time.c b/src/time.c
+index 7e07995..a1fff1a 100644
+--- a/src/time.c
++++ b/src/time.c
+@@ -524,14 +524,14 @@ summarize (fp, fmt, command, resp)
+ 	      fprintf (fp, "%ld", resp->ru.ru_minflt);
+ 	      break;
+ 	    case 'S':		/* System time.  */
+-	      fprintf (fp, "%ld.%02ld",
++	      fprintf (fp, "%ld.%03ld",
+ 		       (long int)resp->ru.ru_stime.tv_sec,
+-		       (long int)(resp->ru.ru_stime.TV_MSEC / 10));
++		       (long int)(resp->ru.ru_stime.TV_MSEC));
+ 	      break;
+ 	    case 'U':		/* User time.  */
+-	      fprintf (fp, "%ld.%02ld",
++	      fprintf (fp, "%ld.%03ld",
+ 		       (long int)(resp->ru.ru_utime.tv_sec),
+-		       (long int)(resp->ru.ru_utime.TV_MSEC / 10));
++		       (long int)(resp->ru.ru_utime.TV_MSEC));
+ 	      break;
+ 	    case 'W':		/* Times swapped out.  */
+ 	      fprintf (fp, "%ld", resp->ru.ru_nswap);
+@@ -550,9 +550,9 @@ summarize (fp, fmt, command, resp)
+ 	      fprintf (fp, "%ld", resp->ru.ru_nivcsw);
+ 	      break;
+ 	    case 'e':		/* Elapsed real time in seconds.  */
+-	      fprintf (fp, "%ld.%02ld",
++	      fprintf (fp, "%ld.%06ld",
+ 		       (long int)resp->elapsed.tv_sec,
+-		       (long int)(resp->elapsed.tv_usec / 10000));
++		       (long int)(resp->elapsed.tv_usec));
+ 	      break;
+ 	    case 'k':		/* Signals delivered.  */
+ 	      fprintf (fp, "%ld", resp->ru.ru_nsignals);

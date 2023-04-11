@@ -6,6 +6,7 @@
   outputs = {nixpkgs, ...}: let
     system = "x86_64-linux";
     pkgs = import nixpkgs {inherit system;};
+    time = import ./nix/time pkgs;
     packages = import ./nix/packages {inherit pkgs;};
     envs =
       builtins.mapAttrs (k: v: {
@@ -19,7 +20,7 @@
       packages;
     environments = pkgs.writeText "environments.json" (builtins.toJSON {
       nsjail_path = "${pkgs.nsjail}/bin/nsjail";
-      time_path = "${pkgs.time}/bin/time";
+      time_path = "${time}/bin/time";
       environments = envs;
     });
   in {
@@ -81,7 +82,7 @@
       default = docker;
     };
     devShells.${system}.default = pkgs.mkShell {
-      buildInputs = [pkgs.nsjail];
+      buildInputs = [pkgs.nsjail time];
       RUST_LOG = "info,sandkasten=trace,difft=off";
       CONFIG_PATH = ".config.toml";
       ENVIRONMENTS_CONFIG_PATH = environments;
