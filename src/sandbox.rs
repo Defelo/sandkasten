@@ -1,10 +1,15 @@
 use std::{future::Future, path::Path, process::Stdio, string::FromUtf8Error};
 
+use poem_openapi::Object;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::{fs, io::AsyncWriteExt};
 use tracing::error;
 
-use crate::schemas::programs::RunResult;
+use crate::schemas::{
+    self,
+    programs::{ResourceUsage, RunResult},
+};
 
 pub struct RunConfig<'a> {
     pub nsjail: &'a str,
@@ -37,18 +42,19 @@ pub enum MountType<'a> {
     },
 }
 
+#[derive(Debug, Clone, Object, Serialize, Deserialize)]
 pub struct Limits {
-    /// `--max_cpus`
+    /// The maximum number of cpus the process is allowed to use.
     pub cpus: u64,
-    /// `--time_limit` (in seconds)
+    /// The number of **seconds** the process is allowed to run.
     pub time: u64,
-    /// `--rlimit_as` (in MB)
+    /// The amount of memory the process is allowed to use (in **MB**).
     pub memory: u64,
-    /// `--rlimit_fsize` (in MB)
+    /// The maximum size of a file the process is allowed to create (in **MB**).
     pub filesize: u64,
-    /// `--rlimit_nofile`
+    /// The maximum number of file descripters the process can open at the same time.
     pub file_descriptors: u64,
-    /// `--rlimit_nproc`
+    /// The maximum number of processes that can run concurrently in the sandbox.
     pub processes: u64,
 }
 
@@ -109,7 +115,7 @@ impl RunConfig<'_> {
         let mut tf = time_file.split_whitespace();
         let (time, memory, status) = (|| {
             Some((
-                tf.next()?.parse().ok()?,
+                (tf.next()?.parse::<f32>().ok()? * 1000.0) as _,
                 tf.next()?.parse().ok()?,
                 tf.next()?.parse().ok()?,
             ))
@@ -120,8 +126,8 @@ impl RunConfig<'_> {
             status,
             stdout,
             stderr,
-            time,
-            memory,
+            resource_usage: ResourceUsage { time, memory },
+            limits: self.limits.clone(),
         })
     }
 }
@@ -134,6 +140,49 @@ pub enum RunError {
     StringConversionError(#[from] FromUtf8Error),
     #[error("time file has not been created correctly")]
     InvalidTimeFile,
+}
+
+impl Limits {
+    pub fn from(
+        config_limits: &Self,
+        limits: &schemas::programs::LimitsOpt,
+    ) -> Result<Self, Vec<LimitExceeded>> {
+        let mut errors = Vec::new();
+        let mut get = |name, mx, val: Option<_>| {
+            let val = val.unwrap_or(mx);
+            if val > mx {
+                errors.push(LimitExceeded {
+                    name,
+                    max_value: mx,
+                });
+            }
+            val
+        };
+        let out = Self {
+            cpus: get("cpus", config_limits.cpus, limits.cpus),
+            time: get("time", config_limits.time, limits.time),
+            memory: get("memory", config_limits.memory, limits.memory),
+            filesize: get("filesize", config_limits.filesize, limits.filesize),
+            file_descriptors: get(
+                "file_descriptors",
+                config_limits.file_descriptors,
+                limits.file_descriptors,
+            ),
+            processes: get("processes", config_limits.processes, limits.processes),
+        };
+        if errors.is_empty() {
+            Ok(out)
+        } else {
+            Err(errors)
+        }
+    }
+}
+
+#[derive(Debug, Object)]
+#[oai(read_only_all)]
+pub struct LimitExceeded {
+    pub name: &'static str,
+    pub max_value: u64,
 }
 
 pub async fn with_tempdir<P, A>(

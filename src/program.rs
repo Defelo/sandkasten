@@ -13,7 +13,7 @@ use uuid::Uuid;
 use crate::{
     config::Config,
     environments::{Environment, Environments},
-    sandbox::{with_tempdir, Limits, Mount, MountType, RunConfig, RunError},
+    sandbox::{with_tempdir, LimitExceeded, Limits, Mount, MountType, RunConfig, RunError},
     schemas::programs::{BuildProgramRequest, BuildResult, RunProgramRequest, RunResult},
 };
 
@@ -92,6 +92,9 @@ pub async fn run_program(
         return Err(RunProgramError::ProgramNotFound);
     }
 
+    let limits = Limits::from(&config.run_limits, &data.run_limits)
+        .map_err(RunProgramError::LimitsExceeded)?;
+
     fs::write(
         path.join("last_run"),
         time::SystemTime::now()
@@ -112,15 +115,16 @@ pub async fn run_program(
             for file in &data.files {
                 fs::write(tmpdir.join("box").join(&file.name), &file.content).await?;
             }
-            execute_program(
-                &environments.nsjail_path,
-                &environments.time_path,
-                &run_script,
-                &main_file,
-                &data,
-                &path.join("files"),
-                &tmpdir,
-            )
+            execute_program(ExecuteProgram {
+                nsjail: &environments.nsjail_path,
+                time: &environments.time_path,
+                run_script: &run_script,
+                main_file: &main_file,
+                data: &data,
+                program_path: &path.join("files"),
+                tmpdir: &tmpdir,
+                limits,
+            })
             .await
         },
     )
@@ -192,6 +196,8 @@ pub enum BuildProgramError {
     PostcardError(#[from] postcard::Error),
     #[error("no main file")]
     NoMainFile,
+    #[error("limits exceeded: {0:?}")]
+    LimitsExceeded(Vec<LimitExceeded>),
 }
 
 #[derive(Debug, Error)]
@@ -202,6 +208,8 @@ pub enum RunProgramError {
     IOError(#[from] std::io::Error),
     #[error("run error: {0}")]
     RunError(#[from] RunError),
+    #[error("limits exceeded: {0:?}")]
+    LimitsExceeded(Vec<LimitExceeded>),
 }
 
 #[derive(Debug, Error)]
@@ -219,6 +227,9 @@ async fn store_program(
     env: &Environment,
     path: &Path,
 ) -> Result<Option<RunResult>, BuildProgramError> {
+    let limits = Limits::from(&config.compile_limits, &data.compile_limits)
+        .map_err(BuildProgramError::LimitsExceeded)?;
+
     fs::create_dir_all(path.join("files")).await?;
     fs::write(path.join("run_script"), &env.run_script).await?;
     fs::write(
@@ -240,14 +251,15 @@ async fn store_program(
                 for file in &data.files {
                     fs::write(tmpdir.join("box").join(&file.name), &file.content).await?;
                 }
-                compile_program(
-                    &environments.nsjail_path,
-                    &environments.time_path,
+                compile_program(CompileProgram {
+                    nsjail: &environments.nsjail_path,
+                    time: &environments.time_path,
                     compile_script,
-                    &data,
+                    data: &data,
                     path,
-                    &tmpdir,
-                )
+                    tmpdir: &tmpdir,
+                    limits,
+                })
                 .await
             },
         )
@@ -268,12 +280,15 @@ async fn store_program(
 }
 
 async fn compile_program(
-    nsjail: &str,
-    time: &str,
-    compile_script: &str,
-    data: &BuildProgramRequest,
-    path: &Path,
-    tmpdir: &Path,
+    CompileProgram {
+        nsjail,
+        time,
+        compile_script,
+        data,
+        path,
+        tmpdir,
+        limits,
+    }: CompileProgram<'_>,
 ) -> Result<RunResult, RunError> {
     RunConfig {
         nsjail,
@@ -310,27 +325,33 @@ async fn compile_program(
                 typ: MountType::Temp { size: 1024 },
             },
         ],
-        limits: Limits {
-            cpus: 1,
-            time: data.compile_limits.time.unwrap_or(10),
-            memory: data.compile_limits.memory.unwrap_or(1024),
-            filesize: 32,
-            file_descriptors: 100,
-            processes: 100,
-        },
+        limits,
     }
     .run()
     .await
 }
 
+struct CompileProgram<'a> {
+    nsjail: &'a str,
+    time: &'a str,
+    compile_script: &'a str,
+    data: &'a BuildProgramRequest,
+    path: &'a Path,
+    tmpdir: &'a Path,
+    limits: Limits,
+}
+
 async fn execute_program(
-    nsjail: &str,
-    time: &str,
-    run_script: &str,
-    main_file: &str,
-    data: &RunProgramRequest,
-    program_path: &Path,
-    tmpdir: &Path,
+    ExecuteProgram {
+        nsjail,
+        time,
+        run_script,
+        main_file,
+        data,
+        program_path,
+        tmpdir,
+        limits,
+    }: ExecuteProgram<'_>,
 ) -> Result<RunResult, RunError> {
     RunConfig {
         nsjail,
@@ -363,15 +384,19 @@ async fn execute_program(
                 typ: MountType::Temp { size: 1024 },
             },
         ],
-        limits: Limits {
-            cpus: 1,
-            time: data.run_limits.time.unwrap_or(10),
-            memory: data.run_limits.memory.unwrap_or(1024),
-            filesize: 32,
-            file_descriptors: 100,
-            processes: 100,
-        },
+        limits,
     }
     .run()
     .await
+}
+
+struct ExecuteProgram<'a> {
+    nsjail: &'a str,
+    time: &'a str,
+    run_script: &'a str,
+    main_file: &'a str,
+    data: &'a RunProgramRequest,
+    program_path: &'a Path,
+    tmpdir: &'a Path,
+    limits: Limits,
 }

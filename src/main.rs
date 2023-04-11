@@ -8,14 +8,7 @@ use poem_ext::panic_handler::PanicHandler;
 use poem_openapi::OpenApiService;
 use tracing::{error, info};
 
-use crate::{api::get_api, program::prune_programs};
-
-mod api;
-mod config;
-mod environments;
-mod program;
-mod sandbox;
-mod schemas;
+use sandkasten::{api::get_api, config, environments, program::prune_programs};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

@@ -7,3 +7,19 @@ jobs_dir = "/jobs"
 
 program_ttl = 600
 prune_programs_interval = 60
+
+[compile_limits]
+cpus = 1
+time = 10  # seconds
+memory = 4096  # mb
+filesize = 256  # mb
+file_descriptors = 256
+processes = 256
+
+[run_limits]
+cpus = 1
+time = 3  # seconds
+memory = 1024  # mb
+filesize = 16  # mb
+file_descriptors = 16
+processes = 16

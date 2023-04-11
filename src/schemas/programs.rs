@@ -2,6 +2,8 @@ use poem_openapi::Object;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::sandbox::Limits;
+
 #[derive(Debug, Object)]
 pub struct RunRequest {
     pub build: BuildProgramRequest,
@@ -17,7 +19,7 @@ pub struct BuildProgramRequest {
     pub files: Vec<File>,
     /// Limits to set on the compilation process.
     #[oai(default)]
-    pub compile_limits: Limits,
+    pub compile_limits: LimitsOpt,
 }
 
 #[derive(Debug, Object)]
@@ -32,7 +34,7 @@ pub struct RunProgramRequest {
     pub files: Vec<File>,
     /// Limits to set on the process.
     #[oai(default)]
-    pub run_limits: Limits,
+    pub run_limits: LimitsOpt,
 }
 
 #[derive(Debug, Object, Serialize)]
@@ -42,11 +44,19 @@ pub struct File {
 }
 
 #[derive(Debug, Object, Default)]
-pub struct Limits {
+pub struct LimitsOpt {
+    /// The maximum number of cpus the process is allowed to use.
+    pub cpus: Option<u64>,
     /// The number of **seconds** the process is allowed to run.
     pub time: Option<u64>,
     /// The amount of memory the process is allowed to use (in **MB**).
     pub memory: Option<u64>,
+    /// The maximum size of a file the process is allowed to create (in **MB**).
+    pub filesize: Option<u64>,
+    /// The maximum number of file descripters the process can open at the same time.
+    pub file_descriptors: Option<u64>,
+    /// The maximum number of processes that can run concurrently in the sandbox.
+    pub processes: Option<u64>,
 }
 
 /// The results of building and running a program.
@@ -80,6 +90,15 @@ pub struct RunResult {
     pub stdout: String,
     /// The stderr output the process produced.
     pub stderr: String,
+    /// The amount of resources the process used.
+    pub resource_usage: ResourceUsage,
+    /// The limits that applied to the process.
+    pub limits: Limits,
+}
+
+/// The amount of resources a process used.
+#[derive(Debug, Object, Serialize, Deserialize)]
+pub struct ResourceUsage {
     /// The number of **milliseconds** the process ran.
     pub time: u64,
     /// The amount of memory the process used (in **KB**)

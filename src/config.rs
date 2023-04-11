@@ -3,6 +3,8 @@ use std::{env, path::PathBuf};
 use config::{ConfigError, File};
 use serde::Deserialize;
 
+use crate::sandbox::Limits;
+
 pub fn load() -> Result<Config, ConfigError> {
     config::Config::builder()
         .add_source(File::with_name(
@@ -23,4 +25,7 @@ pub struct Config {
 
     pub program_ttl: u64,             // in seconds
     pub prune_programs_interval: u64, // in seconds
+
+    pub compile_limits: Limits,
+    pub run_limits: Limits,
 }

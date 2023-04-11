@@ -12,6 +12,7 @@ use crate::{
         build_program, delete_program, run_program, BuildProgramError, DeleteProgramError,
         RunProgramError,
     },
+    sandbox::LimitExceeded,
     schemas::programs::{
         BuildProgramRequest, BuildResult, BuildRunResult, RunProgramRequest, RunRequest, RunResult,
     },
@@ -44,6 +45,9 @@ impl ProgramsApi {
             Ok(result) => result,
             Err(BuildProgramError::EnvironmentNotFound(_)) => return Run::environment_not_found(),
             Err(BuildProgramError::CompilationFailed(result)) => return Run::compile_error(result),
+            Err(BuildProgramError::LimitsExceeded(lim)) => {
+                return Run::compile_limits_exceeded(lim)
+            }
             Err(err) => return Err(err.into()),
         };
 
@@ -53,6 +57,7 @@ impl ProgramsApi {
                 build: compile_result,
                 run: run_result,
             }),
+            Err(RunProgramError::LimitsExceeded(lim)) => Run::run_limits_exceeded(lim),
             Err(err) => Err(err.into()),
         }
     }
@@ -65,6 +70,9 @@ impl ProgramsApi {
             Err(BuildProgramError::EnvironmentNotFound(_)) => BuildProgram::environment_not_found(),
             Err(BuildProgramError::CompilationFailed(result)) => {
                 BuildProgram::compile_error(result)
+            }
+            Err(BuildProgramError::LimitsExceeded(lim)) => {
+                BuildProgram::compile_limits_exceeded(lim)
             }
             Err(err) => Err(err.into()),
         }
@@ -80,6 +88,7 @@ impl ProgramsApi {
         match run_program(&self.config, &self.environments, program_id.0, data.0).await {
             Ok(result) => RunProgram::ok(result),
             Err(RunProgramError::ProgramNotFound) => RunProgram::not_found(),
+            Err(RunProgramError::LimitsExceeded(lim)) => RunProgram::run_limits_exceeded(lim),
             Err(err) => Err(err.into()),
         }
     }
@@ -102,6 +111,10 @@ response!(Run = {
     EnvironmentNotFound(404, error),
     /// Code could not be compiled.
     CompileError(400, error) => RunResult,
+    /// The specified compile limits are too high.
+    CompileLimitsExceeded(400, error) => Vec<LimitExceeded>,
+    /// The specified run limits are too high.
+    RunLimitsExceeded(400, error) => Vec<LimitExceeded>,
 });
 
 response!(BuildProgram = {
@@ -111,6 +124,8 @@ response!(BuildProgram = {
     EnvironmentNotFound(404, error),
     /// Code could not be compiled.
     CompileError(400, error) => RunResult,
+    /// The specified compile limits are too high.
+    CompileLimitsExceeded(400, error) => Vec<LimitExceeded>,
 });
 
 response!(RunProgram = {
@@ -118,6 +133,8 @@ response!(RunProgram = {
     Ok(200) => RunResult,
     /// Program does not exist.
     NotFound(404, error),
+    /// The specified run limits are too high.
+    RunLimitsExceeded(400, error) => Vec<LimitExceeded>,
 });
 
 response!(DeleteProgram = {
