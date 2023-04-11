@@ -1,3 +1,6 @@
+#![forbid(unsafe_code)]
+#![warn(clippy::dbg_macro, clippy::use_debug, clippy::todo)]
+
 use std::time::Duration;
 
 use poem::{listener::TcpListener, middleware::Tracing, EndpointExt, Route, Server};
