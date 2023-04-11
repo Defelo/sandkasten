@@ -4,12 +4,12 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Object)]
 pub struct RunRequest {
-    pub create: CreateProgramRequest,
+    pub build: BuildProgramRequest,
     pub run: RunProgramRequest,
 }
 
 #[derive(Debug, Clone, Object)]
-pub struct CreateProgramRequest {
+pub struct BuildProgramRequest {
     pub environment: String,
     #[oai(validator(min_items = 1))]
     pub files: Vec<File>,
@@ -41,13 +41,13 @@ pub struct Limits {
 }
 
 #[derive(Debug, Clone, Object)]
-pub struct CreateRunResult {
-    pub create: Option<RunResult>,
+pub struct BuildRunResult {
+    pub build: Option<RunResult>,
     pub run: RunResult,
 }
 
 #[derive(Debug, Clone, Object)]
-pub struct CreateResult {
+pub struct BuildResult {
     pub program_id: Uuid,
     pub compile_result: Option<RunResult>,
 }

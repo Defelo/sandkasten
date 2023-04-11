@@ -14,19 +14,19 @@ use crate::{
     config::Config,
     environments::{Environment, Environments},
     sandbox::{with_tempdir, Limits, Mount, MountType, RunConfig, RunError},
-    schemas::{CreateProgramRequest, CreateResult, RunProgramRequest, RunResult},
+    schemas::{BuildProgramRequest, BuildResult, RunProgramRequest, RunResult},
 };
 
 /// Store (and compile) the uploaded program into a directory in the local fs. Return a unique
 /// identifier for the program.
-pub async fn create_program(
+pub async fn build_program(
     config: &Config,
     environments: &Environments,
-    data: CreateProgramRequest,
+    data: BuildProgramRequest,
     compile_lock: &KeyLock<Uuid>,
-) -> Result<CreateResult, CreateProgramError> {
+) -> Result<BuildResult, BuildProgramError> {
     let env = environments.environments.get(&data.environment).ok_or(
-        CreateProgramError::EnvironmentNotFound(data.environment.clone()),
+        BuildProgramError::EnvironmentNotFound(data.environment.clone()),
     )?;
 
     let hash = Sha256::new()
@@ -54,7 +54,7 @@ pub async fn create_program(
         } else {
             None
         };
-        return Ok(CreateResult {
+        return Ok(BuildResult {
             program_id: id,
             compile_result,
         });
@@ -66,7 +66,7 @@ pub async fn create_program(
                 let serialized = postcard::to_stdvec(result)?;
                 fs::write(path.join("compile_result"), serialized).await?;
             }
-            Ok(CreateResult {
+            Ok(BuildResult {
                 program_id: id,
                 compile_result: result,
             })
@@ -177,7 +177,7 @@ pub async fn prune_programs(config: &Config) -> Result<(), std::io::Error> {
 }
 
 #[derive(Debug, Error)]
-pub enum CreateProgramError {
+pub enum BuildProgramError {
     #[error("could not find environment {0}")]
     EnvironmentNotFound(String),
     #[error("io error: {0}")]
@@ -213,10 +213,10 @@ pub enum DeleteProgramError {
 async fn store_program(
     config: &Config,
     environments: &Environments,
-    data: CreateProgramRequest,
+    data: BuildProgramRequest,
     env: &Environment,
     path: &Path,
-) -> Result<Option<RunResult>, CreateProgramError> {
+) -> Result<Option<RunResult>, BuildProgramError> {
     fs::create_dir_all(path.join("files")).await?;
     fs::write(path.join("run_script"), &env.run_script).await?;
     fs::write(
@@ -224,7 +224,7 @@ async fn store_program(
         &data
             .files
             .first()
-            .ok_or(CreateProgramError::NoMainFile)?
+            .ok_or(BuildProgramError::NoMainFile)?
             .name,
     )
     .await?;
@@ -249,7 +249,7 @@ async fn store_program(
         )
         .await??;
         if result.status != 0 {
-            return Err(CreateProgramError::CompilationFailed(result));
+            return Err(BuildProgramError::CompilationFailed(result));
         }
         Some(result)
     } else {
@@ -266,7 +266,7 @@ async fn store_program(
 async fn compile_program(
     nsjail: &str,
     compile_script: &str,
-    data: &CreateProgramRequest,
+    data: &BuildProgramRequest,
     path: &Path,
     tmpdir: &Path,
 ) -> Result<RunResult, RunError> {
