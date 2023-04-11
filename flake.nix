@@ -6,7 +6,7 @@
   outputs = {nixpkgs, ...}: let
     system = "x86_64-linux";
     pkgs = import nixpkgs {inherit system;};
-    packages = import ./packages {inherit pkgs;};
+    packages = import ./nix/packages {inherit pkgs;};
     envs =
       builtins.mapAttrs (k: v: {
         inherit (v) name version;
