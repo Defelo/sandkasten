@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::sync::Arc;
 
 use key_lock::KeyLock;
 use poem_ext::response;
@@ -13,39 +13,20 @@ use crate::{
         RunProgramError,
     },
     schemas::{
-        BuildProgramRequest, BuildResult, BuildRunResult, Environment, RunProgramRequest,
-        RunRequest, RunResult,
+        BuildProgramRequest, BuildResult, BuildRunResult, RunProgramRequest, RunRequest, RunResult,
     },
 };
 
-pub struct Api {
-    pub config: Config,
-    pub environments: Environments,
+use super::Tags;
+
+pub struct ProgramsApi {
+    pub config: Arc<Config>,
+    pub environments: Arc<Environments>,
     pub compile_lock: KeyLock<Uuid>,
 }
 
-#[OpenApi(tag = "Tags::Main")]
-impl Api {
-    /// Return a list of all environments.
-    #[oai(path = "/environments", method = "get")]
-    async fn list_environments(&self) -> ListEnvironments::Response {
-        ListEnvironments::ok(
-            self.environments
-                .environments
-                .iter()
-                .map(|(id, env)| {
-                    (
-                        id.clone(),
-                        Environment {
-                            name: env.name.clone(),
-                            version: env.version.clone(),
-                        },
-                    )
-                })
-                .collect(),
-        )
-    }
-
+#[OpenApi(tag = "Tags::Programs")]
+impl ProgramsApi {
     /// Upload and immediately run a program.
     #[oai(path = "/run", method = "post")]
     async fn run(&self, data: Json<RunRequest>) -> Run::Response {
@@ -114,10 +95,6 @@ impl Api {
     }
 }
 
-response!(ListEnvironments = {
-    Ok(200) => HashMap<String, Environment>,
-});
-
 response!(Run = {
     /// Code has been executed successfully.
     Ok(200) => BuildRunResult,
@@ -128,6 +105,7 @@ response!(Run = {
 });
 
 response!(BuildProgram = {
+    /// Program has been built successfully.
     Ok(201) => BuildResult,
     /// Environment does not exist.
     EnvironmentNotFound(404, error),
@@ -136,18 +114,15 @@ response!(BuildProgram = {
 });
 
 response!(RunProgram = {
+    /// Code has been executed successfully.
     Ok(200) => RunResult,
     /// Program does not exist.
     NotFound(404, error),
 });
 
 response!(DeleteProgram = {
+    /// Program has been deleted.
     Ok(200),
     /// Program does not exist.
     NotFound(404, error),
 });
-
-#[derive(poem_openapi::Tags)]
-enum Tags {
-    Main,
-}

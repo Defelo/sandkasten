@@ -312,8 +312,8 @@ async fn compile_program(
         ],
         limits: Limits {
             cpus: 1,
-            time: data.compile_limits.timeout.unwrap_or(10),
-            memory: data.compile_limits.memory_limit.unwrap_or(1024),
+            time: data.compile_limits.time.unwrap_or(10),
+            memory: data.compile_limits.memory.unwrap_or(1024),
             filesize: 32,
             file_descriptors: 100,
             processes: 100,
@@ -365,8 +365,8 @@ async fn execute_program(
         ],
         limits: Limits {
             cpus: 1,
-            time: data.run_limits.timeout.unwrap_or(10),
-            memory: data.run_limits.memory_limit.unwrap_or(1024),
+            time: data.run_limits.time.unwrap_or(10),
+            memory: data.run_limits.memory.unwrap_or(1024),
             filesize: 32,
             file_descriptors: 100,
             processes: 100,

@@ -12,7 +12,7 @@ pub fn load() -> Result<Config, ConfigError> {
         .try_deserialize()
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Config {
     pub host: String,
     pub port: u16,
