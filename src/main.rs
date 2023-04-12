@@ -6,6 +6,7 @@ use std::{sync::Arc, time::Duration};
 use poem::{listener::TcpListener, middleware::Tracing, EndpointExt, Route, Server};
 use poem_ext::panic_handler::PanicHandler;
 use poem_openapi::OpenApiService;
+use tokio::fs;
 use tracing::{error, info};
 
 use sandkasten::{api::get_api, config, environments, program::prune_programs};
@@ -19,6 +20,10 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Loading environments");
     let environments = Arc::new(environments::load()?);
+
+    if !fs::try_exists(&config.programs_dir).await? {
+        fs::create_dir_all(&config.programs_dir).await?;
+    }
 
     tokio::spawn({
         let config = Arc::clone(&config);
