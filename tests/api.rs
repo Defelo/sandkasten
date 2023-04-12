@@ -252,6 +252,38 @@ async fn test_no_internet() {
     );
 }
 
+#[tokio::test]
+#[ignore]
+async fn test_forkbomb() {
+    let response: BuildRunResponse = reqwest::Client::new()
+        .post(url("/run"))
+        .json(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "python".into(),
+                files: vec![File {
+                    name: "test.py".into(),
+                    content: "import os\nwhile True: os.fork()".into(),
+                }],
+                compile_limits: Default::default(),
+            },
+            run: Default::default(),
+        })
+        .send()
+        .await
+        .unwrap()
+        .error_for_status()
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    assert_eq!(response.run.status, 1);
+    assert_eq!(
+        response.run.stderr.trim().lines().last().unwrap(),
+        "BlockingIOError: [Errno 11] Resource temporarily unavailable"
+    );
+    assert!(response.run.resource_usage.time < 1000);
+}
+
 #[derive(Debug, Deserialize)]
 struct Environment {
     name: String,
