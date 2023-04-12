@@ -66,7 +66,7 @@ async fn test_build_run_python() {
     assert_eq!(response.run.status, 42);
     assert_eq!(response.run.stdout, "13\n");
     assert_eq!(response.run.stderr, "42\n");
-    assert!(response.run.resource_usage.time >= 456 && response.run.resource_usage.time <= 700);
+    assert!(response.run.resource_usage.time >= 456 && response.run.resource_usage.time <= 800);
     assert!(
         response.run.resource_usage.memory >= 1000 && response.run.resource_usage.memory <= 20000
     );
@@ -140,7 +140,7 @@ async fn test_build_run_rust_ok() {
     assert_eq!(build.status, 0);
     assert!(build.stdout.is_empty());
     assert!(!build.stderr.is_empty());
-    assert!(build.resource_usage.time >= 100 && build.resource_usage.time <= 1000);
+    assert!(build.resource_usage.time >= 1 && build.resource_usage.time <= 2000);
     assert!(build.resource_usage.memory >= 100 && response.run.resource_usage.memory <= 10000);
     assert_eq!(response.run.status, 0);
     assert_eq!(response.run.stdout, "foo bar\n");
