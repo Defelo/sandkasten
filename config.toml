@@ -8,6 +8,8 @@ jobs_dir = "/jobs"
 program_ttl = 600
 prune_programs_interval = 60
 
+max_concurrent_jobs = 64
+
 [compile_limits]
 cpus = 1
 time = 10  # seconds

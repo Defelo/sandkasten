@@ -3,6 +3,7 @@ use std::sync::Arc;
 use key_lock::KeyLock;
 use poem_ext::response;
 use poem_openapi::{param::Path, payload::Json, OpenApi};
+use tokio::sync::Semaphore;
 use uuid::Uuid;
 
 use crate::{
@@ -24,6 +25,7 @@ pub struct ProgramsApi {
     pub config: Arc<Config>,
     pub environments: Arc<Environments>,
     pub compile_lock: KeyLock<Uuid>,
+    pub job_semaphore: Semaphore,
 }
 
 #[OpenApi(tag = "Tags::Programs")]
@@ -31,6 +33,7 @@ impl ProgramsApi {
     /// Upload and immediately run a program.
     #[oai(path = "/run", method = "post")]
     async fn run(&self, data: Json<RunRequest>) -> Run::Response {
+        let _guard = self.job_semaphore.acquire().await?;
         let BuildResult {
             program_id,
             compile_result,
@@ -65,6 +68,7 @@ impl ProgramsApi {
     /// Upload and compile a program.
     #[oai(path = "/programs", method = "post")]
     async fn build_program(&self, data: Json<BuildProgramRequest>) -> BuildProgram::Response {
+        let _guard = self.job_semaphore.acquire().await?;
         match build_program(&self.config, &self.environments, data.0, &self.compile_lock).await {
             Ok(result) => BuildProgram::ok(result),
             Err(BuildProgramError::EnvironmentNotFound(_)) => BuildProgram::environment_not_found(),
@@ -85,6 +89,7 @@ impl ProgramsApi {
         program_id: Path<Uuid>,
         data: Json<RunProgramRequest>,
     ) -> RunProgram::Response {
+        let _guard = self.job_semaphore.acquire().await?;
         match run_program(&self.config, &self.environments, program_id.0, data.0).await {
             Ok(result) => RunProgram::ok(result),
             Err(RunProgramError::ProgramNotFound) => RunProgram::not_found(),

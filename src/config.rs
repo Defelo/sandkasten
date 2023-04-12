@@ -26,6 +26,8 @@ pub struct Config {
     pub program_ttl: u64,             // in seconds
     pub prune_programs_interval: u64, // in seconds
 
+    pub max_concurrent_jobs: usize,
+
     pub compile_limits: Limits,
     pub run_limits: Limits,
 }
