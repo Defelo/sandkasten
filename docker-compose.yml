@@ -11,7 +11,7 @@ services:
     volumes:
       - ./config.toml:/config.toml:ro
     tmpfs:
-      - /jobs
-      - /programs:exec
+      - /jobs:uid=65534,gid=65534
+      - /programs:exec,uid=65534,gid=65534
     ports:
       - 127.0.0.1:8000:8000
