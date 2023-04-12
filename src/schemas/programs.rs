@@ -51,6 +51,8 @@ pub struct LimitsOpt {
     pub time: Option<u64>,
     /// The amount of memory the process is allowed to use (in **MB**).
     pub memory: Option<u64>,
+    /// The size of the tmpfs mounted at /tmp (in **MB**).
+    pub tmpfs: Option<u64>,
     /// The maximum size of a file the process is allowed to create (in **MB**).
     pub filesize: Option<u64>,
     /// The maximum number of file descripters the process can open at the same time.

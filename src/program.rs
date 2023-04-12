@@ -322,7 +322,7 @@ async fn compile_program(
             },
             Mount {
                 dest: "/tmp",
-                typ: MountType::Temp { size: 1024 },
+                typ: MountType::Temp { size: limits.tmpfs },
             },
         ],
         limits,
@@ -381,7 +381,7 @@ async fn execute_program(
             },
             Mount {
                 dest: "/tmp",
-                typ: MountType::Temp { size: 1024 },
+                typ: MountType::Temp { size: limits.tmpfs },
             },
         ],
         limits,

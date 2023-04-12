@@ -53,6 +53,8 @@ pub struct Limits {
     pub time: u64,
     /// The amount of memory the process is allowed to use (in **MB**).
     pub memory: u64,
+    /// The size of the tmpfs mounted at /tmp (in **MB**).
+    pub tmpfs: u64,
     /// The maximum size of a file the process is allowed to create (in **MB**).
     pub filesize: u64,
     /// The maximum number of file descripters the process can open at the same time.
@@ -94,7 +96,7 @@ impl RunConfig<'_> {
                 MountType::ReadOnly { src } => cmd.arg("-R").arg(format!("{src}:{dest}")),
                 MountType::ReadWrite { src } => cmd.arg("-B").arg(format!("{src}:{dest}")),
                 MountType::Temp { size } => {
-                    cmd.arg("-m").arg(format!("none:{dest}:tmpfs:size={size}"))
+                    cmd.arg("-m").arg(format!("none:{dest}:tmpfs:size={size}M"))
                 }
             };
         }
@@ -181,6 +183,7 @@ impl Limits {
             cpus: get("cpus", config_limits.cpus, limits.cpus),
             time: get("time", config_limits.time, limits.time),
             memory: get("memory", config_limits.memory, limits.memory),
+            tmpfs: get("tmpfs", config_limits.tmpfs, limits.tmpfs),
             filesize: get("filesize", config_limits.filesize, limits.filesize),
             file_descriptors: get(
                 "file_descriptors",
