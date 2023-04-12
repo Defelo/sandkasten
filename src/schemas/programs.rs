@@ -57,6 +57,10 @@ pub struct LimitsOpt {
     pub file_descriptors: Option<u64>,
     /// The maximum number of processes that can run concurrently in the sandbox.
     pub processes: Option<u64>,
+    /// The maximum number of bytes that are read from stdout.
+    pub stdout_max_size: Option<u64>,
+    /// The maximum number of bytes that are read from stderr.
+    pub stderr_max_size: Option<u64>,
 }
 
 /// The results of building and running a program.

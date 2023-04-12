@@ -3,7 +3,10 @@ use std::{future::Future, path::Path, process::Stdio, string::FromUtf8Error};
 use poem_openapi::Object;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tokio::{fs, io::AsyncWriteExt};
+use tokio::{
+    fs,
+    io::{AsyncReadExt, AsyncWriteExt, BufReader},
+};
 use tracing::error;
 
 use crate::schemas::{
@@ -56,6 +59,10 @@ pub struct Limits {
     pub file_descriptors: u64,
     /// The maximum number of processes that can run concurrently in the sandbox.
     pub processes: u64,
+    /// The maximum number of bytes that are read from stdout.
+    pub stdout_max_size: u64,
+    /// The maximum number of bytes that are read from stderr.
+    pub stderr_max_size: u64,
 }
 
 impl RunConfig<'_> {
@@ -107,9 +114,21 @@ impl RunConfig<'_> {
             drop(handle);
         }
 
-        let output = child.wait_with_output().await?;
-        let stdout = String::from_utf8(output.stdout)?;
-        let stderr: String = String::from_utf8(output.stderr)?;
+        let stdout_reader = BufReader::new(child.stdout.take().unwrap());
+        let stderr_reader = BufReader::new(child.stderr.take().unwrap());
+
+        child.wait().await?;
+
+        let mut stdout = String::new();
+        let mut stderr = String::new();
+        stdout_reader
+            .take(self.limits.stdout_max_size)
+            .read_to_string(&mut stdout)
+            .await?;
+        stderr_reader
+            .take(self.limits.stderr_max_size)
+            .read_to_string(&mut stderr)
+            .await?;
 
         let time_file = fs::read_to_string(time_path).await?;
         let mut tf = time_file.split_whitespace();
@@ -169,6 +188,16 @@ impl Limits {
                 limits.file_descriptors,
             ),
             processes: get("processes", config_limits.processes, limits.processes),
+            stdout_max_size: get(
+                "stdout_max_size",
+                config_limits.stdout_max_size,
+                limits.stdout_max_size,
+            ),
+            stderr_max_size: get(
+                "stderr_max_size",
+                config_limits.stderr_max_size,
+                limits.stderr_max_size,
+            ),
         };
         if errors.is_empty() {
             Ok(out)

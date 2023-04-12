@@ -284,6 +284,44 @@ async fn test_forkbomb() {
     assert!(response.run.resource_usage.time < 1000);
 }
 
+#[tokio::test]
+#[ignore]
+async fn test_stdoutbomb() {
+    let response: BuildRunResponse = reqwest::Client::new()
+        .post(url("/run"))
+        .json(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "rust".into(),
+                files: vec![File {
+                    name: "test.rs".into(),
+                    content: "fn main() { loop { println!(\"spam\"); eprintln!(\"maps\"); } }"
+                        .into(),
+                }],
+                compile_limits: Default::default(),
+            },
+            run: RunRequest {
+                run_limits: LimitsOpt {
+                    time: Some(1),
+                    stdout_max_size: Some(2048),
+                    stderr_max_size: Some(1024),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        })
+        .send()
+        .await
+        .unwrap()
+        .error_for_status()
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    assert_eq!(response.run.status, 137);
+    assert_eq!(response.run.stdout.len(), 2048);
+    assert_eq!(response.run.stderr.len(), 1024);
+}
+
 #[derive(Debug, Deserialize)]
 struct Environment {
     name: String,
@@ -348,6 +386,8 @@ struct LimitsOpt {
     memory: Option<u64>,
     processes: Option<u64>,
     time: Option<u64>,
+    stdout_max_size: Option<u64>,
+    stderr_max_size: Option<u64>,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
@@ -358,6 +398,8 @@ struct Limits {
     memory: u64,
     processes: u64,
     time: u64,
+    stdout_max_size: u64,
+    stderr_max_size: u64,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
