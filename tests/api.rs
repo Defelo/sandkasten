@@ -221,6 +221,37 @@ async fn test_build_cached() {
     assert_eq!(response.stdout, "test\n");
 }
 
+#[tokio::test]
+#[ignore]
+async fn test_no_internet() {
+    let response: BuildRunResponse = reqwest::Client::new()
+        .post(url("/run"))
+        .json(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "python".into(),
+                files: vec![File {
+                    name: "test.py".into(),
+                    content: "from http.client import *; c=HTTPConnection('1.1.1.1'); c.request('GET', 'http://1.1.1.1')".into(),
+                }],
+                compile_limits: Default::default(),
+            },
+            run: Default::default(),
+        })
+        .send()
+        .await
+        .unwrap()
+        .error_for_status()
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    assert_eq!(response.run.status, 1);
+    assert_eq!(
+        response.run.stderr.trim().lines().last().unwrap(),
+        "OSError: [Errno 101] Network is unreachable"
+    );
+}
+
 #[derive(Debug, Deserialize)]
 struct Environment {
     name: String,
