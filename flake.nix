@@ -8,21 +8,24 @@
     pkgs = import nixpkgs {inherit system;};
     time = import ./nix/time pkgs;
     packages = import ./nix/packages {inherit pkgs;};
-    envs =
-      builtins.mapAttrs (k: v: {
-        inherit (v) name version;
-        compile_script =
-          if builtins.isNull v.compile_script
-          then null
-          else pkgs.writeShellScript "${k}-compile.sh" v.compile_script;
-        run_script = pkgs.writeShellScript "${k}-run.sh" v.run_script;
-      })
+    envs = dev:
+      builtins.mapAttrs (k: v:
+        {
+          inherit (v) name version;
+          compile_script =
+            if builtins.isNull v.compile_script
+            then null
+            else pkgs.writeShellScript "${k}-compile.sh" v.compile_script;
+          run_script = pkgs.writeShellScript "${k}-run.sh" v.run_script;
+        }
+        // pkgs.lib.optionalAttrs dev {inherit (v) test;})
       packages;
-    environments = pkgs.writeText "environments.json" (builtins.toJSON {
-      nsjail_path = "${pkgs.nsjail}/bin/nsjail";
-      time_path = "${time}/bin/time";
-      environments = envs;
-    });
+    environments = dev:
+      pkgs.writeText "environments.json" (builtins.toJSON {
+        nsjail_path = "${pkgs.nsjail}/bin/nsjail";
+        time_path = "${time}/bin/time";
+        environments = envs dev;
+      });
   in {
     packages.${system} = rec {
       packages = builtins.mapAttrs (k: {
@@ -48,7 +51,7 @@
             ln -s ${sandbox run_script} $out/bin/${k}-run.sh
           '';
         })
-      envs;
+      (envs false);
       rust = pkgs.rustPlatform.buildRustPackage {
         name = "sandkasten";
         src = pkgs.stdenv.mkDerivation {
@@ -76,7 +79,7 @@
         config = {
           User = "65534:65534";
           Entrypoint = ["${rust}/bin/sandkasten"];
-          Env = ["ENVIRONMENTS_CONFIG_PATH=${environments}"];
+          Env = ["ENVIRONMENTS_CONFIG_PATH=${environments false}"];
         };
       };
       default = docker;
@@ -85,7 +88,16 @@
       buildInputs = [pkgs.nsjail time];
       RUST_LOG = "info,sandkasten=trace,difft=off";
       CONFIG_PATH = ".config.toml";
-      ENVIRONMENTS_CONFIG_PATH = environments;
+      ENVIRONMENTS_CONFIG_PATH = environments true;
+      PACKAGES_TEST_SRC = pkgs.writeText "packages_test_src.rs" (builtins.foldl' (acc: pkg:
+        acc
+        + ''
+          #[tokio::test]
+          #[ignore]
+          async fn test_${pkg}() {
+            test_package("${pkg}").await;
+          }
+        '') "" (builtins.attrNames packages));
     };
   };
 }

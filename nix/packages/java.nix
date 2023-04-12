@@ -2,6 +2,7 @@
   jdk,
   coreutils,
   gnugrep,
+  gawk,
   ...
 }: {
   name = "Java";
@@ -22,5 +23,21 @@
     fi
     ${jdk}/bin/javac -d /out "$@"
   '';
-  run_script = ''${jdk}/bin/java -cp /program "$(${coreutils}/bin/cat /program/.main)" "$@"'';
+  run_script = ''
+    mem=$(${gnugrep}/bin/grep 'address space' /proc/self/limits | ${gawk}/bin/awk '{print $5}')
+    mem=$((mem/128))
+    ${jdk}/bin/java -Xms$mem -Xmx$mem -cp /program "$(${coreutils}/bin/cat /program/.main)" "$@"
+  '';
+  test.files = [
+    {
+      name = "test.java";
+      content = ''
+        class FooBar {
+          public static void main(String[] args) {
+            System.out.print("OK");
+          }
+        }
+      '';
+    }
+  ];
 }

@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
+use common::*;
+
+mod common;
 
 #[tokio::test]
 #[ignore]
@@ -320,94 +322,4 @@ async fn test_stdoutbomb() {
     assert_eq!(response.run.status, 137);
     assert_eq!(response.run.stdout.len(), 2048);
     assert_eq!(response.run.stderr.len(), 1024);
-}
-
-#[derive(Debug, Deserialize)]
-struct Environment {
-    name: String,
-    #[allow(dead_code)]
-    version: String,
-}
-
-#[derive(Debug, Serialize)]
-struct BuildRunRequest {
-    build: BuildRequest,
-    run: RunRequest,
-}
-
-#[derive(Debug, Deserialize)]
-struct BuildRunResponse {
-    program_id: String,
-    build: Option<RunResponse>,
-    run: RunResponse,
-}
-
-#[derive(Debug, Deserialize, PartialEq, Eq)]
-struct RunResponse {
-    pub status: i32,
-    pub stdout: String,
-    pub stderr: String,
-    pub resource_usage: ResourceUsage,
-    pub limits: Limits,
-}
-
-#[derive(Debug, Serialize)]
-struct BuildRequest {
-    environment: String,
-    files: Vec<File>,
-    compile_limits: LimitsOpt,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(tag = "error", content = "details", rename_all = "snake_case")]
-enum BuildError {
-    CompileError(RunResponse),
-}
-
-#[derive(Debug, Serialize, Default)]
-struct RunRequest {
-    stdin: Option<String>,
-    args: Vec<String>,
-    files: Vec<File>,
-    run_limits: LimitsOpt,
-}
-
-#[derive(Debug, Serialize)]
-struct File {
-    name: String,
-    content: String,
-}
-
-#[derive(Debug, Serialize, Default)]
-struct LimitsOpt {
-    cpus: Option<u64>,
-    file_descriptors: Option<u64>,
-    filesize: Option<u64>,
-    memory: Option<u64>,
-    processes: Option<u64>,
-    time: Option<u64>,
-    stdout_max_size: Option<u64>,
-    stderr_max_size: Option<u64>,
-}
-
-#[derive(Debug, Deserialize, PartialEq, Eq)]
-struct Limits {
-    cpus: u64,
-    file_descriptors: u64,
-    filesize: u64,
-    memory: u64,
-    processes: u64,
-    time: u64,
-    stdout_max_size: u64,
-    stderr_max_size: u64,
-}
-
-#[derive(Debug, Deserialize, PartialEq, Eq)]
-pub struct ResourceUsage {
-    pub time: u64,
-    pub memory: u64,
-}
-
-fn url(path: impl std::fmt::Display) -> String {
-    format!("http://127.0.0.1:8000{path}")
 }
