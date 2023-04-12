@@ -39,6 +39,7 @@ pub struct RunProgramRequest {
 
 #[derive(Debug, Object, Serialize)]
 pub struct File {
+    #[oai(validator(pattern = r"^[a-zA-Z0-9._-]{1,32}$"))]
     pub name: String,
     pub content: String,
 }
