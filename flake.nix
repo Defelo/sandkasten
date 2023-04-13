@@ -96,12 +96,23 @@
               test_package("${pkg}").await;
             }
           '') "" (builtins.attrNames packages));
+        CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON (let
+          config = builtins.fromTOML (builtins.readFile ./config.toml);
+        in
+          config
+          // {
+            host = "127.0.0.1";
+            port = 8000;
+            server = "/";
+            programs_dir = "programs";
+            jobs_dir = "jobs";
+          }));
+      };
       };
     in {
       default = pkgs.mkShell ({
           packages = [pkgs.nsjail time];
           RUST_LOG = "info,sandkasten=trace,difft=off";
-          CONFIG_PATH = ".config.toml";
         }
         // test-env);
       test = pkgs.mkShell test-env;
