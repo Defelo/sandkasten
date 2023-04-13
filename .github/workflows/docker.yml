@@ -11,44 +11,13 @@ permissions:
   packages: write
 
 jobs:
-  build:
-    name: build
+  docker:
+    name: docker
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - name: Setup Nix
-        uses: cachix/install-nix-action@v20
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup Cachix
-        uses: cachix/cachix-action@v12
-        with:
-          name: sandkasten
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      - name: nix build
-        run: nix build .#docker
-      - name: prepare docker build
-        run: |
-          image=$(docker load -qi result | cut -d' ' -f3)
-          docker tag "$image" base
-          docker rmi "$image"
-          mkdir .docker_build
-          echo "FROM base" > .docker_build/Dockerfile
-      - name: start service
-        run: docker run -d --init --privileged -v $PWD/config.toml:/config.toml:ro --tmpfs /jobs:uid=65534,gid=65534 --tmpfs /programs:exec,uid=65534,gid=65534 -p 127.0.0.1:8000:8000 base
-      - name: Install stable
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-      - name: cargo generate-lockfile
-        if: hashFiles('Cargo.lock') == ''
-        run: cargo generate-lockfile
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
-      - name: cargo test --locked
-        run: nix develop .#test --command cargo test --locked --all-features --all-targets --no-fail-fast -- --ignored
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
@@ -62,12 +31,30 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
       - name: Login to GHCR
-        uses: docker/login-action@v2
         if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Nix
+        uses: cachix/install-nix-action@v20
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v12
+        with:
+          name: sandkasten
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - name: nix build
+        run: |
+          set -ex
+          nix build .#docker
+          image=$(docker load -qi result | cut -d' ' -f3)
+          docker tag "$image" base
+          docker rmi "$image"
+          mkdir .docker_build
+          echo "FROM base" > .docker_build/Dockerfile
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
@@ -76,3 +63,6 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # cache-from: type=gha
+          # cache-to: type=gha,mode=max
+          # provenance: false
