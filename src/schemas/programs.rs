@@ -4,14 +4,14 @@ use uuid::Uuid;
 
 use crate::sandbox::Limits;
 
-#[derive(Debug, Object)]
-pub struct RunRequest {
-    pub build: BuildProgramRequest,
-    pub run: RunProgramRequest,
+#[derive(Debug, Object, Serialize)]
+pub struct BuildRunRequest {
+    pub build: BuildRequest,
+    pub run: RunRequest,
 }
 
-#[derive(Debug, Object)]
-pub struct BuildProgramRequest {
+#[derive(Debug, Object, Serialize)]
+pub struct BuildRequest {
     /// The environment to use for building and running the program.
     pub environment: String,
     /// A list of source files. The first file is usually used as entrypoint to the program.
@@ -22,8 +22,8 @@ pub struct BuildProgramRequest {
     pub compile_limits: LimitsOpt,
 }
 
-#[derive(Debug, Object)]
-pub struct RunProgramRequest {
+#[derive(Debug, Object, Serialize, Default)]
+pub struct RunRequest {
     /// The stdin input the process reads.
     pub stdin: Option<String>,
     /// A list of command line arguments that are passed to the process.
@@ -37,14 +37,14 @@ pub struct RunProgramRequest {
     pub run_limits: LimitsOpt,
 }
 
-#[derive(Debug, Object, Serialize)]
+#[derive(Debug, Object, Serialize, Deserialize)]
 pub struct File {
     #[oai(validator(pattern = r"^[a-zA-Z0-9._-]{1,32}$"))]
     pub name: String,
     pub content: String,
 }
 
-#[derive(Debug, Object, Default)]
+#[derive(Debug, Object, Default, Serialize)]
 pub struct LimitsOpt {
     /// The maximum number of cpus the process is allowed to use.
     pub cpus: Option<u64>,
@@ -67,7 +67,7 @@ pub struct LimitsOpt {
 }
 
 /// The results of building and running a program.
-#[derive(Debug, Object)]
+#[derive(Debug, Object, Deserialize)]
 pub struct BuildRunResult {
     /// A unique identifier of the program that was built.
     pub program_id: Uuid,
@@ -89,7 +89,7 @@ pub struct BuildResult {
 }
 
 /// The results of running (or compiling) a program.
-#[derive(Debug, Object, Serialize, Deserialize)]
+#[derive(Debug, Object, Serialize, Deserialize, PartialEq, Eq)]
 pub struct RunResult {
     /// The exit code of the processes.
     pub status: i32,
@@ -104,7 +104,7 @@ pub struct RunResult {
 }
 
 /// The amount of resources a process used.
-#[derive(Debug, Object, Serialize, Deserialize)]
+#[derive(Debug, Object, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ResourceUsage {
     /// The number of **milliseconds** the process ran.
     pub time: u64,

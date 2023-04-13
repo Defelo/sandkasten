@@ -15,7 +15,7 @@ use crate::{
     },
     sandbox::LimitExceeded,
     schemas::programs::{
-        BuildProgramRequest, BuildResult, BuildRunResult, RunProgramRequest, RunRequest, RunResult,
+        BuildRequest, BuildResult, BuildRunRequest, BuildRunResult, RunRequest, RunResult,
     },
 };
 
@@ -32,7 +32,7 @@ pub struct ProgramsApi {
 impl ProgramsApi {
     /// Upload and immediately run a program.
     #[oai(path = "/run", method = "post")]
-    async fn run(&self, data: Json<RunRequest>) -> Run::Response {
+    async fn run(&self, data: Json<BuildRunRequest>) -> Run::Response {
         let _guard = self.job_semaphore.acquire().await?;
         let BuildResult {
             program_id,
@@ -67,7 +67,7 @@ impl ProgramsApi {
 
     /// Upload and compile a program.
     #[oai(path = "/programs", method = "post")]
-    async fn build_program(&self, data: Json<BuildProgramRequest>) -> BuildProgram::Response {
+    async fn build_program(&self, data: Json<BuildRequest>) -> BuildProgram::Response {
         let _guard = self.job_semaphore.acquire().await?;
         match build_program(&self.config, &self.environments, data.0, &self.compile_lock).await {
             Ok(result) => BuildProgram::ok(result),
@@ -87,7 +87,7 @@ impl ProgramsApi {
     async fn run_program(
         &self,
         program_id: Path<Uuid>,
-        data: Json<RunProgramRequest>,
+        data: Json<RunRequest>,
     ) -> RunProgram::Response {
         let _guard = self.job_semaphore.acquire().await?;
         match run_program(&self.config, &self.environments, program_id.0, data.0).await {

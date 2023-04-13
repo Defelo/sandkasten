@@ -45,7 +45,7 @@ pub enum MountType<'a> {
     },
 }
 
-#[derive(Debug, Clone, Object, Serialize, Deserialize)]
+#[derive(Debug, Clone, Object, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Limits {
     /// The maximum number of cpus the process is allowed to use.
     pub cpus: u64,

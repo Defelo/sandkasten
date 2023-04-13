@@ -14,7 +14,7 @@ use crate::{
     config::Config,
     environments::{Environment, Environments},
     sandbox::{with_tempdir, LimitExceeded, Limits, Mount, MountType, RunConfig, RunError},
-    schemas::programs::{BuildProgramRequest, BuildResult, RunProgramRequest, RunResult},
+    schemas::programs::{BuildRequest, BuildResult, RunRequest, RunResult},
 };
 
 /// Store (and compile) the uploaded program into a directory in the local fs. Return a unique
@@ -22,7 +22,7 @@ use crate::{
 pub async fn build_program(
     config: &Config,
     environments: &Environments,
-    data: BuildProgramRequest,
+    data: BuildRequest,
     compile_lock: &KeyLock<Uuid>,
 ) -> Result<BuildResult, BuildProgramError> {
     let env = environments.environments.get(&data.environment).ok_or(
@@ -85,7 +85,7 @@ pub async fn run_program(
     config: &Config,
     environments: &Environments,
     program_id: Uuid,
-    data: RunProgramRequest,
+    data: RunRequest,
 ) -> Result<RunResult, RunProgramError> {
     let path = config.programs_dir.join(program_id.to_string());
     if !fs::try_exists(&path).await? {
@@ -223,7 +223,7 @@ pub enum DeleteProgramError {
 async fn store_program(
     config: &Config,
     environments: &Environments,
-    data: BuildProgramRequest,
+    data: BuildRequest,
     env: &Environment,
     path: &Path,
 ) -> Result<Option<RunResult>, BuildProgramError> {
@@ -335,7 +335,7 @@ struct CompileProgram<'a> {
     nsjail: &'a str,
     time: &'a str,
     compile_script: &'a str,
-    data: &'a BuildProgramRequest,
+    data: &'a BuildRequest,
     path: &'a Path,
     tmpdir: &'a Path,
     limits: Limits,
@@ -395,7 +395,7 @@ struct ExecuteProgram<'a> {
     time: &'a str,
     run_script: &'a str,
     main_file: &'a str,
-    data: &'a RunProgramRequest,
+    data: &'a RunRequest,
     program_path: &'a Path,
     tmpdir: &'a Path,
     limits: Limits,

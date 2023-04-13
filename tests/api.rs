@@ -1,6 +1,15 @@
 use std::collections::HashMap;
 
-use common::*;
+use common::build_and_run;
+use indoc::formatdoc;
+use sandkasten::schemas::{
+    environments::Environment,
+    programs::{
+        BuildRequest, BuildRunRequest, BuildRunResult, File, LimitsOpt, RunRequest, RunResult,
+    },
+};
+
+use crate::common::{url, BuildError};
 
 mod common;
 
@@ -32,39 +41,38 @@ async fn test_environments() {
 #[tokio::test]
 #[ignore]
 async fn test_build_run_python() {
-    let response: BuildRunResponse = reqwest::Client::new()
-        .post(url("/run"))
-        .json(&BuildRunRequest {
-            build: BuildRequest {
-                environment: "python".into(),
-                files: vec![
-                    File {
-                        name: "test.py".into(),
-                        content: "from foo import add, mul\nimport sys\nimport time\nprint(add(6, 7))\nprint(mul(6, 7), file=sys.stderr)\ntime.sleep(0.456)\nexit(42)".into(),
-                    },
-                    File {
-                        name: "foo.py".into(),
-                        content: "def add(a, b):\n  return a + b\ndef mul(a, b):\n  return a * b".into(),
-                    },
-                ],
-                compile_limits: LimitsOpt::default(),
-            },
-            run: RunRequest {
-                stdin: None,
-                args: Vec::new(),
-                files: Vec::new(),
-                run_limits: LimitsOpt::default(),
-            },
-        })
-        .send()
-        .await
-        .unwrap()
-        .error_for_status()
-        .unwrap()
-        .json()
-        .await
-        .unwrap();
-    dbg!(&response);
+    let response = build_and_run(&BuildRunRequest {
+        build: BuildRequest {
+            environment: "python".into(),
+            files: vec![
+                File {
+                    name: "test.py".into(),
+                    content: formatdoc! {"
+                        from foo import add, mul
+                        import sys
+                        import time
+                        print(add(6, 7))
+                        print(mul(6, 7), file=sys.stderr)
+                        time.sleep(0.456)
+                        exit(42)
+                    "},
+                },
+                File {
+                    name: "foo.py".into(),
+                    content: formatdoc! {"
+                        def add(a, b):
+                          return a + b
+                        def mul(a, b):
+                          return a * b
+                    "},
+                },
+            ],
+            compile_limits: Default::default(),
+        },
+        run: Default::default(),
+    })
+    .await
+    .unwrap();
     assert!(response.build.is_none());
     assert_eq!(response.run.status, 42);
     assert_eq!(response.run.stdout, "13\n");
@@ -78,29 +86,19 @@ async fn test_build_run_python() {
 #[tokio::test]
 #[ignore]
 async fn test_build_run_rust_compilation_error() {
-    let response = reqwest::Client::new()
-        .post(url("/run"))
-        .json(&BuildRunRequest {
-            build: BuildRequest {
-                environment: "rust".into(),
-                files: vec![File {
-                    name: "test.rs".into(),
-                    content: "fn main() { fn_not_found(); }".into(),
-                }],
-                compile_limits: LimitsOpt::default(),
-            },
-            run: RunRequest {
-                stdin: None,
-                args: Vec::new(),
-                files: Vec::new(),
-                run_limits: LimitsOpt::default(),
-            },
-        })
-        .send()
-        .await
-        .unwrap();
-    assert_eq!(response.status().as_u16(), 400);
-    let BuildError::CompileError(response) = response.json().await.unwrap();
+    let BuildError::CompileError(response) = build_and_run(&BuildRunRequest {
+        build: BuildRequest {
+            environment: "rust".into(),
+            files: vec![File {
+                name: "test.rs".into(),
+                content: "fn main() { fn_not_found(); }".into(),
+            }],
+            compile_limits: Default::default(),
+        },
+        run: Default::default(),
+    })
+    .await
+    .unwrap_err();
     assert_eq!(response.status, 1);
     assert!(response.stdout.is_empty());
     assert!(!response.stderr.is_empty());
@@ -109,36 +107,36 @@ async fn test_build_run_rust_compilation_error() {
 #[tokio::test]
 #[ignore]
 async fn test_build_run_rust_ok() {
-    let response: BuildRunResponse = reqwest::Client::new()
-        .post(url("/run"))
-        .json(&BuildRunRequest {
-            build: BuildRequest {
-                environment: "rust".into(),
-                files: vec![
+    let response = build_and_run(&BuildRunRequest {
+        build: BuildRequest {
+            environment: "rust".into(),
+            files: vec![
                 File {
                     name: "test.rs".into(),
-                    content: "mod foo; fn main() { let test = (); println!(\"foo bar\"); foo::asdf(); }".into(),
-                }, File {
+                    content: formatdoc! {r#"
+                        mod foo;
+                        fn main() {{
+                            let test = ();
+                            println!("foo bar");
+                            foo::asdf();
+                        }}
+                    "#},
+                },
+                File {
                     name: "foo.rs".into(),
-                    content: "pub fn asdf() { eprintln!(\"test {}\", 7 * 191); }".into()
-                }],
-                compile_limits: LimitsOpt::default(),
-            },
-            run: RunRequest {
-                stdin: None,
-                args: Vec::new(),
-                files: Vec::new(),
-                run_limits: LimitsOpt::default(),
-            },
-        })
-        .send()
-        .await
-        .unwrap()
-        .error_for_status()
-        .unwrap()
-        .json()
-        .await
-        .unwrap();
+                    content: formatdoc! {r#"
+                        pub fn asdf() {{
+                            eprintln!("test {{}}", 7 * 191);
+                        }}
+                    "#},
+                },
+            ],
+            compile_limits: Default::default(),
+        },
+        run: Default::default(),
+    })
+    .await
+    .unwrap();
     let build = response.build.unwrap();
     assert_eq!(build.status, 0);
     assert!(build.stdout.is_empty());
@@ -164,52 +162,27 @@ async fn test_build_cached() {
                 name: "test.rs".into(),
                 content: "fn main() { println!(\"test\"); }".into(),
             }],
-            compile_limits: LimitsOpt::default(),
+            compile_limits: Default::default(),
         },
-        run: RunRequest {
-            stdin: None,
-            args: Vec::new(),
-            files: Vec::new(),
-            run_limits: LimitsOpt::default(),
-        },
+        run: Default::default(),
     };
 
-    let BuildRunResponse {
+    let BuildRunResult {
         program_id,
         build,
         run,
-    }: BuildRunResponse = reqwest::Client::new()
-        .post(url("/run"))
-        .json(&request)
-        .send()
-        .await
-        .unwrap()
-        .error_for_status()
-        .unwrap()
-        .json()
-        .await
-        .unwrap();
+    }: BuildRunResult = build_and_run(&request).await.unwrap();
     let build = build.unwrap();
     assert_eq!(run.status, 0);
     assert_eq!(run.stdout, "test\n");
 
-    let response: BuildRunResponse = reqwest::Client::new()
-        .post(url("/run"))
-        .json(&request)
-        .send()
-        .await
-        .unwrap()
-        .error_for_status()
-        .unwrap()
-        .json()
-        .await
-        .unwrap();
+    let response: BuildRunResult = build_and_run(&request).await.unwrap();
     assert_eq!(response.program_id, program_id);
     assert_eq!(response.build.unwrap(), build);
     assert_eq!(response.run.status, 0);
     assert_eq!(response.run.stdout, "test\n");
 
-    let response: RunResponse = reqwest::Client::new()
+    let response: RunResult = reqwest::Client::new()
         .post(url(format!("/programs/{program_id}/run")))
         .json(&RunRequest::default())
         .send()
@@ -227,27 +200,23 @@ async fn test_build_cached() {
 #[tokio::test]
 #[ignore]
 async fn test_no_internet() {
-    let response: BuildRunResponse = reqwest::Client::new()
-        .post(url("/run"))
-        .json(&BuildRunRequest {
-            build: BuildRequest {
-                environment: "python".into(),
-                files: vec![File {
-                    name: "test.py".into(),
-                    content: "from http.client import *; c=HTTPConnection('1.1.1.1'); c.request('GET', 'http://1.1.1.1')".into(),
-                }],
-                compile_limits: Default::default(),
-            },
-            run: Default::default(),
-        })
-        .send()
-        .await
-        .unwrap()
-        .error_for_status()
-        .unwrap()
-        .json()
-        .await
-        .unwrap();
+    let response = build_and_run(&BuildRunRequest {
+        build: BuildRequest {
+            environment: "python".into(),
+            files: vec![File {
+                name: "test.py".into(),
+                content: formatdoc! {r#"
+                    from http.client import *
+                    c=HTTPConnection("1.1.1.1")
+                    c.request("GET", "http://1.1.1.1")
+                "#},
+            }],
+            compile_limits: Default::default(),
+        },
+        run: Default::default(),
+    })
+    .await
+    .unwrap();
     assert_eq!(response.run.status, 1);
     assert_eq!(
         response.run.stderr.trim().lines().last().unwrap(),
@@ -258,28 +227,23 @@ async fn test_no_internet() {
 #[tokio::test]
 #[ignore]
 async fn test_forkbomb() {
-    let response: BuildRunResponse = reqwest::Client::new()
-        .post(url("/run"))
-        .json(&BuildRunRequest {
-            build: BuildRequest {
-                environment: "python".into(),
-                files: vec![File {
-                    name: "test.py".into(),
-                    content: "import os\nwhile True: os.fork()".into(),
-                }],
-                compile_limits: Default::default(),
-            },
-            run: Default::default(),
-        })
-        .send()
-        .await
-        .unwrap()
-        .error_for_status()
-        .unwrap()
-        .json()
-        .await
-        .unwrap();
-    dbg!(&response);
+    let response = build_and_run(&BuildRunRequest {
+        build: BuildRequest {
+            environment: "python".into(),
+            files: vec![File {
+                name: "test.py".into(),
+                content: formatdoc! {"
+                    import os
+                    while True:
+                        os.fork()
+                "},
+            }],
+            compile_limits: Default::default(),
+        },
+        run: Default::default(),
+    })
+    .await
+    .unwrap();
     assert_eq!(response.run.status, 1);
     assert_eq!(
         response.run.stderr.trim().lines().last().unwrap(),
@@ -291,36 +255,34 @@ async fn test_forkbomb() {
 #[tokio::test]
 #[ignore]
 async fn test_stdoutbomb() {
-    let response: BuildRunResponse = reqwest::Client::new()
-        .post(url("/run"))
-        .json(&BuildRunRequest {
-            build: BuildRequest {
-                environment: "rust".into(),
-                files: vec![File {
-                    name: "test.rs".into(),
-                    content: "fn main() { loop { println!(\"spam\"); eprintln!(\"maps\"); } }"
-                        .into(),
-                }],
-                compile_limits: Default::default(),
-            },
-            run: RunRequest {
-                run_limits: LimitsOpt {
-                    time: Some(1),
-                    stdout_max_size: Some(2048),
-                    stderr_max_size: Some(1024),
-                    ..Default::default()
-                },
+    let response = build_and_run(&BuildRunRequest {
+        build: BuildRequest {
+            environment: "rust".into(),
+            files: vec![File {
+                name: "test.rs".into(),
+                content: formatdoc! {r#"
+                    fn main() {{
+                        loop {{
+                            println!("spam");
+                            eprintln!("maps");
+                        }}
+                    }}
+                "#},
+            }],
+            compile_limits: Default::default(),
+        },
+        run: RunRequest {
+            run_limits: LimitsOpt {
+                time: Some(1),
+                stdout_max_size: Some(2048),
+                stderr_max_size: Some(1024),
                 ..Default::default()
             },
-        })
-        .send()
-        .await
-        .unwrap()
-        .error_for_status()
-        .unwrap()
-        .json()
-        .await
-        .unwrap();
+            ..Default::default()
+        },
+    })
+    .await
+    .unwrap();
     assert_eq!(response.run.status, 137);
     assert_eq!(response.run.stdout.len(), 2048);
     assert_eq!(response.run.stderr.len(), 1024);

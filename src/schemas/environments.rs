@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
 use poem_openapi::{types::Example, NewType, Object};
+use serde::Deserialize;
 
 /// A package that can build and run programs.
-#[derive(Debug, Object)]
+#[derive(Debug, Object, Deserialize)]
 pub struct Environment {
     pub name: String,
     pub version: String,
