@@ -28,10 +28,25 @@ jobs:
         run: cargo generate-lockfile
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
-      - name: unit tests
+      - name: cargo test --locked
         run: PACKAGES_TEST_SRC=/dev/null ENVIRONMENTS_CONFIG_PATH=/dev/null cargo test --locked --all-features --all-targets
       # - name: cargo test --doc
       #   run: cargo test --locked --all-features --doc
+
+  integration:
+    runs-on: ubuntu-latest
+    name: integration (stable)
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: cargo generate-lockfile
+        if: hashFiles('Cargo.lock') == ''
+        run: cargo generate-lockfile
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
       - name: Setup Nix
         uses: cachix/install-nix-action@v20
         with:
