@@ -9,21 +9,34 @@ use poem_openapi::OpenApiService;
 use tokio::fs;
 use tracing::{error, info};
 
-use sandkasten::{api::get_api, config, environments, program::prune_programs};
+use sandkasten::{
+    api::get_api,
+    config::{self, Config},
+    environments,
+    program::prune_programs,
+};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
     info!("Loading config");
-    let config = Arc::new(config::load()?);
-
-    info!("Loading environments");
-    let environments = Arc::new(environments::load()?);
-
+    let config = config::load()?;
     if !fs::try_exists(&config.programs_dir).await? {
         fs::create_dir_all(&config.programs_dir).await?;
     }
+    if !fs::try_exists(&config.jobs_dir).await? {
+        fs::create_dir_all(&config.jobs_dir).await?;
+    }
+
+    let config = Arc::new(Config {
+        programs_dir: config.programs_dir.canonicalize().unwrap(),
+        jobs_dir: config.jobs_dir.canonicalize().unwrap(),
+        ..config
+    });
+
+    info!("Loading environments");
+    let environments = Arc::new(environments::load()?);
 
     tokio::spawn({
         let config = Arc::clone(&config);
