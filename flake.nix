@@ -108,14 +108,29 @@
             jobs_dir = "jobs";
           }));
       };
+      test-script = pkgs.writeShellScript "integration-tests.sh" ''
+        rm -rf programs jobs
+        cargo build --locked
+        cargo run --locked &
+        pid=$!
+        sleep 1
+        cargo test --locked --all-features --all-targets --no-fail-fast -- --ignored
+        out=$?
+        kill -9 $pid
+        exit $out
+      '';
+      scripts = pkgs.stdenv.mkDerivation {
+        name = "scripts";
+        unpackPhase = "true";
+        installPhase = "mkdir -p $out/bin && ln -s ${test-script} $out/bin/integration-tests";
       };
     in {
       default = pkgs.mkShell ({
-          packages = [pkgs.nsjail time];
+          packages = [pkgs.nsjail time scripts];
           RUST_LOG = "info,sandkasten=trace,difft=off";
         }
         // test-env);
-      test = pkgs.mkShell test-env;
+      test = pkgs.mkShell ({packages = [scripts];} // test-env);
     };
   };
 }
