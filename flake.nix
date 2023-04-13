@@ -84,20 +84,27 @@
       };
       default = docker;
     };
-    devShells.${system}.default = pkgs.mkShell {
-      buildInputs = [pkgs.nsjail time];
-      RUST_LOG = "info,sandkasten=trace,difft=off";
-      CONFIG_PATH = ".config.toml";
-      ENVIRONMENTS_CONFIG_PATH = environments true;
-      PACKAGES_TEST_SRC = pkgs.writeText "packages_test_src.rs" (builtins.foldl' (acc: pkg:
-        acc
-        + ''
-          #[tokio::test]
-          #[ignore]
-          async fn test_${pkg}() {
-            test_package("${pkg}").await;
-          }
-        '') "" (builtins.attrNames packages));
+    devShells.${system} = let
+      test-env = {
+        ENVIRONMENTS_CONFIG_PATH = environments true;
+        PACKAGES_TEST_SRC = pkgs.writeText "packages_test_src.rs" (builtins.foldl' (acc: pkg:
+          acc
+          + ''
+            #[tokio::test]
+            #[ignore]
+            async fn test_${pkg}() {
+              test_package("${pkg}").await;
+            }
+          '') "" (builtins.attrNames packages));
+      };
+    in {
+      default = pkgs.mkShell ({
+          packages = [pkgs.nsjail time];
+          RUST_LOG = "info,sandkasten=trace,difft=off";
+          CONFIG_PATH = ".config.toml";
+        }
+        // test-env);
+      test = pkgs.mkShell test-env;
     };
   };
 }
