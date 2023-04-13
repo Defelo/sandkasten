@@ -28,10 +28,21 @@ jobs:
         run: cargo generate-lockfile
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
-      - name: cargo test --locked
+      - name: unit tests
         run: PACKAGES_TEST_SRC=/dev/null ENVIRONMENTS_CONFIG_PATH=/dev/null cargo test --locked --all-features --all-targets
       # - name: cargo test --doc
       #   run: cargo test --locked --all-features --doc
+      - name: Setup Nix
+        uses: cachix/install-nix-action@v20
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v12
+        with:
+          name: sandkasten
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - name: integration tests
+        run: nix develop .#test --command integration-tests
 
   # coverage:
   #   runs-on: ubuntu-latest
