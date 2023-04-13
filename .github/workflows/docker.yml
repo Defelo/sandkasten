@@ -48,7 +48,7 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
       - name: cargo test --locked
-        run: nix develop --command cargo test --locked --all-features --all-targets -- --ignored
+        run: nix develop .#test --command cargo test --locked --all-features --all-targets --no-fail-fast -- --ignored
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
