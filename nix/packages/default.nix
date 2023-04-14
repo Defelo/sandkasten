@@ -1,4 +1,5 @@
 {pkgs, ...}: {
+  bash = import ./bash.nix pkgs;
   c = import ./c.nix pkgs;
   cpp = import ./cpp.nix pkgs;
   java = import ./java.nix pkgs;
