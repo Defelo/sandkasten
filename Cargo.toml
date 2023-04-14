@@ -25,3 +25,6 @@ uuid = { version = "1.3.1", default-features = false, features = ["v4", "fast-rn
 indoc = { version = "2.0.1", default-features = false }
 proptest = "1.1.0"
 reqwest = { version = "0.11.16", default-features = false, features = ["json", "blocking"] }
+
+[features]
+nix = []
