@@ -10,34 +10,31 @@ use crate::common::{build_and_run, url, BuildError};
 
 mod common;
 
-#[tokio::test]
+#[test]
 #[ignore]
-async fn test_oai_spec() {
-    reqwest::get(url("/openapi.json"))
-        .await
+fn test_oai_spec() {
+    reqwest::blocking::get(url("/openapi.json"))
         .unwrap()
         .error_for_status()
         .unwrap();
 }
 
-#[tokio::test]
+#[test]
 #[ignore]
-async fn test_environments() {
-    let environments: HashMap<String, Environment> = reqwest::get(url("/environments"))
-        .await
+fn test_environments() {
+    let environments: HashMap<String, Environment> = reqwest::blocking::get(url("/environments"))
         .unwrap()
         .error_for_status()
         .unwrap()
         .json()
-        .await
         .unwrap();
     assert_eq!(environments.get("python").unwrap().name, "Python");
     assert_eq!(environments.get("rust").unwrap().name, "Rust");
 }
 
-#[tokio::test]
+#[test]
 #[ignore]
-async fn test_build_run_python() {
+fn test_build_run_python() {
     let response = build_and_run(&BuildRunRequest {
         build: BuildRequest {
             environment: "python".into(),
@@ -68,7 +65,6 @@ async fn test_build_run_python() {
         },
         run: Default::default(),
     })
-    .await
     .unwrap();
     assert!(response.build.is_none());
     assert_eq!(response.run.status, 42);
@@ -80,9 +76,9 @@ async fn test_build_run_python() {
     );
 }
 
-#[tokio::test]
+#[test]
 #[ignore]
-async fn test_build_run_rust_compilation_error() {
+fn test_build_run_rust_compilation_error() {
     let BuildError::CompileError(response) = build_and_run(&BuildRunRequest {
         build: BuildRequest {
             environment: "rust".into(),
@@ -94,16 +90,15 @@ async fn test_build_run_rust_compilation_error() {
         },
         run: Default::default(),
     })
-    .await
     .unwrap_err();
     assert_eq!(response.status, 1);
     assert!(response.stdout.is_empty());
     assert!(!response.stderr.is_empty());
 }
 
-#[tokio::test]
+#[test]
 #[ignore]
-async fn test_build_run_rust_ok() {
+fn test_build_run_rust_ok() {
     let response = build_and_run(&BuildRunRequest {
         build: BuildRequest {
             environment: "rust".into(),
@@ -132,7 +127,6 @@ async fn test_build_run_rust_ok() {
         },
         run: Default::default(),
     })
-    .await
     .unwrap();
     let build = response.build.unwrap();
     assert_eq!(build.status, 0);
@@ -149,9 +143,9 @@ async fn test_build_run_rust_ok() {
     );
 }
 
-#[tokio::test]
+#[test]
 #[ignore]
-async fn test_build_cached() {
+fn test_build_cached() {
     let request = BuildRunRequest {
         build: BuildRequest {
             environment: "rust".into(),
@@ -168,27 +162,25 @@ async fn test_build_cached() {
         program_id,
         build,
         run,
-    }: BuildRunResult = build_and_run(&request).await.unwrap();
+    }: BuildRunResult = build_and_run(&request).unwrap();
     let build = build.unwrap();
     assert_eq!(run.status, 0);
     assert_eq!(run.stdout, "test\n");
 
-    let response: BuildRunResult = build_and_run(&request).await.unwrap();
+    let response: BuildRunResult = build_and_run(&request).unwrap();
     assert_eq!(response.program_id, program_id);
     assert_eq!(response.build.unwrap(), build);
     assert_eq!(response.run.status, 0);
     assert_eq!(response.run.stdout, "test\n");
 
-    let response: RunResult = reqwest::Client::new()
+    let response: RunResult = reqwest::blocking::Client::new()
         .post(url(format!("/programs/{program_id}/run")))
         .json(&RunRequest::default())
         .send()
-        .await
         .unwrap()
         .error_for_status()
         .unwrap()
         .json()
-        .await
         .unwrap();
     assert_eq!(response.status, 0);
     assert_eq!(response.stdout, "test\n");

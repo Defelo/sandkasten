@@ -90,10 +90,10 @@
         PACKAGES_TEST_SRC = pkgs.writeText "packages_test_src.rs" (builtins.foldl' (acc: pkg:
           acc
           + ''
-            #[tokio::test]
+            #[test]
             #[ignore]
-            async fn test_${pkg}() {
-              test_package("${pkg}").await;
+            fn test_${pkg}() {
+              test_package("${pkg}");
             }
           '') "" (builtins.attrNames packages));
         CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON (let
