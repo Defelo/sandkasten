@@ -7,7 +7,7 @@ use crate::common::build_and_run;
 
 mod common;
 
-async fn test_package(id: &str) {
+fn test_package(id: &str) {
     let EnvironmentsConfig { mut environments }: EnvironmentsConfig = config::Config::builder()
         .add_source(config::File::with_name(env!("ENVIRONMENTS_CONFIG_PATH")))
         .build()
@@ -24,9 +24,7 @@ async fn test_package(id: &str) {
             compile_limits: Default::default(),
         },
         run: Default::default(),
-    })
-    .await
-    {
+    }) {
         Ok(response) => {
             if environment.compile_script.is_some() {
                 let build = response.build.unwrap();

@@ -1,18 +1,18 @@
 use sandkasten::schemas::programs::{BuildRunRequest, BuildRunResult, RunResult};
 use serde::Deserialize;
 
-pub async fn build_and_run(request: &BuildRunRequest) -> Result<BuildRunResult, BuildError> {
-    let response = reqwest::Client::new()
+#[allow(clippy::result_large_err)]
+pub fn build_and_run(request: &BuildRunRequest) -> Result<BuildRunResult, BuildError> {
+    let response = reqwest::blocking::Client::new()
         .post(url("/run"))
         .json(request)
         .send()
-        .await
         .unwrap();
     let status = response.status();
     dbg!(if status == 200 {
-        Ok(response.json().await.unwrap())
+        Ok(response.json().unwrap())
     } else {
-        Err(response.json().await.unwrap())
+        Err(response.json().unwrap())
     })
 }
 

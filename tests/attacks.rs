@@ -5,9 +5,9 @@ use crate::common::build_and_run;
 
 mod common;
 
-#[tokio::test]
+#[test]
 #[ignore]
-async fn test_no_internet() {
+fn test_no_internet() {
     let response = build_and_run(&BuildRunRequest {
         build: BuildRequest {
             environment: "python".into(),
@@ -23,7 +23,6 @@ async fn test_no_internet() {
         },
         run: Default::default(),
     })
-    .await
     .unwrap();
     assert_eq!(response.run.status, 1);
     assert_eq!(
@@ -32,9 +31,9 @@ async fn test_no_internet() {
     );
 }
 
-#[tokio::test]
+#[test]
 #[ignore]
-async fn test_forkbomb() {
+fn test_forkbomb() {
     let response = build_and_run(&BuildRunRequest {
         build: BuildRequest {
             environment: "python".into(),
@@ -50,7 +49,6 @@ async fn test_forkbomb() {
         },
         run: Default::default(),
     })
-    .await
     .unwrap();
     assert_eq!(response.run.status, 1);
     assert_eq!(
@@ -60,9 +58,9 @@ async fn test_forkbomb() {
     assert!(response.run.resource_usage.time < 1000);
 }
 
-#[tokio::test]
+#[test]
 #[ignore]
-async fn test_stdoutbomb() {
+fn test_stdoutbomb() {
     let response = build_and_run(&BuildRunRequest {
         build: BuildRequest {
             environment: "rust".into(),
@@ -89,7 +87,6 @@ async fn test_stdoutbomb() {
             ..Default::default()
         },
     })
-    .await
     .unwrap();
     assert_eq!(response.run.status, 137);
     assert_eq!(response.run.stdout.len(), 2048);
