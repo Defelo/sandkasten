@@ -1,8 +1,10 @@
 use std::{collections::HashSet, sync::Arc};
 
 use key_lock::KeyLock;
+use once_cell::unsync::Lazy;
 use poem_ext::response;
 use poem_openapi::{param::Path, payload::Json, OpenApi};
+use regex::Regex;
 use tokio::sync::Semaphore;
 use uuid::Uuid;
 
@@ -34,7 +36,7 @@ impl ProgramsApi {
     #[oai(path = "/run", method = "post")]
     async fn run(&self, data: Json<BuildRunRequest>) -> BuildRun::Response {
         if !check_files(&data.0.build.files) || !check_files(&data.0.run.files) {
-            return BuildRun::duplicate_file_names();
+            return BuildRun::invalid_file_names();
         }
         let _guard = self.job_semaphore.acquire().await?;
         let BuildResult {
@@ -76,7 +78,7 @@ impl ProgramsApi {
     #[oai(path = "/programs", method = "post")]
     async fn build_program(&self, data: Json<BuildRequest>) -> Build::Response {
         if !check_files(&data.0.files) {
-            return Build::duplicate_file_names();
+            return Build::invalid_file_names();
         }
         let _guard = self.job_semaphore.acquire().await?;
         match build_program(&self.config, &self.environments, data.0, &self.compile_lock).await {
@@ -92,7 +94,7 @@ impl ProgramsApi {
     #[oai(path = "/programs/:program_id/run", method = "post")]
     async fn run_program(&self, program_id: Path<Uuid>, data: Json<RunRequest>) -> Run::Response {
         if !check_files(&data.0.files) {
-            return Run::duplicate_file_names();
+            return Run::invalid_file_names();
         }
         let _guard = self.job_semaphore.acquire().await?;
         match run_program(&self.config, &self.environments, program_id.0, data.0).await {
@@ -122,7 +124,7 @@ response!(BuildRun = {
     /// Code could not be compiled.
     CompileError(400, error) => RunResult,
     /// File names are not unique.
-    DuplicateFileNames(400, error),
+    InvalidFileNames(400, error),
     /// The specified compile limits are too high.
     CompileLimitsExceeded(400, error) => Vec<LimitExceeded>,
     /// The specified run limits are too high.
@@ -137,7 +139,7 @@ response!(Build = {
     /// Code could not be compiled.
     CompileError(400, error) => RunResult,
     /// File names are not unique.
-    DuplicateFileNames(400, error),
+    InvalidFileNames(400, error),
     /// The specified compile limits are too high.
     CompileLimitsExceeded(400, error) => Vec<LimitExceeded>,
 });
@@ -146,7 +148,7 @@ response!(Run = {
     /// Code has been executed successfully.
     Ok(200) => RunResult,
     /// File names are not unique.
-    DuplicateFileNames(400, error),
+    InvalidFileNames(400, error),
     /// Program does not exist.
     NotFound(404, error),
     /// The specified run limits are too high.
@@ -161,5 +163,7 @@ response!(DeleteProgram = {
 });
 
 fn check_files(files: &[File]) -> bool {
-    files.iter().map(|f| &f.name).collect::<HashSet<_>>().len() == files.len()
+    let invalid_names = Lazy::new(|| Regex::new(r"^\.*$").unwrap());
+    files.iter().all(|f| !invalid_names.is_match(&f.name))
+        && files.iter().map(|f| &f.name).collect::<HashSet<_>>().len() == files.len()
 }

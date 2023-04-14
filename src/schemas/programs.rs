@@ -15,7 +15,7 @@ pub struct BuildRequest {
     /// The environment to use for building and running the program.
     pub environment: String,
     /// A list of source files. The first file is usually used as entrypoint to the program.
-    #[oai(validator(min_items = 1))]
+    #[oai(validator(min_items = 1, max_items = 10))]
     pub files: Vec<File>,
     /// Limits to set on the compilation process.
     #[oai(default)]
@@ -25,12 +25,13 @@ pub struct BuildRequest {
 #[derive(Debug, Object, Serialize, Default)]
 pub struct RunRequest {
     /// The stdin input the process reads.
+    #[oai(validator(max_length = 65536))]
     pub stdin: Option<String>,
     /// A list of command line arguments that are passed to the process.
-    #[oai(default)]
+    #[oai(default, validator(max_items = 100, pattern = "^[^\0]{0,4096}$"))]
     pub args: Vec<String>,
     /// A list of additional files that are put in the working directory of the process.
-    #[oai(default)]
+    #[oai(default, validator(max_items = 10))]
     pub files: Vec<File>,
     /// Limits to set on the process.
     #[oai(default)]
@@ -41,6 +42,7 @@ pub struct RunRequest {
 pub struct File {
     #[oai(validator(pattern = r"^[a-zA-Z0-9._-]{1,32}$"))]
     pub name: String,
+    #[oai(validator(max_length = 65536))]
     pub content: String,
 }
 

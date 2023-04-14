@@ -85,7 +85,9 @@
       default = docker;
     };
     devShells.${system} = let
-      test-env = {
+      test-env = let
+        config = builtins.fromTOML (builtins.readFile ./config.toml);
+      in {
         ENVIRONMENTS_CONFIG_PATH = environments true;
         PACKAGES_TEST_SRC = pkgs.writeText "packages_test_src.rs" (builtins.foldl' (acc: pkg:
           acc
@@ -96,10 +98,27 @@
               test_package("${pkg}");
             }
           '') "" (builtins.attrNames packages));
-        CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON (let
-          config = builtins.fromTOML (builtins.readFile ./config.toml);
-        in
-          config
+        LIMITS_TEST_SRC = pkgs.writeText "limits_test_src.rs" ''
+          prop_compose! {
+              fn compile_limits() (
+                  ${builtins.foldl' (acc: x: acc + "${x} in option::of(0u64..=${toString config.compile_limits.${x}}), ") "" (builtins.attrNames config.compile_limits)}
+              ) -> LimitsOpt {
+                  LimitsOpt {
+                    ${builtins.foldl' (acc: x: acc + "${x}, ") "" (builtins.attrNames config.compile_limits)}
+                  }
+              }
+          }
+          prop_compose! {
+              fn run_limits() (
+                  ${builtins.foldl' (acc: x: acc + "${x} in option::of(0u64..=${toString config.run_limits.${x}}), ") "" (builtins.attrNames config.run_limits)}
+              ) -> LimitsOpt {
+                  LimitsOpt {
+                    ${builtins.foldl' (acc: x: acc + "${x}, ") "" (builtins.attrNames config.run_limits)}
+                  }
+              }
+          }
+        '';
+        CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON (config
           // {
             host = "127.0.0.1";
             port = 8000;
@@ -110,8 +129,8 @@
       };
       test-script = pkgs.writeShellScript "integration-tests.sh" ''
         rm -rf programs jobs
-        cargo build --locked
-        cargo run --locked &
+        cargo build -r --locked
+        cargo run -r --locked &
         pid=$!
         sleep 1
         cargo test --locked --all-features --all-targets --no-fail-fast -- --ignored
