@@ -92,3 +92,119 @@ fn test_stdoutbomb() {
     assert_eq!(response.run.stdout.len(), 2048);
     assert_eq!(response.run.stderr.len(), 1024);
 }
+
+#[test]
+#[ignore]
+fn test_flood_memory() {
+    let response = build_and_run(&BuildRunRequest {
+        build: BuildRequest {
+            environment: "python".into(),
+            files: vec![File {
+                name: "test.py".into(),
+                content: formatdoc! {r#"
+                    x = [1]
+                    while True:
+                        x += x
+                "#},
+            }],
+            compile_limits: Default::default(),
+        },
+        run: RunRequest {
+            run_limits: LimitsOpt {
+                memory: Some(1024),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    })
+    .unwrap();
+    assert_eq!(response.run.status, 1);
+    assert_eq!(
+        response.run.stderr.trim().lines().last().unwrap(),
+        "MemoryError"
+    );
+}
+
+#[test]
+#[ignore]
+fn test_combination() {
+    let response = build_and_run(&BuildRunRequest {
+        build: BuildRequest {
+            environment: "python".into(),
+            files: vec![File {
+                name: "test.py".into(),
+                content: formatdoc! {r#"
+                    import os
+                    for _ in range(10):
+                        os.fork()
+                    x = [1]
+                    while True:
+                        x += x
+                "#},
+            }],
+            compile_limits: Default::default(),
+        },
+        run: RunRequest {
+            run_limits: LimitsOpt {
+                memory: Some(1024),
+                processes: Some(16),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    })
+    .unwrap();
+    assert_eq!(response.run.status, 1);
+    assert_eq!(
+        response.run.stderr.trim().lines().last().unwrap(),
+        "MemoryError"
+    );
+}
+
+#[test]
+#[ignore]
+fn test_large_file() {
+    let response = build_and_run(&BuildRunRequest {
+        build: BuildRequest {
+            environment: "bash".into(),
+            files: vec![File {
+                name: "test.sh".into(),
+                content: formatdoc! {r#"
+                    dd if=/dev/urandom of=/tmp/test
+                "#},
+            }],
+            compile_limits: Default::default(),
+        },
+        run: Default::default(),
+    })
+    .unwrap();
+    assert_eq!(response.run.status, 153);
+    assert!(response.run.stderr.contains("File size limit exceeded"));
+}
+
+#[test]
+#[ignore]
+fn test_many_files() {
+    let response = build_and_run(&BuildRunRequest {
+        build: BuildRequest {
+            environment: "bash".into(),
+            files: vec![File {
+                name: "test.sh".into(),
+                content: formatdoc! {r#"
+                    cd /tmp
+                    i=0
+                    while true; do
+                        dd if=/dev/urandom of=f$i bs=1M count=16 status=none
+                        i=$((i+1))
+                    done
+                "#},
+            }],
+            compile_limits: Default::default(),
+        },
+        run: Default::default(),
+    })
+    .unwrap();
+    dbg!(&response);
+    assert_eq!(response.run.status, 137);
+    assert!(response.run.stderr.contains("No space left on device"));
+}

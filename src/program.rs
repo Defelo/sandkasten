@@ -375,7 +375,7 @@ async fn execute_program(
             },
             Mount {
                 dest: "/box",
-                typ: MountType::ReadWrite {
+                typ: MountType::ReadOnly {
                     src: &tmpdir.join("box").display().to_string(),
                 },
             },
