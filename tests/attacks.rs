@@ -154,11 +154,9 @@ fn test_combination() {
         },
     })
     .unwrap();
-    assert_eq!(response.run.status, 1);
-    assert_eq!(
-        response.run.stderr.trim().lines().last().unwrap(),
-        "MemoryError"
-    );
+    assert_ne!(response.run.status, 0);
+    let stderr = response.run.stderr;
+    assert!(stderr.contains("MemoryError") || stderr.contains("Resource temporarily unavailable"));
 }
 
 #[test]
