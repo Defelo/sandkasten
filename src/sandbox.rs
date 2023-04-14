@@ -100,6 +100,7 @@ impl RunConfig<'_> {
                 }
             };
         }
+        cmd.arg("-R").arg("/dev/null");
 
         let mut child = cmd
             .arg("--")
