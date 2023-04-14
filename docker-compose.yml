@@ -2,7 +2,7 @@ version: '3.10'
 
 services:
   sandkasten:
-    image: ghcr.io/defelo/sandkasten
+    image: ghcr.io/defelo/sandkasten:develop
     restart: always
     init: true
     privileged: true
