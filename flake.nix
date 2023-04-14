@@ -38,17 +38,40 @@
           inherit name version;
           unpackPhase = "true";
           installPhase = let
-            sandbox = file:
+            config = builtins.fromTOML (builtins.readFile ./config.toml);
+            sandbox = build: file: let
+              limits =
+                if build
+                then config.compile_limits
+                else config.run_limits;
+            in
               pkgs.writeShellScript "run-in-sandbox.sh"
-              ''${pkgs.nsjail}/bin/nsjail -q --cwd /box -B $PWD/box:/box -B $PWD/program:/out -E MAIN -R /nix/store -R $PWD/program:/program -T /tmp -s /proc/self/fd:/dev/fd --rlimit_as hard -- ${file} "$@"'';
+              ''
+                ${pkgs.nsjail}/bin/nsjail -q \
+                  --cwd /box \
+                  -B $PWD/box:/box \
+                  -B $PWD/program:/out \
+                  -E MAIN \
+                  -R /nix/store \
+                  -R $PWD/program:/program \
+                  -m none:/tmp:tmpfs:size=${toString limits.tmpfs}M \
+                  -s /proc/self/fd:/dev/fd \
+                  --max_cpus ${toString limits.cpus} \
+                  --time_limit ${toString limits.time} \
+                  --rlimit_as ${toString limits.memory} \
+                  --rlimit_fsize ${toString limits.filesize} \
+                  --rlimit_nofile ${toString limits.file_descriptors} \
+                  --rlimit_nproc ${toString limits.processes} \
+                  -- ${file} "$@"
+              '';
           in ''
             mkdir -p $out/bin
             ${
               if compile_script != null
-              then "ln -s ${sandbox compile_script} $out/bin/${k}-compile.sh"
+              then "ln -s ${sandbox true compile_script} $out/bin/${k}-compile.sh"
               else ""
             }
-            ln -s ${sandbox run_script} $out/bin/${k}-run.sh
+            ln -s ${sandbox false run_script} $out/bin/${k}-run.sh
           '';
         })
       (envs false);

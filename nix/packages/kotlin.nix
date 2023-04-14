@@ -1,0 +1,20 @@
+{
+  kotlin,
+  coreutils,
+  ...
+}: {
+  name = "Kotlin";
+  version = kotlin.version;
+  compile_script = ''PATH=${coreutils}/bin ${kotlin}/bin/kotlinc -d /out/program.jar "$@"'';
+  run_script = ''PATH=${coreutils}/bin ${kotlin}/bin/kotlin /program/program.jar "$@"'';
+  test.files = [
+    {
+      name = "test.kt";
+      content = ''
+        fun main() {
+            println("OK")
+        }
+      '';
+    }
+  ];
+}

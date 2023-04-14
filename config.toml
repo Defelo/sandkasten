@@ -12,7 +12,7 @@ max_concurrent_jobs = 64
 
 [compile_limits]
 cpus = 1
-time = 20  # seconds
+time = 30  # seconds
 memory = 4096  # mb
 tmpfs = 256  # mb
 filesize = 16  # mb
@@ -28,6 +28,6 @@ memory = 2048  # mb
 tmpfs = 256  # mb
 filesize = 16  # mb
 file_descriptors = 256
-processes = 16
+processes = 64
 stdout_max_size = 65536
 stderr_max_size = 65536

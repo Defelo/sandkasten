@@ -5,6 +5,7 @@
   haskell = import ./haskell.nix pkgs;
   java = import ./java.nix pkgs;
   javascript = import ./javascript.nix pkgs;
+  kotlin = import ./kotlin.nix pkgs;
   lua = import ./lua.nix pkgs;
   perl = import ./perl.nix pkgs;
   php = import ./php.nix pkgs;
