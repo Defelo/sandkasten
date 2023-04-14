@@ -35,7 +35,8 @@
         run_script,
       }:
         pkgs.stdenv.mkDerivation {
-          inherit name version;
+          inherit version;
+          name = k;
           unpackPhase = "true";
           installPhase = let
             config = builtins.fromTOML (builtins.readFile ./config.toml);
@@ -55,6 +56,9 @@
                   -R /nix/store \
                   -R $PWD/program:/program \
                   -m none:/tmp:tmpfs:size=${toString limits.tmpfs}M \
+                  -R /dev/null \
+                  -R /dev/urandom \
+                  -s /dev/null:/etc/passwd \
                   -s /proc/self/fd:/dev/fd \
                   --max_cpus ${toString limits.cpus} \
                   --time_limit ${toString limits.time} \

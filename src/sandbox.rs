@@ -101,7 +101,9 @@ impl RunConfig<'_> {
             };
         }
         cmd.arg("-R").arg("/dev/null");
+        cmd.arg("-R").arg("/dev/urandom");
         cmd.arg("-s").arg("/proc/self/fd:/dev/fd");
+        cmd.arg("-s").arg("/dev/null:/etc/passwd");
 
         let mut child = cmd
             .arg("--")
