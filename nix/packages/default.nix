@@ -12,5 +12,6 @@
   python = import ./python.nix pkgs;
   ruby = import ./ruby.nix pkgs;
   rust = import ./rust.nix pkgs;
+  swift = import ./swift.nix pkgs;
   typescript = import ./typescript.nix pkgs;
 }
