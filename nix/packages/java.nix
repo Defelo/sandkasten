@@ -9,19 +9,19 @@
   version = jdk.version;
   compile_script = ''
     set -e
-    ${jdk}/bin/javac -d /out "$1"
-    for file in /out/*.class; do
+    ${jdk}/bin/javac -d /program "$1"
+    for file in /program/*.class; do
       cls=$(${coreutils}/bin/basename "$file" .class)
       if ${jdk}/bin/javap -public "$file" | ${gnugrep}/bin/grep -q '^  public static void main(java.lang.String\[\]);$'; then
-        echo "$cls" > /out/.main
+        echo "$cls" > /program/.main
         break
       fi
     done
-    if ! [[ -f /out/.main ]]; then
+    if ! [[ -f /program/.main ]]; then
       echo "Could not find main class"
       exit 1
     fi
-    ${jdk}/bin/javac -d /out "$@"
+    ${jdk}/bin/javac -d /program "$@"
   '';
   run_script = ''
     mem=$(${gnugrep}/bin/grep 'address space' /proc/self/limits | ${gawk}/bin/awk '{print $5}')

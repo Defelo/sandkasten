@@ -309,15 +309,15 @@ async fn compile_program(
                 typ: MountType::ReadOnly { src: "/nix/store" },
             },
             Mount {
-                dest: "/box",
-                typ: MountType::ReadOnly {
-                    src: &tmpdir.join("box").display().to_string(),
+                dest: "/program",
+                typ: MountType::ReadWrite {
+                    src: &path.join("files").display().to_string(),
                 },
             },
             Mount {
-                dest: "/out",
-                typ: MountType::ReadWrite {
-                    src: &path.join("files").display().to_string(),
+                dest: "/box",
+                typ: MountType::ReadOnly {
+                    src: &tmpdir.join("box").display().to_string(),
                 },
             },
             Mount {

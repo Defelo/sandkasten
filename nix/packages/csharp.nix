@@ -1,7 +1,6 @@
 {
   dotnet-sdk,
   coreutils,
-  findutils,
   ...
 }: {
   name = "C#";
@@ -14,7 +13,7 @@
     ${dotnet-sdk}/bin/dotnet new console -o . --no-restore
     ${coreutils}/bin/rm Program.cs
     ${dotnet-sdk}/bin/dotnet restore
-    ${dotnet-sdk}/bin/dotnet build --no-restore -o /out
+    ${dotnet-sdk}/bin/dotnet build --no-restore -o /program
   '';
   run_script = ''
     export HOME=/tmp/.dotnet

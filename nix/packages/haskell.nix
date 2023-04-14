@@ -9,7 +9,7 @@
   compile_script = ''
     ${coreutils}/bin/cp $(${coreutils}/bin/ls -A) /tmp
     cd /tmp
-    PATH=${gcc}/bin ${ghc}/bin/ghc -O -o /out/binary "$1"
+    PATH=${gcc}/bin ${ghc}/bin/ghc -O -o /program/binary "$1"
   '';
   run_script = ''/program/binary "$@"'';
   test.files = [

@@ -50,11 +50,14 @@
               ''
                 ${pkgs.nsjail}/bin/nsjail -q \
                   --cwd /box \
-                  -B $PWD/box:/box \
-                  -B $PWD/program:/out \
+                  -R $PWD/box:/box \
+                  -${
+                  if build
+                  then "B"
+                  else "R"
+                } $PWD/program:/program \
                   -E MAIN \
                   -R /nix/store \
-                  -R $PWD/program:/program \
                   -m none:/tmp:tmpfs:size=${toString limits.tmpfs}M \
                   -R /dev/null \
                   -R /dev/urandom \
