@@ -1,3 +1,5 @@
+#![cfg(feature = "nix")]
+
 use std::collections::HashSet;
 
 use indoc::formatdoc;

@@ -1,3 +1,5 @@
+#![cfg(feature = "nix")]
+
 use std::collections::HashMap;
 
 use sandkasten::schemas::programs::{BuildRequest, BuildRunRequest, File};
