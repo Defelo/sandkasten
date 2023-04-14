@@ -40,7 +40,7 @@
           installPhase = let
             sandbox = file:
               pkgs.writeShellScript "run-in-sandbox.sh"
-              ''${pkgs.nsjail}/bin/nsjail -q --cwd /box -B $PWD/box:/box -B $PWD/program:/out -E MAIN -R /nix/store -R $PWD/program:/program -T /tmp --rlimit_as hard -- ${file} "$@"'';
+              ''${pkgs.nsjail}/bin/nsjail -q --cwd /box -B $PWD/box:/box -B $PWD/program:/out -E MAIN -R /nix/store -R $PWD/program:/program -T /tmp -s /proc/self/fd:/dev/fd --rlimit_as hard -- ${file} "$@"'';
           in ''
             mkdir -p $out/bin
             ${
