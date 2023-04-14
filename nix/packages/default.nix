@@ -2,6 +2,7 @@
   bash = import ./bash.nix pkgs;
   c = import ./c.nix pkgs;
   cpp = import ./cpp.nix pkgs;
+  haskell = import ./haskell.nix pkgs;
   java = import ./java.nix pkgs;
   javascript = import ./javascript.nix pkgs;
   lua = import ./lua.nix pkgs;

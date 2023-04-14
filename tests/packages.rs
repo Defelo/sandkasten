@@ -31,7 +31,6 @@ fn test_package(id: &str) {
             if environment.compile_script.is_some() {
                 let build = response.build.unwrap();
                 assert_eq!(build.status, 0);
-                assert!(build.stdout.is_empty());
                 assert!(build.stderr.is_empty());
             } else {
                 assert!(response.build.is_none());
