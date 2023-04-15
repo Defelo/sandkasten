@@ -234,6 +234,9 @@
               test_package("${pkg}");
             }
           '') "" (builtins.attrNames packages));
+        ENVIRONMENTS_LIST_SRC = pkgs.writeText "environments_list_src.rs" ''
+          const ENVIRONMENTS: &[&str] = &[${builtins.foldl' (acc: x: acc + ''"${x}", '') "" (builtins.attrNames packages)}];
+        '';
         LIMITS_TEST_SRC = pkgs.writeText "limits_test_src.rs" ''
           prop_compose! {
               fn compile_limits() (

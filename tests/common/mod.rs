@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use sandkasten::schemas::programs::{BuildRunRequest, BuildRunResult, RunResult};
 use serde::Deserialize;
 
@@ -6,6 +8,7 @@ pub fn build_and_run(request: &BuildRunRequest) -> Result<BuildRunResult, BuildE
     let response = reqwest::blocking::Client::new()
         .post(url("/run"))
         .json(request)
+        .timeout(Duration::from_secs(60))
         .send()
         .unwrap();
     let status = response.status();
@@ -23,5 +26,8 @@ pub enum BuildError {
 }
 
 pub fn url(path: impl std::fmt::Display) -> String {
-    format!("http://127.0.0.1:8000{path}")
+    format!(
+        "http://{}{path}",
+        option_env!("TARGET_HOST").unwrap_or("127.0.0.1:8000")
+    )
 }

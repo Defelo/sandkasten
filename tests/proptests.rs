@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use indoc::formatdoc;
 use once_cell::unsync::Lazy;
-use proptest::{collection, option, prelude::*};
+use proptest::{collection, option, prelude::*, string::string_regex};
 use regex::Regex;
 use sandkasten::schemas::programs::{BuildRequest, BuildRunRequest, File, LimitsOpt, RunRequest};
 
@@ -15,7 +15,7 @@ mod common;
 proptest! {
     #[test]
     #[ignore]
-    fn test_files(build_files in files(1), run_files in files(0)) {
+    fn test_files(build_files in files(1, 10, 256), run_files in files(0, 10, 256)) {
         build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
@@ -75,7 +75,7 @@ proptest! {
 proptest! {
     #[test]
     #[ignore]
-    fn test_run_args(stdin in option::of("(?s).{0,2048}"), args in args(), files in files(0)) {
+    fn test_run_args(stdin in stdin(256), args in args(100, 256), files in files(0, 10, 256)) {
         let expected = format!("{}\n{}\n{}", args.len() + 1, files.len(), stdin.as_ref().map(|s| s.chars().count()).unwrap_or(0));
         let result = build_and_run(&BuildRunRequest {
             build: BuildRequest {
@@ -99,6 +99,34 @@ proptest! {
     }
 }
 
+proptest! {
+    #[test]
+    #[ignore]
+    fn random_bullshit_go(
+        environment in valid_environment(),
+        build_files in files(1, 4, 16),
+        compile_limits in compile_limits(),
+        stdin in stdin(32),
+        args in args(8, 16),
+        run_files in files(0, 4, 16),
+        run_limits in run_limits()
+    ) {
+        build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: environment.to_owned(),
+                files: build_files,
+                compile_limits
+            },
+            run: RunRequest {
+                stdin,
+                args,
+                files: run_files,
+                run_limits
+            }
+        }).ok();
+    }
+}
+
 prop_compose! {
     fn filename() (name in "[a-zA-Z0-9._-]{1,32}".prop_filter("Invalid filename", |x| {
         let invalid_names = Lazy::new(|| Regex::new(r"^\.*$").unwrap());
@@ -109,13 +137,13 @@ prop_compose! {
 }
 
 prop_compose! {
-    fn src_file() (name in filename(), content in "(?s).{0,2048}") -> File {
+    fn src_file(max_len: usize) (name in filename(), content in string_regex(&format!("(?s).{{0,{max_len}}}")).unwrap()) -> File {
         File {name, content}
     }
 }
 
 prop_compose! {
-    fn files(min: usize) (cnt in min..10) (files in collection::vec(src_file(), cnt)
+    fn files(min_cnt: usize, max_cnt: usize, max_len: usize) (cnt in min_cnt..=max_cnt) (files in collection::vec(src_file(max_len), cnt)
         .prop_filter("Filenames must be unique",
             |files| files
                 .iter()
@@ -126,9 +154,22 @@ prop_compose! {
 }
 
 prop_compose! {
-    fn args() (cnt in 0usize..100) (args in collection::vec("[^\0]{0,256}", cnt)) -> Vec<String> {
+    fn args(max_cnt: usize, max_len: usize) (cnt in 0..=max_cnt) (args in collection::vec(string_regex(&format!("[^\0]{{0,{max_len}}}")).unwrap(), cnt)) -> Vec<String> {
         args
     }
 }
 
+prop_compose! {
+    fn stdin(max_len: usize) (stdin in option::of(string_regex(&format!("(?s).{{0,{max_len}}}")).unwrap())) -> Option<String> {
+        stdin
+    }
+}
+
+prop_compose! {
+    fn valid_environment() (idx in 0usize..ENVIRONMENTS.len()) -> &'static str {
+        ENVIRONMENTS[idx]
+    }
+}
+
 include!(env!("LIMITS_TEST_SRC"));
+include!(env!("ENVIRONMENTS_LIST_SRC"));

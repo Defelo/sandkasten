@@ -128,16 +128,18 @@ impl RunConfig<'_> {
 
         child.wait().await?;
 
-        let mut stdout = String::new();
-        let mut stderr = String::new();
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
         stdout_reader
             .take(self.limits.stdout_max_size)
-            .read_to_string(&mut stdout)
+            .read_to_end(&mut stdout)
             .await?;
         stderr_reader
             .take(self.limits.stderr_max_size)
-            .read_to_string(&mut stderr)
+            .read_to_end(&mut stderr)
             .await?;
+        let stdout = String::from_utf8_lossy(&stdout).into_owned();
+        let stderr = String::from_utf8_lossy(&stderr).into_owned();
 
         let time_file = fs::read_to_string(time_path).await?;
         let mut tf = time_file.split_whitespace();
