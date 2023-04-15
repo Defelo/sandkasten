@@ -46,23 +46,26 @@
                 then config.compile_limits
                 else config.run_limits;
             in
-              pkgs.writeShellScript "run-in-sandbox.sh"
+              pkgs.writeShellScript "sandbox.sh"
               ''
                 ${pkgs.nsjail}/bin/nsjail -q \
+                  --user 65534 \
+                  --group 65534 \
+                  --hostname box \
                   --cwd /box \
-                  -R $PWD/box:/box \
-                  -${
-                  if build
-                  then "B"
-                  else "R"
-                } $PWD/program:/program \
-                  -E MAIN \
                   -R /nix/store \
+                  -R $PWD/box:/box \
+                ${
+                  if build
+                  then "-B $PWD/program:/program"
+                  else "-R $PWD/program:/program"
+                } \
                   -m none:/tmp:tmpfs:size=${toString limits.tmpfs}M \
                   -R /dev/null \
                   -R /dev/urandom \
-                  -s /dev/null:/etc/passwd \
                   -s /proc/self/fd:/dev/fd \
+                  -s /dev/null:/etc/passwd \
+                  -E MAIN \
                   --max_cpus ${toString limits.cpus} \
                   --time_limit ${toString limits.time} \
                   --rlimit_as ${toString limits.memory} \
