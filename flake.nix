@@ -85,37 +85,51 @@
           '';
         })
       (envs false);
-      rust = pkgs.rustPlatform.buildRustPackage {
-        name = "sandkasten";
-        src = pkgs.stdenv.mkDerivation {
-          name = "sandkasten-src";
-          src = ./src;
-          installPhase = let
-            files = {
-              "Cargo.toml" = ./Cargo.toml;
-              "Cargo.lock" = ./Cargo.lock;
-              src = ./src;
-            };
-          in
-            builtins.foldl' (acc: k: acc + " && ln -s ${files.${k}} $out/${k}") "mkdir -p $out" (builtins.attrNames files);
+      rust = let
+        cargotoml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+      in
+        pkgs.rustPlatform.buildRustPackage {
+          pname = cargotoml.package.name;
+          version = cargotoml.package.version;
+          src = pkgs.stdenv.mkDerivation {
+            name = "src";
+            src = ./src;
+            installPhase = let
+              files = {
+                "Cargo.toml" = ./Cargo.toml;
+                "Cargo.lock" = ./Cargo.lock;
+                src = ./src;
+              };
+            in
+              builtins.foldl' (acc: k: acc + " && ln -s ${files.${k}} $out/${k}") "mkdir -p $out" (builtins.attrNames files);
+          };
+          cargoLock.lockFile = ./Cargo.lock;
         };
-        cargoLock.lockFile = ./Cargo.lock;
-      };
       docker = pkgs.dockerTools.buildLayeredImage {
-        name = "ghcr.io/defelo/sandkasten";
-        tag = "latest";
+        name = rust.pname;
+        tag = rust.version;
         contents = with pkgs; [
           nsjail
           coreutils-full
-          bash
+          bashInteractive
+          rust
         ];
         config = {
           User = "65534:65534";
-          Entrypoint = ["${rust}/bin/sandkasten"];
+          Entrypoint = ["${rust}/bin/${rust.pname}"];
           Env = ["ENVIRONMENTS_CONFIG_PATH=${environments false}"];
         };
       };
-      default = docker;
+      default = pkgs.stdenv.mkDerivation {
+        inherit (rust) pname version;
+        unpackPhase = "true";
+        installPhase = let
+          script = pkgs.writeShellScript "${rust.pname}.sh" ''
+            [[ -n "$ENVIRONMENTS_CONFIG_PATH" ]] || export ENVIRONMENTS_CONFIG_PATH=${environments false}
+            ${rust}/bin/${rust.pname}
+          '';
+        in "mkdir -p $out/bin && ln -s ${script} $out/bin/${rust.pname}";
+      };
     };
     devShells.${system} = let
       test-env = let
