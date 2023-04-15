@@ -208,6 +208,8 @@
               ];
               User = "sandkasten";
               Group = "sandkasten";
+              Restart = "always";
+              RestartSec = 0;
             };
             environment = {
               CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON cfg);
