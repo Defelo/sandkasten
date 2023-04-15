@@ -3,7 +3,11 @@
     nixpkgs.url = "github:NixOS/nixpkgs/release-22.11";
   };
 
-  outputs = {nixpkgs, ...}: let
+  outputs = {
+    self,
+    nixpkgs,
+    ...
+  }: let
     system = "x86_64-linux";
     pkgs = import nixpkgs {inherit system;};
     time = import ./nix/time pkgs;
@@ -131,6 +135,91 @@
         in "mkdir -p $out/bin && ln -s ${script} $out/bin/${rust.pname}";
       };
     };
+    nixosModules.sandkasten = {
+      pkgs,
+      lib,
+      config,
+      ...
+    }:
+      with lib; let
+        inherit (pkgs) system;
+        cfg = config.services.sandkasten;
+      in {
+        imports = [];
+        options.services.sandkasten = let
+          conf = builtins.fromTOML (builtins.readFile ./config.toml);
+        in {
+          enable = mkEnableOption "sandkasten";
+          host = mkOption {
+            type = types.str;
+            default = "0.0.0.0";
+          };
+          port = mkOption {
+            type = types.port;
+            default = 8000;
+          };
+          server = mkOption {
+            type = types.str;
+            default = "/";
+          };
+          programs_dir = mkOption {
+            type = types.path;
+            default = "/srv/sandkasten/programs";
+          };
+          jobs_dir = mkOption {
+            type = types.path;
+            default = "/tmp/.sandkasten/jobs";
+          };
+          program_ttl = mkOption {
+            type = types.int;
+            default = conf.program_ttl;
+          };
+          prune_programs_interval = mkOption {
+            type = types.int;
+            default = conf.prune_programs_interval;
+          };
+          max_concurrent_jobs = mkOption {
+            type = types.int;
+            default = conf.max_concurrent_jobs;
+          };
+          compile_limits = builtins.mapAttrs (k: v:
+            mkOption {
+              type = types.int;
+              default = v;
+            })
+          conf.compile_limits;
+          run_limits = builtins.mapAttrs (k: v:
+            mkOption {
+              type = types.int;
+              default = v;
+            })
+          conf.run_limits;
+        };
+        config = mkIf cfg.enable {
+          systemd.services.sandkasten = {
+            wantedBy = ["multi-user.target"];
+            serviceConfig = {
+              ExecStart = "${self.packages.${system}.default}/bin/sandkasten";
+              ExecStartPre = [
+                "+${pkgs.coreutils}/bin/mkdir -p ${cfg.programs_dir}"
+                "+${pkgs.coreutils}/bin/mkdir -p ${cfg.jobs_dir}"
+                "+${pkgs.coreutils}/bin/chown sandkasten:sandkasten ${cfg.programs_dir}"
+                "+${pkgs.coreutils}/bin/chown sandkasten:sandkasten ${cfg.jobs_dir}"
+              ];
+              User = "sandkasten";
+              Group = "sandkasten";
+            };
+            environment = {
+              CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON cfg);
+            };
+          };
+          users.users.sandkasten = {
+            group = "sandkasten";
+            isSystemUser = true;
+          };
+          users.groups.sandkasten = {};
+        };
+      };
     devShells.${system} = let
       test-env = let
         config = builtins.fromTOML (builtins.readFile ./config.toml);
