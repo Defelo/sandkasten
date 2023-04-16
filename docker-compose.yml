@@ -1,0 +1,31 @@
+version: '3.10'
+
+services:
+  changeme:
+    image: changeme
+    build: .
+    restart: always
+    init: true
+    depends_on:
+      - database
+      - redis
+    environment:
+      RUST_LOG: info,changeme=debug
+    volumes:
+      - ./config.toml:/config.toml:ro
+    ports:
+      - 127.0.0.1:8000:8000
+
+  database:
+    image: postgres:alpine
+    restart: always
+    environment:
+      POSTGRES_USER: changeme
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: changeme
+    # volumes:
+    #   - ./.db:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    restart: always
