@@ -71,7 +71,9 @@ jobs:
   #       with:
   #         components: llvm-tools-preview
   #     - name: cargo install cargo-llvm-cov
-  #       uses: taiki-e/install-action@cargo-llvm-cov
+  #       uses: taiki-e/install-action@v2
+  #       with:
+  #         tool: cargo-llvm-cov
   #     - name: cargo generate-lockfile
   #       if: hashFiles('Cargo.lock') == ''
   #       run: cargo generate-lockfile

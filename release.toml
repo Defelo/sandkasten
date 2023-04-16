@@ -1,0 +1,10 @@
+shared-version = true
+
+sign-commit = true
+pre-release-commit-message = "{{version}}"
+
+sign-tag = true
+tag-prefix = ""
+tag-message = "{{version}}"
+
+publish = false
