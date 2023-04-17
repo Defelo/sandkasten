@@ -11,10 +11,7 @@ use uuid::Uuid;
 use crate::{
     config::Config,
     environments::Environments,
-    program::{
-        build_program, delete_program, run_program, BuildProgramError, DeleteProgramError,
-        RunProgramError,
-    },
+    program::{build_program, run_program, BuildProgramError, RunProgramError},
     sandbox::LimitExceeded,
     schemas::programs::{
         BuildRequest, BuildResult, BuildRunRequest, BuildRunResult, File, RunRequest, RunResult,
@@ -101,16 +98,6 @@ impl ProgramsApi {
             Ok(result) => Run::ok(result),
             Err(RunProgramError::ProgramNotFound) => Run::not_found(),
             Err(RunProgramError::LimitsExceeded(lim)) => Run::run_limits_exceeded(lim),
-            Err(err) => Err(err.into()),
-        }
-    }
-
-    /// Delete a program.
-    #[oai(path = "/programs/:program_id", method = "delete")]
-    async fn delete_program(&self, program_id: Path<Uuid>) -> DeleteProgram::Response {
-        match delete_program(&self.config, program_id.0).await {
-            Ok(_) => DeleteProgram::ok(),
-            Err(DeleteProgramError::ProgramNotFound) => DeleteProgram::not_found(),
             Err(err) => Err(err.into()),
         }
     }
