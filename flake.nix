@@ -210,6 +210,7 @@
               Group = "sandkasten";
               Restart = "always";
               RestartSec = 0;
+              OOMPolicy = "continue";
             };
             environment = {
               CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON cfg);
