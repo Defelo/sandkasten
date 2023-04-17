@@ -17,7 +17,7 @@
       jq
       yq
     ];
-  in ''PATH='${lib.makeBinPath path}' ${bash}/bin/bash "/program/$MAIN" "$@"'';
+  in ''PATH='${lib.makeBinPath path}' ${bash}/bin/bash /program/"$@"'';
   test.files = [
     {
       name = "test.sh";

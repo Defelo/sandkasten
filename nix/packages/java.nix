@@ -24,6 +24,7 @@
     ${jdk}/bin/javac -d /program "$@"
   '';
   run_script = ''
+    shift
     mem=$(${gnugrep}/bin/grep 'address space' /proc/self/limits | ${gawk}/bin/awk '{print $5}')
     mem=$((mem/128))
     ${jdk}/bin/java -Xms$mem -Xmx$mem -cp /program "$(${coreutils}/bin/cat /program/.main)" "$@"

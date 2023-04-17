@@ -4,7 +4,7 @@ in {
   name = "Lua";
   version = lua.version;
   compile_script = null;
-  run_script = ''${lua}/bin/lua "/program/$MAIN" "$@"'';
+  run_script = ''${lua}/bin/lua /program/"$@"'';
   test.files = [
     {
       name = "test.lua";

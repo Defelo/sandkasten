@@ -16,6 +16,7 @@
     ${dotnet-sdk}/bin/dotnet build --no-restore -o /program
   '';
   run_script = ''
+    shift
     export HOME=/tmp/.dotnet
     export DOTNET_CLI_TELEMETRY_OPTOUT=1
     ${dotnet-sdk}/bin/dotnet /program/*.dll "$@"

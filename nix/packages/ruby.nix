@@ -4,7 +4,7 @@ in {
   name = "Ruby";
   version = toString ruby.version;
   compile_script = null;
-  run_script = ''${ruby}/bin/ruby "/program/$MAIN" "$@"'';
+  run_script = ''${ruby}/bin/ruby /program/"$@"'';
   test.files = [
     {
       name = "test.rb";

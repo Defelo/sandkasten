@@ -69,7 +69,6 @@
                   -R /dev/urandom \
                   -s /proc/self/fd:/dev/fd \
                   -s /dev/null:/etc/passwd \
-                  -E MAIN \
                   --max_cpus ${toString limits.cpus} \
                   --time_limit ${toString limits.time} \
                   --rlimit_as ${toString limits.memory} \

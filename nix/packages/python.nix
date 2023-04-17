@@ -2,7 +2,7 @@
   name = "Python";
   version = python311.version;
   compile_script = null;
-  run_script = ''${python311}/bin/python "/program/$MAIN" "$@"'';
+  run_script = ''${python311}/bin/python /program/"$@"'';
   test.files = [
     {
       name = "test.py";

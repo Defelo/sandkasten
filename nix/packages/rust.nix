@@ -6,7 +6,7 @@
   name = "Rust";
   version = rustc.version;
   compile_script = ''PATH=${gcc}/bin/ ${rustc}/bin/rustc -O -o /program/binary "$1"'';
-  run_script = ''/program/binary "$@"'';
+  run_script = ''shift; /program/binary "$@"'';
   test.files = [
     {
       name = "test.rs";

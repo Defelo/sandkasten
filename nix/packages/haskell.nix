@@ -11,7 +11,7 @@
     cd /tmp
     PATH=${gcc}/bin ${ghc}/bin/ghc -O -o /program/binary "$1"
   '';
-  run_script = ''/program/binary "$@"'';
+  run_script = ''shift; /program/binary "$@"'';
   test.files = [
     {
       name = "test.hs";

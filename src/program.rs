@@ -358,8 +358,10 @@ async fn execute_program(
         time,
         tmpdir,
         program: run_script,
-        args: &data.args.iter().map(|f| f.as_str()).collect::<Vec<_>>(),
-        envvars: &[("MAIN", main_file)],
+        args: &std::iter::once(main_file)
+            .chain(data.args.iter().map(|f| f.as_str()))
+            .collect::<Vec<_>>(),
+        envvars: &[],
         cwd: "/box",
         stdin: data.stdin.as_deref(),
         mounts: &[
