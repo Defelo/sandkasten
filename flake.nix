@@ -239,26 +239,39 @@
         ENVIRONMENTS_LIST_SRC = pkgs.writeText "environments_list_src.rs" ''
           const ENVIRONMENTS: &[&str] = &[${builtins.foldl' (acc: x: acc + ''"${x}", '') "" (builtins.attrNames packages)}];
         '';
-        LIMITS_TEST_SRC = pkgs.writeText "limits_test_src.rs" ''
-          prop_compose! {
-              fn compile_limits() (
-                  ${builtins.foldl' (acc: x: acc + "${x} in option::of(0u64..=${toString config.compile_limits.${x}}), ") "" (builtins.attrNames config.compile_limits)}
-              ) -> LimitsOpt {
-                  LimitsOpt {
-                    ${builtins.foldl' (acc: x: acc + "${x}, ") "" (builtins.attrNames config.compile_limits)}
-                  }
-              }
-          }
-          prop_compose! {
-              fn run_limits() (
-                  ${builtins.foldl' (acc: x: acc + "${x} in option::of(0u64..=${toString config.run_limits.${x}}), ") "" (builtins.attrNames config.run_limits)}
-              ) -> LimitsOpt {
-                  LimitsOpt {
-                    ${builtins.foldl' (acc: x: acc + "${x}, ") "" (builtins.attrNames config.run_limits)}
-                  }
-              }
-          }
-        '';
+        LIMITS_TEST_SRC = let
+          minvals = {
+            cpus = 1;
+            time = 1;
+            memory = 1;
+            tmpfs = 0;
+            filesize = 1;
+            file_descriptors = 1;
+            processes = 1;
+            stdout_max_size = 0;
+            stderr_max_size = 0;
+          };
+        in
+          pkgs.writeText "limits_test_src.rs" ''
+            prop_compose! {
+                fn compile_limits() (
+                    ${builtins.foldl' (acc: x: acc + "${x} in option::of(${toString minvals.${x}}u64..=${toString config.compile_limits.${x}}), ") "" (builtins.attrNames config.compile_limits)}
+                ) -> LimitsOpt {
+                    LimitsOpt {
+                      ${builtins.foldl' (acc: x: acc + "${x}, ") "" (builtins.attrNames config.compile_limits)}
+                    }
+                }
+            }
+            prop_compose! {
+                fn run_limits() (
+                    ${builtins.foldl' (acc: x: acc + "${x} in option::of(${toString minvals.${x}}u64..=${toString config.run_limits.${x}}), ") "" (builtins.attrNames config.run_limits)}
+                ) -> LimitsOpt {
+                    LimitsOpt {
+                      ${builtins.foldl' (acc: x: acc + "${x}, ") "" (builtins.attrNames config.run_limits)}
+                    }
+                }
+            }
+          '';
         CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON (config
           // {
             host = "127.0.0.1";

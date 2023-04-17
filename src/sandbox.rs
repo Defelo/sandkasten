@@ -14,6 +14,7 @@ use crate::schemas::{
     programs::{ResourceUsage, RunResult},
 };
 
+#[derive(Debug)]
 pub struct RunConfig<'a> {
     pub nsjail: &'a str,
     pub time: &'a str,
@@ -27,11 +28,13 @@ pub struct RunConfig<'a> {
     pub limits: Limits,
 }
 
+#[derive(Debug)]
 pub struct Mount<'a> {
     pub dest: &'a str,
     pub typ: MountType<'a>,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub enum MountType<'a> {
     ReadOnly {
         src: &'a str,
@@ -94,12 +97,18 @@ impl RunConfig<'_> {
             cmd.arg("-E").arg(format!("{name}={value}"));
         }
 
-        for Mount { dest, typ } in self.mounts {
+        for &Mount { dest, typ } in self.mounts {
             match typ {
-                MountType::ReadOnly { src } => cmd.arg("-R").arg(format!("{src}:{dest}")),
-                MountType::ReadWrite { src } => cmd.arg("-B").arg(format!("{src}:{dest}")),
+                MountType::ReadOnly { src } => {
+                    cmd.arg("-R").arg(format!("{src}:{dest}"));
+                }
+                MountType::ReadWrite { src } => {
+                    cmd.arg("-B").arg(format!("{src}:{dest}"));
+                }
                 MountType::Temp { size } => {
-                    cmd.arg("-m").arg(format!("none:{dest}:tmpfs:size={size}M"))
+                    if size > 0 {
+                        cmd.arg("-m").arg(format!("none:{dest}:tmpfs:size={size}M"));
+                    }
                 }
             };
         }
