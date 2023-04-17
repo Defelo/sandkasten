@@ -81,7 +81,7 @@ impl RunConfig<'_> {
             .args(["-o", &time_path.display().to_string()])
             .arg("--")
             .arg(self.nsjail)
-            .arg("-q")
+            .arg("-Q")
             .args(["--user", "65534"])
             .args(["--group", "65534"])
             .args(["--hostname", "box"])
