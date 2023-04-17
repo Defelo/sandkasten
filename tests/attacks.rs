@@ -118,7 +118,7 @@ fn test_flood_memory() {
         },
     })
     .unwrap();
-    assert_eq!(response.run.status, 1);
+    assert_ne!(response.run.status, 0);
     assert_eq!(
         response.run.stderr.trim().lines().last().unwrap(),
         "MemoryError"

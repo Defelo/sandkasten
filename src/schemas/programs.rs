@@ -7,6 +7,7 @@ use crate::sandbox::Limits;
 #[derive(Debug, Object, Serialize)]
 pub struct BuildRunRequest {
     pub build: BuildRequest,
+    #[oai(default)]
     pub run: RunRequest,
 }
 
@@ -25,7 +26,7 @@ pub struct BuildRequest {
 #[derive(Debug, Object, Serialize, Default)]
 pub struct RunRequest {
     /// The stdin input the process reads.
-    #[oai(validator(max_length = 65536))]
+    #[oai(default, validator(max_length = 65536))]
     pub stdin: Option<String>,
     /// A list of command line arguments that are passed to the process.
     #[oai(default, validator(max_items = 100, pattern = "^[^\0]{0,4096}$"))]
@@ -49,18 +50,24 @@ pub struct File {
 #[derive(Debug, Object, Default, Serialize)]
 pub struct LimitsOpt {
     /// The maximum number of cpus the process is allowed to use.
+    #[oai(validator(minimum(value = "1")))]
     pub cpus: Option<u64>,
     /// The number of **seconds** the process is allowed to run.
+    #[oai(validator(minimum(value = "1")))]
     pub time: Option<u64>,
     /// The amount of memory the process is allowed to use (in **MB**).
+    #[oai(validator(minimum(value = "1")))]
     pub memory: Option<u64>,
     /// The size of the tmpfs mounted at /tmp (in **MB**).
     pub tmpfs: Option<u64>,
     /// The maximum size of a file the process is allowed to create (in **MB**).
+    #[oai(validator(minimum(value = "1")))]
     pub filesize: Option<u64>,
     /// The maximum number of file descripters the process can open at the same time.
+    #[oai(validator(minimum(value = "1")))]
     pub file_descriptors: Option<u64>,
     /// The maximum number of processes that can run concurrently in the sandbox.
+    #[oai(validator(minimum(value = "1")))]
     pub processes: Option<u64>,
     /// The maximum number of bytes that are read from stdout.
     pub stdout_max_size: Option<u64>,
