@@ -11,8 +11,20 @@
     {
       name = "test.kt";
       content = ''
+        import foo.bar;
+
         fun main() {
-            println("OK")
+            bar()
+        }
+      '';
+    }
+    {
+      name = "foo.kt";
+      content = ''
+        package foo;
+
+        fun bar() {
+          println("OK")
         }
       '';
     }
