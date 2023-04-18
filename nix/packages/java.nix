@@ -12,7 +12,7 @@
     ${jdk}/bin/javac -d /program "$1"
     for file in /program/*.class; do
       cls=$(${coreutils}/bin/basename "$file" .class)
-      if ${jdk}/bin/javap -public "$file" | ${gnugrep}/bin/grep -q '^  public static void main(java.lang.String\[\]);$'; then
+      if ${jdk}/bin/javap -public "$file" | ${gnugrep}/bin/grep -q '^  public static void main(java.lang.String\[\])'; then
         echo "$cls" > /program/.main
         break
       fi
@@ -33,8 +33,34 @@
     {
       name = "test.java";
       content = ''
+        import java.io.IOException;
+        import java.util.Scanner;
+        import java.nio.file.Files;
+        import java.nio.file.Paths;
+
         class FooBar {
-          public static void main(String[] args) {
+          public static void main(String[] args) throws IOException {
+            Scanner s = new Scanner(System.in);
+            if (!s.next().equals("stdin")) System.exit(1);
+
+            if (args.length != 3) System.exit(2);
+            if (!args[0].equals("foo")) System.exit(3);
+            if (!args[1].equals("bar")) System.exit(4);
+            if (!args[2].equals("baz")) System.exit(5);
+
+            String content = Files.readString(Paths.get("test.txt"));
+            if (!content.equals("hello world")) System.exit(6);
+
+            Foo.bar();
+          }
+        }
+      '';
+    }
+    {
+      name = "Foo.java";
+      content = ''
+        public class Foo {
+          public static void bar() {
             System.out.print("OK");
           }
         }

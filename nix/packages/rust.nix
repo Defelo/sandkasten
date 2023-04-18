@@ -13,6 +13,19 @@
       content = ''
         mod foo;
         fn main() {
+          let mut s = String::new();
+          std::io::stdin().read_line(&mut s).unwrap();
+          assert_eq!(s, "stdin");
+
+          let mut args = std::env::args();
+          args.next().unwrap();
+          assert_eq!(args.next().unwrap(), "foo");
+          assert_eq!(args.next().unwrap(), "bar");
+          assert_eq!(args.next().unwrap(), "baz");
+
+          let s = std::fs::read_to_string("test.txt").unwrap();
+          assert_eq!(s, "hello world");
+
           foo::bar();
         }
       '';

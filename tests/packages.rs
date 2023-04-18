@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use sandkasten::schemas::programs::{BuildRequest, BuildRunRequest, File};
+use sandkasten::schemas::programs::{BuildRequest, BuildRunRequest, File, RunRequest};
 use serde::Deserialize;
 
 use crate::common::build_and_run;
@@ -25,7 +25,15 @@ fn test_package(id: &str) {
             files: environment.test.files,
             compile_limits: Default::default(),
         },
-        run: Default::default(),
+        run: RunRequest {
+            stdin: Some("stdin".into()),
+            args: ["foo", "bar", "baz"].into_iter().map(Into::into).collect(),
+            files: vec![File {
+                name: "test.txt".into(),
+                content: "hello world".into(),
+            }],
+            run_limits: Default::default(),
+        },
     }) {
         Ok(response) => {
             if environment.compile_script.is_some() {
