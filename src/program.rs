@@ -1,12 +1,13 @@
 use std::{
     path::Path,
+    sync::Arc,
     time::{self, UNIX_EPOCH},
 };
 
-use key_lock::KeyLock;
+use key_rwlock::KeyRwLock;
 use sha2::{Digest, Sha256};
 use thiserror::Error;
-use tokio::fs;
+use tokio::{fs, sync::OwnedRwLockReadGuard};
 use tracing::{debug, error};
 use uuid::Uuid;
 
@@ -20,11 +21,12 @@ use crate::{
 /// Store (and compile) the uploaded program into a directory in the local fs. Return a unique
 /// identifier for the program.
 pub async fn build_program(
-    config: &Config,
-    environments: &Environments,
+    config: Arc<Config>,
+    environments: Arc<Environments>,
     data: BuildRequest,
-    compile_lock: &KeyLock<Uuid>,
-) -> Result<BuildResult, BuildProgramError> {
+    program_lock: Arc<KeyRwLock<Uuid>>,
+    job_lock: Arc<KeyRwLock<Uuid>>,
+) -> Result<(BuildResult, OwnedRwLockReadGuard<()>), BuildProgramError> {
     let env = environments.environments.get(&data.environment).ok_or(
         BuildProgramError::EnvironmentNotFound(data.environment.clone()),
     )?;
@@ -37,39 +39,38 @@ pub async fn build_program(
             &data.files,
         ))?)
         .finalize();
-
     let id = Uuid::from_u128(
         hash.into_iter()
             .take(16)
             .fold(0, |acc, x| (acc << 8) | x as u128),
     );
-    let _guard = compile_lock.lock(id).await;
-
     let path = config.programs_dir.join(id.to_string());
-    if fs::try_exists(path.join("compile_result")).await? {
-        drop(_guard);
-        let compile_result = if env.compile_script.is_some() {
-            let serialized = fs::read(path.join("compile_result")).await?;
-            Some(postcard::from_bytes(&serialized)?)
-        } else {
-            None
-        };
-        return Ok(BuildResult {
-            program_id: id,
-            compile_result,
-        });
+
+    let _guard = program_lock.read(id).await;
+    if let Some(cached) = get_cached_program(id, &path, env).await? {
+        return Ok((cached, _guard));
+    }
+    drop(_guard);
+
+    let _guard = program_lock.write(id).await;
+    if let Some(cached) = get_cached_program(id, &path, env).await? {
+        return Ok((cached, _guard.downgrade()));
     }
 
-    match store_program(config, environments, data, env, &path).await {
+    match store_program(&config, &environments, data, env, &path, &job_lock).await {
         Ok(result) => {
             if let Some(result) = &result {
                 let serialized = postcard::to_stdvec(result)?;
                 fs::write(path.join("compile_result"), serialized).await?;
             }
-            Ok(BuildResult {
-                program_id: id,
-                compile_result: result,
-            })
+            fs::write(path.join("ok"), []).await?;
+            Ok((
+                BuildResult {
+                    program_id: id,
+                    compile_result: result,
+                },
+                _guard.downgrade(),
+            ))
         }
         Err(err) => {
             if let Err(err) = fs::remove_dir_all(&path).await {
@@ -80,36 +81,60 @@ pub async fn build_program(
     }
 }
 
+async fn get_cached_program(
+    program_id: Uuid,
+    path: &Path,
+    env: &Environment,
+) -> Result<Option<BuildResult>, BuildProgramError> {
+    if !fs::try_exists(path.join("ok")).await? {
+        return Ok(None);
+    }
+
+    let compile_result = if env.compile_script.is_some() {
+        let serialized = fs::read(path.join("compile_result")).await?;
+        Some(postcard::from_bytes(&serialized)?)
+    } else {
+        None
+    };
+    Ok(Some(BuildResult {
+        program_id,
+        compile_result,
+    }))
+}
+
 /// Run a given program and return its output.
 pub async fn run_program(
-    config: &Config,
-    environments: &Environments,
+    config: Arc<Config>,
+    environments: Arc<Environments>,
     program_id: Uuid,
     data: RunRequest,
+    _program_guard: OwnedRwLockReadGuard<()>,
+    job_lock: Arc<KeyRwLock<Uuid>>,
 ) -> Result<RunResult, RunProgramError> {
+    let limits = Limits::from(&config.run_limits, &data.run_limits)
+        .map_err(RunProgramError::LimitsExceeded)?;
+
     let path = config.programs_dir.join(program_id.to_string());
     if !fs::try_exists(&path).await? {
         return Err(RunProgramError::ProgramNotFound);
     }
 
-    let limits = Limits::from(&config.run_limits, &data.run_limits)
-        .map_err(RunProgramError::LimitsExceeded)?;
-
-    fs::write(
+    std::fs::write(
         path.join("last_run"),
         time::SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs()
             .to_string(),
-    )
-    .await?;
+    )?;
 
     let run_script = fs::read_to_string(path.join("run_script")).await?;
     let main_file = fs::read_to_string(path.join("main_file")).await?;
 
+    let job_id = Uuid::new_v4();
+    let _guard = job_lock.write(job_id).await;
     Ok(with_tempdir(
-        config.jobs_dir.join(Uuid::new_v4().to_string()),
+        config.jobs_dir.join(job_id.to_string()),
         |tmpdir| async move {
             fs::create_dir_all(tmpdir.join("box")).await?;
             for file in &data.files {
@@ -141,44 +166,63 @@ pub async fn delete_program(config: &Config, program_id: Uuid) -> Result<(), Del
     Ok(())
 }
 
-pub async fn prune_programs(config: &Config) -> Result<(), std::io::Error> {
-    debug!("pruning programs (ttl={})", config.program_ttl);
-    let mut it = fs::read_dir(&config.programs_dir).await?;
-    let now = time::SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    let mut pruned = 0;
-    while let Some(dir) = it.next_entry().await? {
-        if fs::metadata(dir.path())
-            .await?
-            .created()?
-            .elapsed()
-            .unwrap()
-            .as_secs()
-            < config.program_ttl
-        {
-            continue;
+pub async fn prune_programs(
+    config: &Config,
+    program_lock: Arc<KeyRwLock<Uuid>>,
+) -> Result<(), std::io::Error> {
+    async fn prune(dir: fs::DirEntry, prune_until: u64) -> bool {
+        if !fs::try_exists(dir.path()).await.unwrap_or(false) {
+            return false;
         }
         match fs::read_to_string(dir.path().join("last_run"))
             .await
             .ok()
             .and_then(|lr| lr.parse::<u64>().ok())
         {
-            Some(last_run) if now < last_run + config.program_ttl => {}
-            _ => {
-                if let Err(err) = fs::remove_dir_all(dir.path()).await {
-                    error!(
-                        "could not delete old program at {}: {err}",
-                        dir.path().display()
-                    );
-                } else {
-                    pruned += 1;
-                }
+            Some(last_run) if last_run > prune_until => return false,
+            _ => {}
+        }
+        let result = fs::remove_dir_all(dir.path()).await;
+        match result {
+            Ok(_) => true,
+            Err(err) => {
+                error!(
+                    "could not delete old program at {}: {err}",
+                    dir.path().display()
+                );
+                false
             }
         }
     }
-    debug!("successfully removed {pruned} old programs");
+
+    debug!("pruning programs (ttl={})", config.program_ttl);
+    let mut it = fs::read_dir(&config.programs_dir).await?;
+    let mut pruned = 0;
+    let prune_until = time::SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
+        - config.program_ttl;
+    while let Some(dir) = it.next_entry().await? {
+        let Ok(program_id)  = dir.file_name().to_string_lossy().parse::<Uuid>() else {
+            pruned += prune(dir, prune_until).await as usize;
+            continue;
+        };
+        if let Ok(_guard) = program_lock.try_write(program_id).await {
+            pruned += prune(dir, prune_until).await as usize;
+            continue;
+        }
+        tokio::spawn({
+            let program_lock = Arc::clone(&program_lock);
+            async move {
+                let _guard = program_lock.write(program_id).await;
+                if prune(dir, prune_until).await {
+                    debug!("successfully removed one old program");
+                }
+            }
+        });
+    }
+    debug!("successfully removed {pruned} old program(s)");
     Ok(())
 }
 
@@ -226,6 +270,7 @@ async fn store_program(
     data: BuildRequest,
     env: &Environment,
     path: &Path,
+    job_lock: &KeyRwLock<Uuid>,
 ) -> Result<Option<RunResult>, BuildProgramError> {
     let limits = Limits::from(&config.compile_limits, &data.compile_limits)
         .map_err(BuildProgramError::LimitsExceeded)?;
@@ -244,8 +289,10 @@ async fn store_program(
 
     let compile_result = if let Some(compile_script) = &env.compile_script {
         // run compile script and copy output to program dir
+        let job_id = Uuid::new_v4();
+        let _guard = job_lock.write(job_id).await;
         let result = with_tempdir(
-            config.jobs_dir.join(Uuid::new_v4().to_string()),
+            config.jobs_dir.join(job_id.to_string()),
             |tmpdir| async move {
                 fs::create_dir_all(tmpdir.join("box")).await?;
                 for file in &data.files {

@@ -1,6 +1,6 @@
 use std::{collections::HashSet, sync::Arc};
 
-use key_lock::KeyLock;
+use key_rwlock::KeyRwLock;
 use once_cell::unsync::Lazy;
 use poem_ext::response;
 use poem_openapi::{param::Path, payload::Json, OpenApi};
@@ -23,8 +23,9 @@ use super::Tags;
 pub struct ProgramsApi {
     pub config: Arc<Config>,
     pub environments: Arc<Environments>,
-    pub compile_lock: KeyLock<Uuid>,
-    pub job_semaphore: Semaphore,
+    pub program_lock: Arc<KeyRwLock<Uuid>>,
+    pub job_lock: Arc<KeyRwLock<Uuid>>,
+    pub request_semaphore: Semaphore,
 }
 
 #[OpenApi(tag = "Tags::Programs")]
@@ -35,17 +36,21 @@ impl ProgramsApi {
         if !check_files(&data.0.build.files) || !check_files(&data.0.run.files) {
             return BuildRun::invalid_file_names();
         }
-        let _guard = self.job_semaphore.acquire().await?;
-        let BuildResult {
-            program_id,
-            compile_result,
-        } = match build_program(
-            &self.config,
-            &self.environments,
+        let _guard = self.request_semaphore.acquire().await?;
+        let (
+            BuildResult {
+                program_id,
+                compile_result,
+            },
+            read_guard,
+        ) = match tokio::spawn(build_program(
+            Arc::clone(&self.config),
+            Arc::clone(&self.environments),
             data.0.build,
-            &self.compile_lock,
-        )
-        .await
+            Arc::clone(&self.program_lock),
+            Arc::clone(&self.job_lock),
+        ))
+        .await?
         {
             Ok(result) => result,
             Err(BuildProgramError::EnvironmentNotFound(_)) => {
@@ -60,7 +65,16 @@ impl ProgramsApi {
             Err(err) => return Err(err.into()),
         };
 
-        match run_program(&self.config, &self.environments, program_id, data.0.run).await {
+        match tokio::spawn(run_program(
+            Arc::clone(&self.config),
+            Arc::clone(&self.environments),
+            program_id,
+            data.0.run,
+            read_guard,
+            Arc::clone(&self.job_lock),
+        ))
+        .await?
+        {
             Ok(run_result) => BuildRun::ok(BuildRunResult {
                 program_id,
                 build: compile_result,
@@ -77,9 +91,17 @@ impl ProgramsApi {
         if !check_files(&data.0.files) {
             return Build::invalid_file_names();
         }
-        let _guard = self.job_semaphore.acquire().await?;
-        match build_program(&self.config, &self.environments, data.0, &self.compile_lock).await {
-            Ok(result) => Build::ok(result),
+        let _guard = self.request_semaphore.acquire().await?;
+        match tokio::spawn(build_program(
+            Arc::clone(&self.config),
+            Arc::clone(&self.environments),
+            data.0,
+            Arc::clone(&self.program_lock),
+            Arc::clone(&self.job_lock),
+        ))
+        .await?
+        {
+            Ok((result, _)) => Build::ok(result),
             Err(BuildProgramError::EnvironmentNotFound(_)) => Build::environment_not_found(),
             Err(BuildProgramError::CompilationFailed(result)) => Build::compile_error(result),
             Err(BuildProgramError::LimitsExceeded(lim)) => Build::compile_limits_exceeded(lim),
@@ -93,8 +115,17 @@ impl ProgramsApi {
         if !check_files(&data.0.files) {
             return Run::invalid_file_names();
         }
-        let _guard = self.job_semaphore.acquire().await?;
-        match run_program(&self.config, &self.environments, program_id.0, data.0).await {
+        let _guard = self.request_semaphore.acquire().await?;
+        match tokio::spawn(run_program(
+            Arc::clone(&self.config),
+            Arc::clone(&self.environments),
+            program_id.0,
+            data.0,
+            self.program_lock.read(program_id.0).await,
+            Arc::clone(&self.job_lock),
+        ))
+        .await?
+        {
             Ok(result) => Run::ok(result),
             Err(RunProgramError::ProgramNotFound) => Run::not_found(),
             Err(RunProgramError::LimitsExceeded(lim)) => Run::run_limits_exceeded(lim),

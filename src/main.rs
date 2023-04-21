@@ -25,9 +25,10 @@ async fn main() -> anyhow::Result<()> {
     if !fs::try_exists(&config.programs_dir).await? {
         fs::create_dir_all(&config.programs_dir).await?;
     }
-    if !fs::try_exists(&config.jobs_dir).await? {
-        fs::create_dir_all(&config.jobs_dir).await?;
+    if fs::try_exists(&config.jobs_dir).await? {
+        fs::remove_dir_all(&config.jobs_dir).await?;
     }
+    fs::create_dir_all(&config.jobs_dir).await?;
 
     let config = Arc::new(Config {
         programs_dir: config.programs_dir.canonicalize().unwrap(),
@@ -38,14 +39,18 @@ async fn main() -> anyhow::Result<()> {
     info!("Loading environments");
     let environments = Arc::new(environments::load()?);
 
+    let program_lock = Default::default();
+    let job_lock = Default::default();
+
     tokio::spawn({
         let config = Arc::clone(&config);
+        let program_lock = Arc::clone(&program_lock);
         async move {
             let mut interval =
                 tokio::time::interval(Duration::from_secs(config.prune_programs_interval));
             loop {
                 interval.tick().await;
-                if let Err(err) = prune_programs(&config).await {
+                if let Err(err) = prune_programs(&config, Arc::clone(&program_lock)).await {
                     error!("pruning old programs failed: {err}");
                 }
             }
@@ -53,7 +58,12 @@ async fn main() -> anyhow::Result<()> {
     });
 
     let api_service = OpenApiService::new(
-        get_api(Arc::clone(&config), Arc::clone(&environments)),
+        get_api(
+            Arc::clone(&config),
+            Arc::clone(&environments),
+            program_lock,
+            job_lock,
+        ),
         "Sandkasten",
         env!("CARGO_PKG_VERSION"),
     )
