@@ -3,6 +3,11 @@ name = "sandkasten"
 version = "0.0.1-alpha.1"
 edition = "2021"
 
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+
 [dependencies]
 anyhow = { version = "1.0.70", default-features = false, features = ["std"] }
 config = { version = "0.13.3", default-features = false, features = ["toml", "json"] }

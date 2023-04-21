@@ -1,11 +1,21 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/release-22.11";
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    naersk = {
+      url = "github:nix-community/naersk";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
     self,
     nixpkgs,
+    fenix,
+    naersk,
     ...
   }: let
     system = "x86_64-linux";
@@ -89,11 +99,18 @@
         })
       (envs false);
       rust = let
-        cargotoml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+        toolchain = with fenix.packages.${system};
+          combine [
+            stable.rustc
+            stable.cargo
+            targets.x86_64-unknown-linux-musl.stable.rust-std
+          ];
       in
-        pkgs.rustPlatform.buildRustPackage {
-          pname = cargotoml.package.name;
-          version = cargotoml.package.version;
+        (naersk.lib.${system}.override {
+          cargo = toolchain;
+          rustc = toolchain;
+        })
+        .buildPackage {
           src = pkgs.stdenv.mkDerivation {
             name = "src";
             src = ./src;
@@ -106,7 +123,7 @@
             in
               builtins.foldl' (acc: k: acc + " && ln -s ${files.${k}} $out/${k}") "mkdir -p $out" (builtins.attrNames files);
           };
-          cargoLock.lockFile = ./Cargo.lock;
+          CARGO_BUILD_TARGET = "x86_64-unknown-linux-musl";
         };
       docker = pkgs.dockerTools.buildLayeredImage {
         name = rust.pname;
