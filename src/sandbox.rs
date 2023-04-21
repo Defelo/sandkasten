@@ -68,6 +68,8 @@ pub struct Limits {
     pub stdout_max_size: u64,
     /// The maximum number of bytes that are read from stderr.
     pub stderr_max_size: u64,
+    /// Whether the process is allowed to access the network.
+    pub network: bool,
 }
 
 impl RunConfig<'_> {
@@ -116,6 +118,10 @@ impl RunConfig<'_> {
         cmd.arg("-R").arg("/dev/urandom");
         cmd.arg("-s").arg("/proc/self/fd:/dev/fd");
         cmd.arg("-s").arg("/dev/null:/etc/passwd");
+
+        if self.limits.network {
+            cmd.arg("-N").args(["-R", "/etc/resolv.conf"]);
+        }
 
         let mut child = cmd
             .arg("--")
@@ -219,6 +225,11 @@ impl Limits {
                 config_limits.stderr_max_size,
                 limits.stderr_max_size,
             ),
+            network: get(
+                "network",
+                config_limits.network as _,
+                limits.network.map(|x| x as _),
+            ) != 0,
         };
         if errors.is_empty() {
             Ok(out)

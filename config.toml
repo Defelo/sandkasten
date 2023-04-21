@@ -20,6 +20,7 @@ file_descriptors = 256
 processes = 256
 stdout_max_size = 65536
 stderr_max_size = 65536
+network = false
 
 [run_limits]
 cpus = 1
@@ -31,3 +32,4 @@ file_descriptors = 256
 processes = 64
 stdout_max_size = 65536
 stderr_max_size = 65536
+network = false

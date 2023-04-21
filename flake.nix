@@ -252,26 +252,38 @@
             stderr_max_size = 0;
           };
         in
-          pkgs.writeText "limits_test_src.rs" ''
+          pkgs.writeText "limits_test_src.rs" (let
+            numeric = builtins.attrNames minvals;
+            compile.network =
+              if config.compile_limits.network
+              then "any::<bool>()"
+              else "Just(false)";
+            run.network =
+              if config.run_limits.network
+              then "any::<bool>()"
+              else "Just(false)";
+          in ''
             prop_compose! {
                 fn compile_limits() (
-                    ${builtins.foldl' (acc: x: acc + "${x} in option::of(${toString minvals.${x}}u64..=${toString config.compile_limits.${x}}), ") "" (builtins.attrNames config.compile_limits)}
+                    ${builtins.foldl' (acc: x: acc + "${x} in option::of(${toString minvals.${x}}u64..=${toString config.compile_limits.${x}}), ") "network in option::of(${compile.network}), " numeric}
                 ) -> LimitsOpt {
                     LimitsOpt {
-                      ${builtins.foldl' (acc: x: acc + "${x}, ") "" (builtins.attrNames config.compile_limits)}
+                      network,
+                      ${builtins.foldl' (acc: x: acc + "${x}, ") "" numeric}
                     }
                 }
             }
             prop_compose! {
                 fn run_limits() (
-                    ${builtins.foldl' (acc: x: acc + "${x} in option::of(${toString minvals.${x}}u64..=${toString config.run_limits.${x}}), ") "" (builtins.attrNames config.run_limits)}
+                    ${builtins.foldl' (acc: x: acc + "${x} in option::of(${toString minvals.${x}}u64..=${toString config.run_limits.${x}}), ") "network in option::of(${run.network}), " numeric}
                 ) -> LimitsOpt {
                     LimitsOpt {
-                      ${builtins.foldl' (acc: x: acc + "${x}, ") "" (builtins.attrNames config.run_limits)}
+                      network,
+                      ${builtins.foldl' (acc: x: acc + "${x}, ") "" numeric}
                     }
                 }
             }
-          '';
+          '');
         CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON (config
           // {
             host = "127.0.0.1";

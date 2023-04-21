@@ -73,6 +73,8 @@ pub struct LimitsOpt {
     pub stdout_max_size: Option<u64>,
     /// The maximum number of bytes that are read from stderr.
     pub stderr_max_size: Option<u64>,
+    /// Whether the process is allowed to access the network.
+    pub network: Option<bool>,
 }
 
 /// The results of building and running a program.
