@@ -21,6 +21,7 @@
     system = "x86_64-linux";
     pkgs = import nixpkgs {inherit system;};
     time = import ./nix/time pkgs;
+    cargotoml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
     packages = import ./nix/packages {inherit pkgs;};
     envs = dev:
       builtins.mapAttrs (k: v:
@@ -126,8 +127,8 @@
           CARGO_BUILD_TARGET = "x86_64-unknown-linux-musl";
         };
       docker = pkgs.dockerTools.buildLayeredImage {
-        name = rust.pname;
-        tag = rust.version;
+        name = cargotoml.package.name;
+        tag = cargotoml.package.version;
         contents = with pkgs; [
           nsjail
           coreutils-full
@@ -136,19 +137,20 @@
         ];
         config = {
           User = "65534:65534";
-          Entrypoint = ["${rust}/bin/${rust.pname}"];
+          Entrypoint = ["${rust}/bin/${cargotoml.package.name}"];
           Env = ["ENVIRONMENTS_CONFIG_PATH=${environments false}"];
         };
       };
       default = pkgs.stdenv.mkDerivation {
-        inherit (rust) pname version;
+        pname = cargotoml.package.name;
+        version = cargotoml.package.version;
         unpackPhase = "true";
         installPhase = let
-          script = pkgs.writeShellScript "${rust.pname}.sh" ''
+          script = pkgs.writeShellScript "${cargotoml.package.name}.sh" ''
             [[ -n "$ENVIRONMENTS_CONFIG_PATH" ]] || export ENVIRONMENTS_CONFIG_PATH=${environments false}
-            ${rust}/bin/${rust.pname}
+            ${rust}/bin/${cargotoml.package.name}
           '';
-        in "mkdir -p $out/bin && ln -s ${script} $out/bin/${rust.pname}";
+        in "mkdir -p $out/bin && ln -s ${script} $out/bin/${cargotoml.package.name}";
       };
     };
     nixosModules.sandkasten = {
