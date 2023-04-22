@@ -57,6 +57,8 @@
         server = "/";
         programs_dir = "programs";
         jobs_dir = "jobs";
+        program_ttl = 60;
+        prune_programs_interval = 30;
       }));
   };
   test-script = pkgs.writeShellScript "integration-tests.sh" ''
