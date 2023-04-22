@@ -47,13 +47,13 @@ pub async fn build_program(
     let path = config.programs_dir.join(id.to_string());
 
     let _guard = program_lock.read(id).await;
-    if let Some(cached) = get_cached_program(id, &path, env).await? {
+    if let Some(cached) = get_cached_program(id, &path, &config, env).await? {
         return Ok((cached, _guard));
     }
     drop(_guard);
 
     let _guard = program_lock.write(id).await;
-    if let Some(cached) = get_cached_program(id, &path, env).await? {
+    if let Some(cached) = get_cached_program(id, &path, &config, env).await? {
         return Ok((cached, _guard.downgrade()));
     }
 
@@ -67,6 +67,7 @@ pub async fn build_program(
             Ok((
                 BuildResult {
                     program_id: id,
+                    ttl: config.program_ttl,
                     compile_result: result,
                 },
                 _guard.downgrade(),
@@ -84,6 +85,7 @@ pub async fn build_program(
 async fn get_cached_program(
     program_id: Uuid,
     path: &Path,
+    config: &Config,
     env: &Environment,
 ) -> Result<Option<BuildResult>, BuildProgramError> {
     if !fs::try_exists(path.join("ok")).await? {
@@ -98,6 +100,7 @@ async fn get_cached_program(
     };
     Ok(Some(BuildResult {
         program_id,
+        ttl: config.program_ttl,
         compile_result,
     }))
 }

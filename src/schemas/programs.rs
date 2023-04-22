@@ -82,6 +82,8 @@ pub struct LimitsOpt {
 pub struct BuildRunResult {
     /// A unique identifier of the program that was built.
     pub program_id: Uuid,
+    /// The number of seconds after the last execution of the program before it is removed.
+    pub ttl: u64,
     /// The results of compiling the program. Empty iff programs don't need to be compiled in this
     /// environment.
     pub build: Option<RunResult>,
@@ -94,6 +96,8 @@ pub struct BuildRunResult {
 pub struct BuildResult {
     /// A unique identifier of the program that was built.
     pub program_id: Uuid,
+    /// The number of seconds after the last execution of the program before it is removed.
+    pub ttl: u64,
     /// The results of compiling the program. Empty iff programs don't need to be compiled in this
     /// environment.
     pub compile_result: Option<RunResult>,

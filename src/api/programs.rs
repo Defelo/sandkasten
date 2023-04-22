@@ -40,6 +40,7 @@ impl ProgramsApi {
         let (
             BuildResult {
                 program_id,
+                ttl,
                 compile_result,
             },
             read_guard,
@@ -77,6 +78,7 @@ impl ProgramsApi {
         {
             Ok(run_result) => BuildRun::ok(BuildRunResult {
                 program_id,
+                ttl,
                 build: compile_result,
                 run: run_result,
             }),

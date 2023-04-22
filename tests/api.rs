@@ -160,6 +160,7 @@ fn test_build_cached() {
 
     let BuildRunResult {
         program_id,
+        ttl: _,
         build,
         run,
     }: BuildRunResult = build_and_run(&request).unwrap();
