@@ -166,6 +166,18 @@
         imports = [];
         options.services.sandkasten = let
           conf = builtins.fromTOML (builtins.readFile ./config.toml);
+          limit_types = {
+            cpus = types.int;
+            time = types.int;
+            memory = types.int;
+            tmpfs = types.int;
+            filesize = types.int;
+            file_descriptors = types.int;
+            processes = types.int;
+            stdout_max_size = types.int;
+            stderr_max_size = types.int;
+            network = types.bool;
+          };
         in {
           enable = mkEnableOption "sandkasten";
           host = mkOption {
@@ -202,13 +214,13 @@
           };
           compile_limits = builtins.mapAttrs (k: v:
             mkOption {
-              type = types.int;
+              type = limit_types.${k};
               default = v;
             })
           conf.compile_limits;
           run_limits = builtins.mapAttrs (k: v:
             mkOption {
-              type = types.int;
+              type = limit_types.${k};
               default = v;
             })
           conf.run_limits;

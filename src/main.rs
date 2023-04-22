@@ -25,10 +25,17 @@ async fn main() -> anyhow::Result<()> {
     if !fs::try_exists(&config.programs_dir).await? {
         fs::create_dir_all(&config.programs_dir).await?;
     }
-    if fs::try_exists(&config.jobs_dir).await? {
-        fs::remove_dir_all(&config.jobs_dir).await?;
+    if !fs::try_exists(&config.jobs_dir).await? {
+        fs::create_dir_all(&config.jobs_dir).await?;
     }
-    fs::create_dir_all(&config.jobs_dir).await?;
+    for dir in std::fs::read_dir(&config.jobs_dir)? {
+        let path = dir?.path();
+        if path.is_dir() {
+            std::fs::remove_dir_all(path)?;
+        } else {
+            std::fs::remove_file(path)?;
+        }
+    }
 
     let config = Arc::new(Config {
         programs_dir: config.programs_dir.canonicalize().unwrap(),
