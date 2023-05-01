@@ -9,7 +9,7 @@ lto = true
 codegen-units = 1
 
 [dependencies]
-anyhow = { version = "1.0.70", default-features = false, features = ["std"] }
+anyhow = { version = "1.0.71", default-features = false, features = ["std"] }
 config = { version = "0.13.3", default-features = false, features = ["toml", "json"] }
 key-rwlock = { version = "0.1.0", default-features = false }
 once_cell = { version = "1.17.1", default-features = false }
