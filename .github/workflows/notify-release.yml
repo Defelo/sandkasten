@@ -1,0 +1,21 @@
+name: notify-release
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+  issues:
+    types: [closed]
+  schedule:
+    - cron: '0 0 * * *'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  notify-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify release
+        uses: nearform-actions/github-action-notify-release@v1
