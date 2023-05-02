@@ -1,10 +1,12 @@
 shared-version = true
 
 sign-commit = true
-pre-release-commit-message = "{{version}}"
+pre-release-commit-message = "v{{version}}"
 
 sign-tag = true
 tag-prefix = ""
-tag-message = "{{version}}"
+tag-message = "v{{version}}"
 
 publish = false
+
+allow-branch = ["changeme"]
