@@ -7,7 +7,7 @@ on:
   issues:
     types: [closed]
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 4 * * *'
 
 permissions:
   contents: read
@@ -19,3 +19,5 @@ jobs:
     steps:
       - name: Notify release
         uses: nearform-actions/github-action-notify-release@v1
+        with:
+          notify-after: '7d'
