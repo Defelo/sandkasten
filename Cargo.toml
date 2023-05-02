@@ -9,7 +9,7 @@ lto = true
 codegen-units = 1
 
 [dependencies]
-anyhow = { version = "1.0.70", default-features = false, features = ["std"] }
+anyhow = { version = "1.0.71", default-features = false, features = ["std"] }
 config = { version = "0.13.3", default-features = false, features = ["toml", "json"] }
 key-rwlock = { version = "0.1.0", default-features = false }
 once_cell = { version = "1.17.1", default-features = false }
@@ -17,19 +17,19 @@ poem = { version = "1.3.55", default-features = false, features = ["server"] }
 poem-ext = { version = "0.5.2", default-features = false }
 poem-openapi = { version = "2.0.26", default-features = false, features = ["swagger-ui", "redoc", "uuid"] }
 postcard = { version = "1.0.4", default-features = false, features = ["use-std"] }
-regex = "1.8.0"
+regex = "1.8.1"
 serde = { version = "1.0.160", default-features = false, features = ["derive"] }
 sha2 = { version = "0.10.6", default-features = false }
 thiserror = { version = "1.0.40", default-features = false }
-tokio = { version = "1.27.0", default-features = false, features = ["rt-multi-thread", "macros", "process", "time"] }
+tokio = { version = "1.28.0", default-features = false, features = ["rt-multi-thread", "macros", "process", "time"] }
 tracing = { version = "0.1.37", default-features = false }
 tracing-subscriber = { version = "0.3.17", default-features = false, features = ["fmt", "ansi"] }
-uuid = { version = "1.3.1", default-features = false, features = ["v4", "fast-rng", "serde"] }
+uuid = { version = "1.3.2", default-features = false, features = ["v4", "fast-rng", "serde"] }
 
 [dev-dependencies]
 indoc = { version = "2.0.1", default-features = false }
 proptest = "1.1.0"
-reqwest = { version = "0.11.16", default-features = false, features = ["json", "blocking"] }
+reqwest = { version = "0.11.17", default-features = false, features = ["json", "blocking"] }
 
 [features]
 nix = []
