@@ -1,18 +1,13 @@
 use std::{future::Future, path::Path, process::Stdio, string::FromUtf8Error};
 
 use poem_openapi::Object;
-use serde::{Deserialize, Serialize};
+use sandkasten_client::schemas::programs::{Limits, LimitsOpt, ResourceUsage, RunResult};
 use thiserror::Error;
 use tokio::{
     fs,
     io::{AsyncReadExt, AsyncWriteExt, BufReader},
 };
 use tracing::error;
-
-use crate::schemas::{
-    self,
-    programs::{ResourceUsage, RunResult},
-};
 
 #[derive(Debug)]
 pub struct RunConfig<'a> {
@@ -46,30 +41,6 @@ pub enum MountType<'a> {
         /// in MB
         size: u64,
     },
-}
-
-#[derive(Debug, Clone, Object, Serialize, Deserialize, PartialEq, Eq)]
-pub struct Limits {
-    /// The maximum number of cpus the process is allowed to use.
-    pub cpus: u64,
-    /// The number of **seconds** the process is allowed to run.
-    pub time: u64,
-    /// The amount of memory the process is allowed to use (in **MB**).
-    pub memory: u64,
-    /// The size of the tmpfs mounted at /tmp (in **MB**).
-    pub tmpfs: u64,
-    /// The maximum size of a file the process is allowed to create (in **MB**).
-    pub filesize: u64,
-    /// The maximum number of file descripters the process can open at the same time.
-    pub file_descriptors: u64,
-    /// The maximum number of processes that can run concurrently in the sandbox.
-    pub processes: u64,
-    /// The maximum number of bytes that are read from stdout.
-    pub stdout_max_size: u64,
-    /// The maximum number of bytes that are read from stderr.
-    pub stderr_max_size: u64,
-    /// Whether the process is allowed to access the network.
-    pub network: bool,
 }
 
 impl RunConfig<'_> {
@@ -187,55 +158,53 @@ pub enum RunError {
     InvalidTimeFile,
 }
 
-impl Limits {
-    pub fn from(
-        config_limits: &Self,
-        limits: &schemas::programs::LimitsOpt,
-    ) -> Result<Self, Vec<LimitExceeded>> {
-        let mut errors = Vec::new();
-        let mut get = |name, mx, val: Option<_>| {
-            let val = val.unwrap_or(mx);
-            if val > mx {
-                errors.push(LimitExceeded {
-                    name,
-                    max_value: mx,
-                });
-            }
-            val
-        };
-        let out = Self {
-            cpus: get("cpus", config_limits.cpus, limits.cpus),
-            time: get("time", config_limits.time, limits.time),
-            memory: get("memory", config_limits.memory, limits.memory),
-            tmpfs: get("tmpfs", config_limits.tmpfs, limits.tmpfs),
-            filesize: get("filesize", config_limits.filesize, limits.filesize),
-            file_descriptors: get(
-                "file_descriptors",
-                config_limits.file_descriptors,
-                limits.file_descriptors,
-            ),
-            processes: get("processes", config_limits.processes, limits.processes),
-            stdout_max_size: get(
-                "stdout_max_size",
-                config_limits.stdout_max_size,
-                limits.stdout_max_size,
-            ),
-            stderr_max_size: get(
-                "stderr_max_size",
-                config_limits.stderr_max_size,
-                limits.stderr_max_size,
-            ),
-            network: get(
-                "network",
-                config_limits.network as _,
-                limits.network.map(|x| x as _),
-            ) != 0,
-        };
-        if errors.is_empty() {
-            Ok(out)
-        } else {
-            Err(errors)
+pub fn opt_to_limits(
+    config_limits: &Limits,
+    limits: &LimitsOpt,
+) -> Result<Limits, Vec<LimitExceeded>> {
+    let mut errors = Vec::new();
+    let mut get = |name, mx, val: Option<_>| {
+        let val = val.unwrap_or(mx);
+        if val > mx {
+            errors.push(LimitExceeded {
+                name,
+                max_value: mx,
+            });
         }
+        val
+    };
+    let out = Limits {
+        cpus: get("cpus", config_limits.cpus, limits.cpus),
+        time: get("time", config_limits.time, limits.time),
+        memory: get("memory", config_limits.memory, limits.memory),
+        tmpfs: get("tmpfs", config_limits.tmpfs, limits.tmpfs),
+        filesize: get("filesize", config_limits.filesize, limits.filesize),
+        file_descriptors: get(
+            "file_descriptors",
+            config_limits.file_descriptors,
+            limits.file_descriptors,
+        ),
+        processes: get("processes", config_limits.processes, limits.processes),
+        stdout_max_size: get(
+            "stdout_max_size",
+            config_limits.stdout_max_size,
+            limits.stdout_max_size,
+        ),
+        stderr_max_size: get(
+            "stderr_max_size",
+            config_limits.stderr_max_size,
+            limits.stderr_max_size,
+        ),
+        network: get(
+            "network",
+            config_limits.network as _,
+            limits.network.map(|x| x as _),
+        ) != 0,
+    };
+    if errors.is_empty() {
+        Ok(out)
+    } else {
+        Err(errors)
     }
 }
 

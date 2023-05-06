@@ -2,11 +2,9 @@ use std::sync::Arc;
 
 use poem_ext::response;
 use poem_openapi::OpenApi;
+use sandkasten_client::schemas::environments::{Environment, ListEnvironmentsResponse};
 
-use crate::{
-    environments::Environments,
-    schemas::environments::{Environment, ListEnvironmentsResponse},
-};
+use crate::environments::Environments;
 
 use super::Tags;
 

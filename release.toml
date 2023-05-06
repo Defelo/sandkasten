@@ -7,6 +7,6 @@ sign-tag = true
 tag-prefix = ""
 tag-message = "v{{version}}"
 
-publish = false
+publish = true
 
 allow-branch = ["develop"]

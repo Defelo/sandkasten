@@ -1,9 +1,8 @@
 use std::{env, path::PathBuf};
 
 use config::{ConfigError, File};
+use sandkasten_client::schemas::programs::Limits;
 use serde::Deserialize;
-
-use crate::sandbox::Limits;
 
 pub fn load() -> Result<Config, ConfigError> {
     config::Config::builder()

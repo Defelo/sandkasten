@@ -5,6 +5,9 @@ use std::{
 };
 
 use key_rwlock::KeyRwLock;
+use sandkasten_client::schemas::programs::{
+    BuildRequest, BuildResult, Limits, RunRequest, RunResult,
+};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 use tokio::{fs, sync::OwnedRwLockReadGuard};
@@ -14,8 +17,7 @@ use uuid::Uuid;
 use crate::{
     config::Config,
     environments::{Environment, Environments},
-    sandbox::{with_tempdir, LimitExceeded, Limits, Mount, MountType, RunConfig, RunError},
-    schemas::programs::{BuildRequest, BuildResult, RunRequest, RunResult},
+    sandbox::{opt_to_limits, with_tempdir, LimitExceeded, Mount, MountType, RunConfig, RunError},
 };
 
 /// Store (and compile) the uploaded program into a directory in the local fs. Return a unique
@@ -114,7 +116,7 @@ pub async fn run_program(
     _program_guard: OwnedRwLockReadGuard<()>,
     job_lock: Arc<KeyRwLock<Uuid>>,
 ) -> Result<RunResult, RunProgramError> {
-    let limits = Limits::from(&config.run_limits, &data.run_limits)
+    let limits = opt_to_limits(&config.run_limits, &data.run_limits)
         .map_err(RunProgramError::LimitsExceeded)?;
 
     let path = config.programs_dir.join(program_id.to_string());
@@ -275,7 +277,7 @@ async fn store_program(
     path: &Path,
     job_lock: &KeyRwLock<Uuid>,
 ) -> Result<Option<RunResult>, BuildProgramError> {
-    let limits = Limits::from(&config.compile_limits, &data.compile_limits)
+    let limits = opt_to_limits(&config.compile_limits, &data.compile_limits)
         .map_err(BuildProgramError::LimitsExceeded)?;
 
     fs::create_dir_all(path.join("files")).await?;

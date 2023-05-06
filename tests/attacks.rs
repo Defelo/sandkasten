@@ -1,29 +1,32 @@
 use indoc::formatdoc;
-use sandkasten::schemas::programs::{BuildRequest, BuildRunRequest, File, LimitsOpt, RunRequest};
+use sandkasten_client::schemas::programs::{
+    BuildRequest, BuildRunRequest, File, LimitsOpt, RunRequest,
+};
 
-use crate::common::build_and_run;
+use crate::common::client;
 
 mod common;
 
 #[test]
 #[ignore]
 fn test_no_internet() {
-    let response = build_and_run(&BuildRunRequest {
-        build: BuildRequest {
-            environment: "python".into(),
-            files: vec![File {
-                name: "test.py".into(),
-                content: formatdoc! {r#"
-                    from http.client import *
-                    c=HTTPConnection("1.1.1.1")
-                    c.request("GET", "http://1.1.1.1")
-                "#},
-            }],
-            compile_limits: Default::default(),
-        },
-        run: Default::default(),
-    })
-    .unwrap();
+    let response = client()
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "python".into(),
+                files: vec![File {
+                    name: "test.py".into(),
+                    content: formatdoc! {r#"
+                        from http.client import *
+                        c=HTTPConnection("1.1.1.1")
+                        c.request("GET", "http://1.1.1.1")
+                    "#},
+                }],
+                compile_limits: Default::default(),
+            },
+            run: Default::default(),
+        })
+        .unwrap();
     assert_eq!(response.run.status, 1);
     assert_eq!(
         response.run.stderr.trim().lines().last().unwrap(),
@@ -34,22 +37,23 @@ fn test_no_internet() {
 #[test]
 #[ignore]
 fn test_forkbomb() {
-    let response = build_and_run(&BuildRunRequest {
-        build: BuildRequest {
-            environment: "python".into(),
-            files: vec![File {
-                name: "test.py".into(),
-                content: formatdoc! {"
-                    import os
-                    while True:
-                        os.fork()
-                "},
-            }],
-            compile_limits: Default::default(),
-        },
-        run: Default::default(),
-    })
-    .unwrap();
+    let response = client()
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "python".into(),
+                files: vec![File {
+                    name: "test.py".into(),
+                    content: formatdoc! {"
+                        import os
+                        while True:
+                            os.fork()
+                    "},
+                }],
+                compile_limits: Default::default(),
+            },
+            run: Default::default(),
+        })
+        .unwrap();
     assert_eq!(response.run.status, 1);
     assert_eq!(
         response.run.stderr.trim().lines().last().unwrap(),
@@ -61,33 +65,34 @@ fn test_forkbomb() {
 #[test]
 #[ignore]
 fn test_stdoutbomb() {
-    let response = build_and_run(&BuildRunRequest {
-        build: BuildRequest {
-            environment: "rust".into(),
-            files: vec![File {
-                name: "test.rs".into(),
-                content: formatdoc! {r#"
-                    fn main() {{
-                        loop {{
-                            println!("spam");
-                            eprintln!("maps");
+    let response = client()
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "rust".into(),
+                files: vec![File {
+                    name: "test.rs".into(),
+                    content: formatdoc! {r#"
+                        fn main() {{
+                            loop {{
+                                println!("spam");
+                                eprintln!("maps");
+                            }}
                         }}
-                    }}
-                "#},
-            }],
-            compile_limits: Default::default(),
-        },
-        run: RunRequest {
-            run_limits: LimitsOpt {
-                time: Some(1),
-                stdout_max_size: Some(2048),
-                stderr_max_size: Some(1024),
+                    "#},
+                }],
+                compile_limits: Default::default(),
+            },
+            run: RunRequest {
+                run_limits: LimitsOpt {
+                    time: Some(1),
+                    stdout_max_size: Some(2048),
+                    stderr_max_size: Some(1024),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        },
-    })
-    .unwrap();
+        })
+        .unwrap();
     assert_eq!(response.run.status, 137);
     assert_eq!(response.run.stdout.len(), 2048);
     assert_eq!(response.run.stderr.len(), 1024);
@@ -96,28 +101,29 @@ fn test_stdoutbomb() {
 #[test]
 #[ignore]
 fn test_flood_memory() {
-    let response = build_and_run(&BuildRunRequest {
-        build: BuildRequest {
-            environment: "python".into(),
-            files: vec![File {
-                name: "test.py".into(),
-                content: formatdoc! {r#"
-                    x = [1]
-                    while True:
-                        x += x
-                "#},
-            }],
-            compile_limits: Default::default(),
-        },
-        run: RunRequest {
-            run_limits: LimitsOpt {
-                memory: Some(1024),
+    let response = client()
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "python".into(),
+                files: vec![File {
+                    name: "test.py".into(),
+                    content: formatdoc! {r#"
+                        x = [1]
+                        while True:
+                            x += x
+                    "#},
+                }],
+                compile_limits: Default::default(),
+            },
+            run: RunRequest {
+                run_limits: LimitsOpt {
+                    memory: Some(1024),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        },
-    })
-    .unwrap();
+        })
+        .unwrap();
     assert_ne!(response.run.status, 0);
     assert_eq!(
         response.run.stderr.trim().lines().last().unwrap(),
@@ -128,32 +134,33 @@ fn test_flood_memory() {
 #[test]
 #[ignore]
 fn test_combination() {
-    let response = build_and_run(&BuildRunRequest {
-        build: BuildRequest {
-            environment: "python".into(),
-            files: vec![File {
-                name: "test.py".into(),
-                content: formatdoc! {r#"
-                    import os
-                    for _ in range(10):
-                        os.fork()
-                    x = [1]
-                    while True:
-                        x += x
-                "#},
-            }],
-            compile_limits: Default::default(),
-        },
-        run: RunRequest {
-            run_limits: LimitsOpt {
-                memory: Some(1024),
-                processes: Some(16),
+    let response = client()
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "python".into(),
+                files: vec![File {
+                    name: "test.py".into(),
+                    content: formatdoc! {r#"
+                        import os
+                        for _ in range(10):
+                            os.fork()
+                        x = [1]
+                        while True:
+                            x += x
+                    "#},
+                }],
+                compile_limits: Default::default(),
+            },
+            run: RunRequest {
+                run_limits: LimitsOpt {
+                    memory: Some(1024),
+                    processes: Some(16),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        },
-    })
-    .unwrap();
+        })
+        .unwrap();
     assert_ne!(response.run.status, 0);
     let stderr = response.run.stderr;
     assert!(stderr.contains("MemoryError") || stderr.contains("Resource temporarily unavailable"));
@@ -162,20 +169,21 @@ fn test_combination() {
 #[test]
 #[ignore]
 fn test_large_file() {
-    let response = build_and_run(&BuildRunRequest {
-        build: BuildRequest {
-            environment: "bash".into(),
-            files: vec![File {
-                name: "test.sh".into(),
-                content: formatdoc! {r#"
-                    dd if=/dev/urandom of=/tmp/test
-                "#},
-            }],
-            compile_limits: Default::default(),
-        },
-        run: Default::default(),
-    })
-    .unwrap();
+    let response = client()
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "bash".into(),
+                files: vec![File {
+                    name: "test.sh".into(),
+                    content: formatdoc! {r#"
+                        dd if=/dev/urandom of=/tmp/test
+                    "#},
+                }],
+                compile_limits: Default::default(),
+            },
+            run: Default::default(),
+        })
+        .unwrap();
     assert_eq!(response.run.status, 153);
     assert!(response.run.stderr.contains("File size limit exceeded"));
 }
@@ -183,25 +191,26 @@ fn test_large_file() {
 #[test]
 #[ignore]
 fn test_many_files() {
-    let response = build_and_run(&BuildRunRequest {
-        build: BuildRequest {
-            environment: "bash".into(),
-            files: vec![File {
-                name: "test.sh".into(),
-                content: formatdoc! {r#"
-                    cd /tmp
-                    i=0
-                    while true; do
-                        dd if=/dev/urandom of=f$i bs=1M count=16 status=none
-                        i=$((i+1))
-                    done
-                "#},
-            }],
-            compile_limits: Default::default(),
-        },
-        run: Default::default(),
-    })
-    .unwrap();
+    let response = client()
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "bash".into(),
+                files: vec![File {
+                    name: "test.sh".into(),
+                    content: formatdoc! {r#"
+                        cd /tmp
+                        i=0
+                        while true; do
+                            dd if=/dev/urandom of=f$i bs=1M count=16 status=none
+                            i=$((i+1))
+                        done
+                    "#},
+                }],
+                compile_limits: Default::default(),
+            },
+            run: Default::default(),
+        })
+        .unwrap();
     dbg!(&response);
     assert_eq!(response.run.status, 137);
     assert!(response.run.stderr.contains("No space left on device"));

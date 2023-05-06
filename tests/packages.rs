@@ -2,10 +2,10 @@
 
 use std::collections::HashMap;
 
-use sandkasten::schemas::programs::{BuildRequest, BuildRunRequest, File, RunRequest};
+use sandkasten_client::schemas::programs::{BuildRequest, BuildRunRequest, File, RunRequest};
 use serde::Deserialize;
 
-use crate::common::build_and_run;
+use crate::common::client;
 
 mod common;
 
@@ -19,7 +19,7 @@ fn test_package(id: &str) {
 
     let environment = environments.remove(id).unwrap();
 
-    match build_and_run(&BuildRunRequest {
+    match client().build_and_run(&BuildRunRequest {
         build: BuildRequest {
             environment: id.to_owned(),
             files: environment.test.files,
