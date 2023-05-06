@@ -1,7 +1,12 @@
 [package]
 name = "sandkasten-client"
 version = "0.0.1"
+description = "Sandkasten client library for running untrusted code"
+license = "MIT"
+documentation = "https://docs.rs/sandkasten-client/"
+repository = "https://github.com/Defelo/sandkasten"
 edition = "2021"
+rust-version = "1.64.0"
 publish = true
 
 [features]

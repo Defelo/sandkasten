@@ -48,3 +48,56 @@ jobs:
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  doc:
+    runs-on: ubuntu-latest
+    name: doc (nightly)
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install nightly
+        uses: dtolnay/rust-toolchain@nightly
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: cargo doc
+        run: cargo doc --no-deps --all-features --workspace
+        env:
+          RUSTDOCFLAGS: --cfg docsrs
+
+  hack:
+    name: hack (stable)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: cargo install cargo-hack
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-hack
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: cargo hack
+        run: cargo hack --workspace --feature-powerset check
+
+  msrv:
+    name: msrv (${{ matrix.msrv }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        msrv: [1.64.0]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install ${{ matrix.msrv }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.msrv }}
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: cargo +${{ matrix.msrv }} check
+        run: cargo check -p sandkasten-client
