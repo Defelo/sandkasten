@@ -176,3 +176,23 @@ fn test_build_cached() {
     assert_eq!(response.status, 0);
     assert_eq!(response.stdout, "test\n");
 }
+
+#[test]
+#[ignore]
+fn test_build_then_run() {
+    let client = client();
+    let build = client
+        .build(&BuildRequest {
+            environment: "rust".into(),
+            files: vec![File {
+                name: "test.rs".into(),
+                content: "fn main() { println!(\"hello world\"); }".into(),
+            }],
+            compile_limits: Default::default(),
+        })
+        .unwrap();
+    assert_eq!(build.compile_result.unwrap().status, 0);
+    let run = client.run(build.program_id, &Default::default()).unwrap();
+    assert_eq!(run.status, 0);
+    assert_eq!(run.stdout, "hello world\n");
+}
