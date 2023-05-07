@@ -1,16 +1,22 @@
+//! Schemas for programs endpoints.
+
 #[cfg(feature = "poem-openapi")]
 use poem_openapi::Object;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+/// The request data for building and running a program.
 #[derive(Debug, Serialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct BuildRunRequest {
+    /// The data for the build step.
     pub build: BuildRequest,
+    /// The data for the run step.
     #[cfg_attr(feature = "poem-openapi", oai(default))]
     pub run: RunRequest,
 }
 
+/// The request data for building a program.
 #[derive(Debug, Serialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct BuildRequest {
@@ -27,6 +33,7 @@ pub struct BuildRequest {
     pub compile_limits: LimitsOpt,
 }
 
+/// The request data for running a program.
 #[derive(Debug, Serialize, Default)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct RunRequest {
@@ -47,18 +54,22 @@ pub struct RunRequest {
     pub run_limits: LimitsOpt,
 }
 
+/// A file that is put in the working directory of the build/run process.
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct File {
+    /// The name of the file.
     #[cfg_attr(
         feature = "poem-openapi",
         oai(validator(pattern = r"^[a-zA-Z0-9._-]{1,32}$"))
     )]
     pub name: String,
+    /// The content of the file.
     #[cfg_attr(feature = "poem-openapi", oai(validator(max_length = 65536)))]
     pub content: String,
 }
 
+/// The resource limits of a process.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct Limits {
@@ -84,6 +95,7 @@ pub struct Limits {
     pub network: bool,
 }
 
+/// The resource limits of a process. Omit a value to use the default limit.
 #[derive(Debug, Default, Serialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct LimitsOpt {
@@ -130,6 +142,7 @@ pub struct BuildRunResult {
     pub run: RunResult,
 }
 
+/// The error responses that may be returned when building and running a program.
 #[derive(Debug, Deserialize)]
 #[serde(tag = "error", content = "details", rename_all = "snake_case")]
 pub enum BuildRunError {
@@ -158,6 +171,7 @@ pub struct BuildResult {
     pub compile_result: Option<RunResult>,
 }
 
+/// The error responses that may be returned when building a program.
 #[derive(Debug, Deserialize)]
 #[serde(tag = "error", content = "details", rename_all = "snake_case")]
 pub enum BuildError {
@@ -187,6 +201,7 @@ pub struct RunResult {
     pub limits: Limits,
 }
 
+/// The error responses that may be returned when running a program.
 #[derive(Debug, Deserialize)]
 #[serde(tag = "error", content = "details", rename_all = "snake_case")]
 pub enum RunError {
@@ -208,8 +223,11 @@ pub struct ResourceUsage {
     pub memory: u64,
 }
 
+/// Information about a build/run limit that has been exceeded.
 #[derive(Debug, Deserialize)]
 pub struct LimitExceeded {
+    /// The name of the limit.
     pub name: String,
+    /// The maximum value that is allowed for this limit.
     pub max_value: u64,
 }

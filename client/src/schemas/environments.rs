@@ -1,3 +1,5 @@
+//! Schemas for environments endpoints.
+
 use std::collections::HashMap;
 
 #[cfg(feature = "poem-openapi")]
@@ -8,10 +10,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct Environment {
+    /// The display name of the environment (e.g. `Rust` or `C++`).
     pub name: String,
+    /// The version of the environment.
     pub version: String,
 }
 
+/// A map of environments where the key represents the id of the environment.
 #[derive(Debug)]
 #[cfg_attr(feature = "poem-openapi", derive(NewType))]
 #[cfg_attr(
