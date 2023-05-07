@@ -6,7 +6,8 @@ use poem_ext::response;
 use poem_openapi::{param::Path, payload::Json, OpenApi};
 use regex::Regex;
 use sandkasten_client::schemas::programs::{
-    BuildRequest, BuildResult, BuildRunRequest, BuildRunResult, File, RunRequest, RunResult,
+    BuildRequest, BuildResult, BuildRunRequest, BuildRunResult, File, LimitExceeded, RunRequest,
+    RunResult,
 };
 use tokio::sync::Semaphore;
 use uuid::Uuid;
@@ -15,7 +16,6 @@ use crate::{
     config::Config,
     environments::Environments,
     program::{build_program, run_program, BuildProgramError, RunProgramError},
-    sandbox::LimitExceeded,
 };
 
 use super::Tags;

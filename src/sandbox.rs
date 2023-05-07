@@ -1,7 +1,6 @@
 use std::{future::Future, path::Path, process::Stdio, string::FromUtf8Error};
 
-use poem_openapi::Object;
-use sandkasten_client::schemas::programs::{Limits, LimitsOpt, ResourceUsage, RunResult};
+use sandkasten_client::schemas::programs::{Limits, ResourceUsage, RunResult};
 use thiserror::Error;
 use tokio::{
     fs,
@@ -156,63 +155,6 @@ pub enum RunError {
     StringConversionError(#[from] FromUtf8Error),
     #[error("time file has not been created correctly")]
     InvalidTimeFile,
-}
-
-pub fn opt_to_limits(
-    config_limits: &Limits,
-    limits: &LimitsOpt,
-) -> Result<Limits, Vec<LimitExceeded>> {
-    let mut errors = Vec::new();
-    let mut get = |name, mx, val: Option<_>| {
-        let val = val.unwrap_or(mx);
-        if val > mx {
-            errors.push(LimitExceeded {
-                name,
-                max_value: mx,
-            });
-        }
-        val
-    };
-    let out = Limits {
-        cpus: get("cpus", config_limits.cpus, limits.cpus),
-        time: get("time", config_limits.time, limits.time),
-        memory: get("memory", config_limits.memory, limits.memory),
-        tmpfs: get("tmpfs", config_limits.tmpfs, limits.tmpfs),
-        filesize: get("filesize", config_limits.filesize, limits.filesize),
-        file_descriptors: get(
-            "file_descriptors",
-            config_limits.file_descriptors,
-            limits.file_descriptors,
-        ),
-        processes: get("processes", config_limits.processes, limits.processes),
-        stdout_max_size: get(
-            "stdout_max_size",
-            config_limits.stdout_max_size,
-            limits.stdout_max_size,
-        ),
-        stderr_max_size: get(
-            "stderr_max_size",
-            config_limits.stderr_max_size,
-            limits.stderr_max_size,
-        ),
-        network: get(
-            "network",
-            config_limits.network as _,
-            limits.network.map(|x| x as _),
-        ) != 0,
-    };
-    if errors.is_empty() {
-        Ok(out)
-    } else {
-        Err(errors)
-    }
-}
-
-#[derive(Debug, Object)]
-#[oai(read_only_all)]
-pub struct LimitExceeded {
-    pub name: &'static str,
-    pub max_value: u64,
 }
 
 pub async fn with_tempdir<P, A>(

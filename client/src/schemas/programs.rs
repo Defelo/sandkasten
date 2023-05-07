@@ -69,64 +69,6 @@ pub struct File {
     pub content: String,
 }
 
-/// The resource limits of a process.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[cfg_attr(feature = "poem-openapi", derive(Object))]
-pub struct Limits {
-    /// The maximum number of cpus the process is allowed to use.
-    pub cpus: u64,
-    /// The number of **seconds** the process is allowed to run.
-    pub time: u64,
-    /// The amount of memory the process is allowed to use (in **MB**).
-    pub memory: u64,
-    /// The size of the tmpfs mounted at /tmp (in **MB**).
-    pub tmpfs: u64,
-    /// The maximum size of a file the process is allowed to create (in **MB**).
-    pub filesize: u64,
-    /// The maximum number of file descripters the process can open at the same time.
-    pub file_descriptors: u64,
-    /// The maximum number of processes that can run concurrently in the sandbox.
-    pub processes: u64,
-    /// The maximum number of bytes that are read from stdout.
-    pub stdout_max_size: u64,
-    /// The maximum number of bytes that are read from stderr.
-    pub stderr_max_size: u64,
-    /// Whether the process is allowed to access the network.
-    pub network: bool,
-}
-
-/// The resource limits of a process. Omit a value to use the default limit.
-#[derive(Debug, Default, Serialize)]
-#[cfg_attr(feature = "poem-openapi", derive(Object))]
-pub struct LimitsOpt {
-    /// The maximum number of cpus the process is allowed to use.
-    #[cfg_attr(feature = "poem-openapi", oai(validator(minimum(value = "1"))))]
-    pub cpus: Option<u64>,
-    /// The number of **seconds** the process is allowed to run.
-    #[cfg_attr(feature = "poem-openapi", oai(validator(minimum(value = "1"))))]
-    pub time: Option<u64>,
-    /// The amount of memory the process is allowed to use (in **MB**).
-    #[cfg_attr(feature = "poem-openapi", oai(validator(minimum(value = "1"))))]
-    pub memory: Option<u64>,
-    /// The size of the tmpfs mounted at /tmp (in **MB**).
-    pub tmpfs: Option<u64>,
-    /// The maximum size of a file the process is allowed to create (in **MB**).
-    #[cfg_attr(feature = "poem-openapi", oai(validator(minimum(value = "1"))))]
-    pub filesize: Option<u64>,
-    /// The maximum number of file descripters the process can open at the same time.
-    #[cfg_attr(feature = "poem-openapi", oai(validator(minimum(value = "1"))))]
-    pub file_descriptors: Option<u64>,
-    /// The maximum number of processes that can run concurrently in the sandbox.
-    #[cfg_attr(feature = "poem-openapi", oai(validator(minimum(value = "1"))))]
-    pub processes: Option<u64>,
-    /// The maximum number of bytes that are read from stdout.
-    pub stdout_max_size: Option<u64>,
-    /// The maximum number of bytes that are read from stderr.
-    pub stderr_max_size: Option<u64>,
-    /// Whether the process is allowed to access the network.
-    pub network: Option<bool>,
-}
-
 /// The results of building and running a program.
 #[derive(Debug, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
@@ -225,9 +167,96 @@ pub struct ResourceUsage {
 
 /// Information about a build/run limit that has been exceeded.
 #[derive(Debug, Deserialize)]
+#[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct LimitExceeded {
     /// The name of the limit.
     pub name: String,
     /// The maximum value that is allowed for this limit.
     pub max_value: u64,
+}
+
+macro_rules! limits {
+    ($( $(#[doc = $doc:literal])* $(#[validator($validator:meta)])* $name:ident : $type:ty , )*) => {
+        /// The resource limits of a process.
+        #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+        #[cfg_attr(feature = "poem-openapi", derive(Object))]
+        pub struct Limits {
+            $(
+                $(#[doc = $doc])*
+                pub $name : $type,
+            )*
+        }
+
+        /// The resource limits of a process. Omit a value to use the default limit.
+        #[derive(Debug, Default, Serialize)]
+        #[cfg_attr(feature = "poem-openapi", derive(Object))]
+        pub struct LimitsOpt {
+            $(
+                $(#[doc = $doc])*
+                $(
+                    #[cfg_attr(feature = "poem-openapi", oai(validator($validator)))]
+                )*
+                pub $name : Option<$type>,
+            )*
+        }
+
+        impl LimitsOpt {
+            /// Try to convert to [`Limits`] by replacing empty limits with default values and
+            /// returning an error if a limit has been exceeded.
+            pub fn check(
+                &self,
+                max_limits: &Limits,
+            ) -> Result<Limits, Vec<LimitExceeded>> {
+                let mut errors = Vec::new();
+                let out = Limits {
+                    $(
+                        $name : {
+                            let val = self.$name.unwrap_or(max_limits.$name);
+                            if val > max_limits.$name {
+                                errors.push(LimitExceeded {
+                                    name: stringify!($name).into(),
+                                    max_value: max_limits.$name as _,
+                                });
+                            }
+                            val
+                        },
+                    )*
+                };
+                if errors.is_empty() {
+                    Ok(out)
+                } else {
+                    Err(errors)
+                }
+            }
+        }
+    };
+}
+
+limits! {
+    /// The maximum number of cpus the process is allowed to use.
+    #[validator(minimum(value = "1"))]
+    cpus: u64,
+    /// The number of **seconds** the process is allowed to run.
+    #[validator(minimum(value = "1"))]
+    time: u64,
+    /// The amount of memory the process is allowed to use (in **MB**).
+    #[validator(minimum(value = "1"))]
+    memory: u64,
+    /// The size of the tmpfs mounted at /tmp (in **MB**).
+    tmpfs: u64,
+    /// The maximum size of a file the process is allowed to create (in **MB**).
+    #[validator(minimum(value = "1"))]
+    filesize: u64,
+    /// The maximum number of file descripters the process can open at the same time.
+    #[validator(minimum(value = "1"))]
+    file_descriptors: u64,
+    /// The maximum number of processes that can run concurrently in the sandbox.
+    #[validator(minimum(value = "1"))]
+    processes: u64,
+    /// The maximum number of bytes that are read from stdout.
+    stdout_max_size: u64,
+    /// The maximum number of bytes that are read from stderr.
+    stderr_max_size: u64,
+    /// Whether the process is allowed to access the network.
+    network: bool,
 }
