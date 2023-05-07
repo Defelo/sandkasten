@@ -35,5 +35,20 @@ pub fn get_api(
             config,
             environments,
         },
+        #[cfg(feature = "test_api")]
+        test_api::TestApi,
     )
+}
+
+#[cfg(feature = "test_api")]
+mod test_api {
+    pub struct TestApi;
+
+    #[poem_openapi::OpenApi]
+    impl TestApi {
+        #[oai(path = "/test/exit", method = "post", hidden)]
+        async fn exit(&self) {
+            std::process::exit(0);
+        }
+    }
 }
