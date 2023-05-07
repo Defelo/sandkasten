@@ -29,9 +29,9 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
       - name: cargo test --locked
-        run: cargo test --locked --all-targets
-      # - name: cargo test --doc
-      #   run: cargo test --locked --all-features --doc
+        run: cargo test --locked --workspace -F reqwest,blocking,poem-openapi --all-targets
+      - name: cargo test --doc
+        run: cargo test --locked --workspace -F reqwest,blocking,poem-openapi --doc
 
   integration:
     runs-on: ubuntu-latest

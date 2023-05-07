@@ -5,6 +5,10 @@ use once_cell::unsync::Lazy;
 use poem_ext::response;
 use poem_openapi::{param::Path, payload::Json, OpenApi};
 use regex::Regex;
+use sandkasten_client::schemas::programs::{
+    BuildRequest, BuildResult, BuildRunRequest, BuildRunResult, File, LimitExceeded, RunRequest,
+    RunResult,
+};
 use tokio::sync::Semaphore;
 use uuid::Uuid;
 
@@ -12,10 +16,6 @@ use crate::{
     config::Config,
     environments::Environments,
     program::{build_program, run_program, BuildProgramError, RunProgramError},
-    sandbox::LimitExceeded,
-    schemas::programs::{
-        BuildRequest, BuildResult, BuildRunRequest, BuildRunResult, File, RunRequest, RunResult,
-    },
 };
 
 use super::Tags;
@@ -129,7 +129,7 @@ impl ProgramsApi {
         .await?
         {
             Ok(result) => Run::ok(result),
-            Err(RunProgramError::ProgramNotFound) => Run::not_found(),
+            Err(RunProgramError::ProgramNotFound) => Run::program_not_found(),
             Err(RunProgramError::LimitsExceeded(lim)) => Run::run_limits_exceeded(lim),
             Err(err) => Err(err.into()),
         }
@@ -170,16 +170,9 @@ response!(Run = {
     /// File names are not unique.
     InvalidFileNames(400, error),
     /// Program does not exist.
-    NotFound(404, error),
+    ProgramNotFound(404, error),
     /// The specified run limits are too high.
     RunLimitsExceeded(400, error) => Vec<LimitExceeded>,
-});
-
-response!(DeleteProgram = {
-    /// Program has been deleted.
-    Ok(200),
-    /// Program does not exist.
-    NotFound(404, error),
 });
 
 fn check_files(files: &[File]) -> bool {

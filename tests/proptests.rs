@@ -6,9 +6,11 @@ use indoc::formatdoc;
 use once_cell::unsync::Lazy;
 use proptest::{collection, option, prelude::*, string::string_regex};
 use regex::Regex;
-use sandkasten::schemas::programs::{BuildRequest, BuildRunRequest, File, LimitsOpt, RunRequest};
+use sandkasten_client::schemas::programs::{
+    BuildRequest, BuildRunRequest, File, LimitsOpt, RunRequest,
+};
 
-use common::build_and_run;
+use common::client;
 
 mod common;
 
@@ -16,7 +18,7 @@ proptest! {
     #[test]
     #[ignore]
     fn test_files(build_files in files(1, 10, 256), run_files in files(0, 10, 256)) {
-        build_and_run(&BuildRunRequest {
+        client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
                 files: build_files,
@@ -31,7 +33,7 @@ proptest! {
     #[test]
     #[ignore]
     fn test_compile_limits(compile_limits in compile_limits()) {
-        build_and_run(&BuildRunRequest {
+        client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "rust".into(),
                 files: vec![File {
@@ -54,7 +56,7 @@ proptest! {
     #[test]
     #[ignore]
     fn test_run_limits(run_limits in run_limits()) {
-        build_and_run(&BuildRunRequest {
+        client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "rust".into(),
                 files: vec![File {
@@ -77,7 +79,7 @@ proptest! {
     #[ignore]
     fn test_run_args(stdin in stdin(256), args in args(100, 256), files in files(0, 10, 256)) {
         let expected = format!("{}\n{}\n{}", args.len() + 1, files.len(), stdin.as_ref().map(|s| s.chars().count()).unwrap_or(0));
-        let result = build_and_run(&BuildRunRequest {
+        let result = client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
                 files: vec![File {
@@ -111,7 +113,7 @@ proptest! {
         run_files in files(0, 4, 16),
         run_limits in run_limits()
     ) {
-        build_and_run(&BuildRunRequest {
+        client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: environment.to_owned(),
                 files: build_files,
