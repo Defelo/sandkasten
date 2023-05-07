@@ -30,10 +30,9 @@
 #![forbid(unsafe_code)]
 #![warn(clippy::dbg_macro, clippy::use_debug, clippy::todo)]
 #![warn(missing_docs, missing_debug_implementations)]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 #[cfg(feature = "reqwest")]
-#[cfg_attr(docsrs, doc(cfg(feature = "reqwest")))]
 pub use client::*;
 
 pub mod schemas;
@@ -62,7 +61,6 @@ mod client {
 
     /// A synchronous client for Sandkasten.
     #[cfg(feature = "blocking")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "blocking")))]
     #[derive(Debug)]
     pub struct BlockingSandkastenClient {
         base_url: Url,
@@ -80,7 +78,6 @@ mod client {
     }
 
     #[cfg(feature = "blocking")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "blocking")))]
     impl BlockingSandkastenClient {
         /// Create a new client for the Sandkasten instance at `base_url`.
         pub fn new(base_url: Url) -> Self {
@@ -130,7 +127,6 @@ mod client {
             }
 
             #[cfg(feature = "blocking")]
-            #[cfg_attr(docsrs, doc(cfg(feature = "blocking")))]
             impl BlockingSandkastenClient {
                 $(
                     $(#[doc = $doc])*
