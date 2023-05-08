@@ -17,7 +17,7 @@
 //!                 name: "test.py".into(),
 //!                 content: "print(6 * 7, end='')".into(),
 //!             }],
-//!             compile_limits: Default::default(),
+//!             ..Default::default()
 //!         },
 //!         run: Default::default(),
 //!     })

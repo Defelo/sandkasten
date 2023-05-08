@@ -1,13 +1,14 @@
 #![cfg(feature = "nix")]
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
+use std::fmt::Write;
 
 use indoc::formatdoc;
 use once_cell::unsync::Lazy;
 use proptest::{collection, option, prelude::*, string::string_regex};
 use regex::Regex;
 use sandkasten_client::schemas::programs::{
-    BuildRequest, BuildRunRequest, File, LimitsOpt, RunRequest,
+    BuildRequest, BuildRunRequest, EnvVar, File, LimitsOpt, RunRequest,
 };
 
 use common::client;
@@ -22,6 +23,7 @@ proptest! {
             build: BuildRequest {
                 environment: "python".into(),
                 files: build_files,
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
             run: RunRequest{files: run_files, ..Default::default()},
@@ -45,6 +47,7 @@ proptest! {
                         }}
                     "#}
                 }],
+                env_vars: vec![],
                 compile_limits,
             },
             run: Default::default(),
@@ -67,6 +70,7 @@ proptest! {
                         }}
                     "#}
                 }],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
             run: RunRequest{run_limits, ..Default::default()},
@@ -91,9 +95,10 @@ proptest! {
                         print(len(sys.stdin.read()))
                     "#}
                 }],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
-            run: RunRequest{files, stdin, args, run_limits: Default::default()},
+            run: RunRequest{files, stdin, args, env_vars: vec![], run_limits: Default::default()},
         }).unwrap();
         assert_eq!(result.run.status, 0);
         assert_eq!(result.run.stdout.trim(), expected);
@@ -104,25 +109,61 @@ proptest! {
 proptest! {
     #[test]
     #[ignore]
+    fn test_env_vars(build_vars in env_vars_map(16, 256), run_vars in env_vars_map(16, 256)) {
+        let expected = build_vars.iter().chain(&run_vars).map(|(_, v)| v.as_str()).collect::<String>();
+        let mut src = String::new();
+        write!(&mut src, "fn main() {{").unwrap();
+        for name in build_vars.keys() {
+            write!(&mut src, "print!(\"{{}}\", env!(\"{name}\"));").unwrap();
+        }
+        for name in run_vars.keys() {
+            write!(&mut src, "print!(\"{{}}\", std::env::var(\"{name}\").unwrap());").unwrap();
+        }
+        write!(&mut src, "}}").unwrap();
+        let result = client().build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "rust".into(),
+                files: vec![File {
+                    name: "test.rs".into(),
+                    content: src,
+                }],
+                env_vars: build_vars.into_iter().map(|(name, value)| EnvVar {name, value}).collect(),
+                compile_limits: Default::default()
+            },
+            run: RunRequest {env_vars: run_vars.into_iter().map(|(name, value)| EnvVar {name, value}).collect(), ..Default::default()},
+        }).unwrap();
+        assert_eq!(result.run.status, 0);
+        assert_eq!(result.run.stdout, expected);
+        assert!(result.run.stderr.is_empty());
+    }
+}
+
+proptest! {
+    #[test]
+    #[ignore]
     fn random_bullshit_go(
         environment in valid_environment(),
         build_files in files(1, 4, 16),
+        build_env_vars in env_vars(8, 16),
         compile_limits in compile_limits(),
         stdin in stdin(32),
         args in args(8, 16),
         run_files in files(0, 4, 16),
+        run_env_vars in env_vars(8, 16),
         run_limits in run_limits()
     ) {
         client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: environment.to_owned(),
                 files: build_files,
+                env_vars: build_env_vars,
                 compile_limits
             },
             run: RunRequest {
                 stdin,
                 args,
                 files: run_files,
+                env_vars: run_env_vars,
                 run_limits
             }
         }).ok();
@@ -158,6 +199,26 @@ prop_compose! {
 prop_compose! {
     fn args(max_cnt: usize, max_len: usize) (cnt in 0..=max_cnt) (args in collection::vec(string_regex(&format!("[^\0]{{0,{max_len}}}")).unwrap(), cnt)) -> Vec<String> {
         args
+    }
+}
+
+prop_compose! {
+    fn env_var(max_len: usize) (name in "[a-zA-Z0-9_]{1,64}".prop_filter("Invalid name", |x| {
+        x != "_"
+    }), value in string_regex(&format!("[^\0]{{0,{max_len}}}")).unwrap()) -> EnvVar {
+        EnvVar {name, value}
+    }
+}
+
+prop_compose! {
+    fn env_vars(max_cnt: usize, max_len: usize) (cnt in 0..=max_cnt) (env_vars in collection::vec(env_var(max_len), cnt)) -> Vec<EnvVar> {
+        env_vars
+    }
+}
+
+prop_compose! {
+    fn env_vars_map(max_cnt: usize, max_len: usize) (env_vars in env_vars(max_cnt, max_len)) -> BTreeMap<String, String> {
+        env_vars.into_iter().map(|v| (v.name, v.value)).collect()
     }
 }
 

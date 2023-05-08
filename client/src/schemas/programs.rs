@@ -17,7 +17,7 @@ pub struct BuildRunRequest {
 }
 
 /// The request data for building a program.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Default)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct BuildRequest {
     /// The environment to use for building and running the program.
@@ -28,6 +28,9 @@ pub struct BuildRequest {
         oai(validator(min_items = 1, max_items = 10))
     )]
     pub files: Vec<File>,
+    /// A list of environment variables to set during the build step.
+    #[cfg_attr(feature = "poem-openapi", oai(default, validator(max_items = 16)))]
+    pub env_vars: Vec<EnvVar>,
     /// Limits to set on the compilation process.
     #[cfg_attr(feature = "poem-openapi", oai(default))]
     pub compile_limits: LimitsOpt,
@@ -49,6 +52,9 @@ pub struct RunRequest {
     /// A list of additional files that are put in the working directory of the process.
     #[cfg_attr(feature = "poem-openapi", oai(default, validator(max_items = 10)))]
     pub files: Vec<File>,
+    /// A list of environment variables to set during the run step.
+    #[cfg_attr(feature = "poem-openapi", oai(default, validator(max_items = 16)))]
+    pub env_vars: Vec<EnvVar>,
     /// Limits to set on the process.
     #[cfg_attr(feature = "poem-openapi", oai(default))]
     pub run_limits: LimitsOpt,
@@ -67,6 +73,21 @@ pub struct File {
     /// The content of the file.
     #[cfg_attr(feature = "poem-openapi", oai(validator(max_length = 65536)))]
     pub content: String,
+}
+
+/// An environment variable that is set for the build/run process.
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "poem-openapi", derive(Object))]
+pub struct EnvVar {
+    /// The name of the environment variable.
+    #[cfg_attr(
+        feature = "poem-openapi",
+        oai(validator(pattern = r"^[a-zA-Z0-9_]{1,64}$"))
+    )]
+    pub name: String,
+    /// The value of the environment variable.
+    #[cfg_attr(feature = "poem-openapi", oai(validator(pattern = "^[^\0]{0,256}$")))]
+    pub value: String,
 }
 
 /// The results of building and running a program.
@@ -94,6 +115,8 @@ pub enum BuildRunError {
     CompileError(RunResult),
     /// File names are not unique.
     InvalidFileNames,
+    /// Environment variable names are not valid.
+    InvalidEnvVars,
     /// The specified compile limits are too high.
     CompileLimitsExceeded(Vec<LimitExceeded>),
     /// The specified run limits are too high.
@@ -123,6 +146,8 @@ pub enum BuildError {
     CompileError(RunResult),
     /// File names are not unique.
     InvalidFileNames,
+    /// Environment variable names are not valid.
+    InvalidEnvVars,
     /// The specified compile limits are too high.
     CompileLimitsExceeded(Vec<LimitExceeded>),
 }
@@ -149,6 +174,8 @@ pub struct RunResult {
 pub enum RunError {
     /// File names are not unique.
     InvalidFileNames,
+    /// Environment variable names are not valid.
+    InvalidEnvVars,
     /// Program does not exist.
     ProgramNotFound,
     /// The specified run limits are too high.

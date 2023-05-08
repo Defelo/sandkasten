@@ -22,6 +22,7 @@ fn test_no_internet() {
                         c.request("GET", "http://1.1.1.1")
                     "#},
                 }],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
             run: Default::default(),
@@ -49,6 +50,7 @@ fn test_forkbomb() {
                             os.fork()
                     "},
                 }],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
             run: Default::default(),
@@ -80,6 +82,7 @@ fn test_stdoutbomb() {
                         }}
                     "#},
                 }],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
             run: RunRequest {
@@ -113,6 +116,7 @@ fn test_flood_memory() {
                             x += x
                     "#},
                 }],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
             run: RunRequest {
@@ -149,6 +153,7 @@ fn test_combination() {
                             x += x
                     "#},
                 }],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
             run: RunRequest {
@@ -179,6 +184,7 @@ fn test_large_file() {
                         dd if=/dev/urandom of=/tmp/test
                     "#},
                 }],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
             run: Default::default(),
@@ -206,6 +212,7 @@ fn test_many_files() {
                         done
                     "#},
                 }],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
             run: Default::default(),

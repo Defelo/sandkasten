@@ -42,10 +42,10 @@ the program.
 - [x] Packages are defined via Nix.
 - [x] Programs are deleted automatically if they are not executed anymore.
 - [x] Specify stdin, command line arguments and files in the working directory for run steps.
+- [x] Specify environment variables for both compile and run steps.
 - [x] Client library for rust ([crate](https://crates.io/crates/sandkasten-client), [documentation](https://docs.rs/sandkasten-client))
 
 ### Planned/Ideas
-- [ ] Specify environment variables for both compile and run steps.
 - [ ] Communicate with running programs via websockets.
 - [ ] Spawn multiple processes that can communicate with each other.
 - [ ] JWTs for individual limits (+rate limits).

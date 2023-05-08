@@ -23,6 +23,7 @@ fn test_package(id: &str) {
         build: BuildRequest {
             environment: id.to_owned(),
             files: environment.test.files,
+            env_vars: vec![],
             compile_limits: Default::default(),
         },
         run: RunRequest {
@@ -32,6 +33,7 @@ fn test_package(id: &str) {
                 name: "test.txt".into(),
                 content: "hello world".into(),
             }],
+            env_vars: vec![],
             run_limits: Default::default(),
         },
     }) {
