@@ -63,14 +63,16 @@
   };
   test-script = pkgs.writeShellScript "integration-tests.sh" ''
     rm -rf programs jobs
-    cargo llvm-cov run -r --locked --lcov --output-path lcov.info -F test_api &
+    cargo llvm-cov run --lcov --output-path lcov-server.info --release --locked -F test_api &
     pid=$!
     while ! ${pkgs.curl}/bin/curl -so/dev/null localhost:8000; do
       sleep 1
     done
-    cargo test --locked --all-features --all-targets --no-fail-fast -- --ignored
+    cargo llvm-cov test --lcov --output-path lcov-tests.info --locked --all-features --all-targets --no-fail-fast -- --include-ignored
     out=$?
     ${pkgs.curl}/bin/curl -X POST localhost:8000/test/exit
+    wait $pid
+    ${pkgs.lcov}/bin/lcov -a lcov-server.info -a lcov-tests.info -o lcov.info
     exit $out
   '';
   scripts = pkgs.stdenv.mkDerivation {
@@ -80,7 +82,7 @@
   };
 in {
   default = pkgs.mkShell ({
-      packages = [pkgs.nsjail pkgs.cargo-llvm-cov time scripts];
+      packages = [pkgs.nsjail pkgs.cargo-llvm-cov pkgs.lcov time scripts];
       RUST_LOG = "info,sandkasten=trace,difft=off";
     }
     // test-env);
