@@ -62,6 +62,7 @@
       }));
   };
   test-script = pkgs.writeShellScript "integration-tests.sh" ''
+    export PROPTEST_CASES=''${1:-256}
     rm -rf programs jobs
     cargo llvm-cov run --lcov --output-path lcov-server.info --release --locked -F test_api &
     pid=$!
