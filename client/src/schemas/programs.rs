@@ -17,7 +17,7 @@ pub struct BuildRunRequest {
 }
 
 /// The request data for building a program.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Default)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct BuildRequest {
     /// The environment to use for building and running the program.
