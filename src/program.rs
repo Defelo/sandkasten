@@ -39,6 +39,7 @@ pub async fn build_program(
             &env.version,
             &env.compile_script,
             &data.files,
+            &data.environment,
         ))?)
         .finalize();
     let id = Uuid::from_u128(
@@ -356,7 +357,11 @@ async fn compile_program(
             .iter()
             .map(|f| f.name.as_str())
             .collect::<Vec<_>>(),
-        envvars: &[],
+        envvars: &data
+            .env_vars
+            .iter()
+            .map(|e| (e.name.as_str(), e.value.as_str()))
+            .collect::<Vec<_>>(),
         cwd: "/box",
         stdin: None,
         mounts: &[
@@ -417,7 +422,11 @@ async fn execute_program(
         args: &std::iter::once(main_file)
             .chain(data.args.iter().map(|f| f.as_str()))
             .collect::<Vec<_>>(),
-        envvars: &[],
+        envvars: &data
+            .env_vars
+            .iter()
+            .map(|e| (e.name.as_str(), e.value.as_str()))
+            .collect::<Vec<_>>(),
         cwd: "/box",
         stdin: data.stdin.as_deref(),
         mounts: &[

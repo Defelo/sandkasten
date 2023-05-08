@@ -1,7 +1,8 @@
 use indoc::formatdoc;
 use sandkasten_client::schemas::{
     programs::{
-        BuildRequest, BuildRunError, BuildRunRequest, BuildRunResult, File, RunRequest, RunResult,
+        BuildRequest, BuildRunError, BuildRunRequest, BuildRunResult, EnvVar, File, RunRequest,
+        RunResult,
     },
     ErrorResponse,
 };
@@ -32,8 +33,10 @@ fn test_build_run_python() {
                             from foo import add, mul
                             import sys
                             import time
+                            import os
                             print(add(6, 7))
                             print(mul(6, 7), file=sys.stderr)
+                            print(os.environ['FOO'], os.environ['BAR'])
                             time.sleep(0.456)
                             exit(42)
                         "},
@@ -48,14 +51,27 @@ fn test_build_run_python() {
                         "},
                     },
                 ],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
-            run: Default::default(),
+            run: RunRequest {
+                env_vars: vec![
+                    EnvVar {
+                        name: "FOO".into(),
+                        value: "hello".into(),
+                    },
+                    EnvVar {
+                        name: "BAR".into(),
+                        value: "world".into(),
+                    },
+                ],
+                ..Default::default()
+            },
         })
         .unwrap();
     assert!(response.build.is_none());
     assert_eq!(response.run.status, 42);
-    assert_eq!(response.run.stdout, "13\n");
+    assert_eq!(response.run.stdout, "13\nhello world\n");
     assert_eq!(response.run.stderr, "42\n");
     assert!(response.run.resource_usage.time >= 456 && response.run.resource_usage.time <= 2000);
     assert!(
@@ -74,6 +90,7 @@ fn test_build_run_rust_compilation_error() {
                     name: "test.rs".into(),
                     content: "fn main() { fn_not_found(); }".into(),
                 }],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
             run: Default::default(),
@@ -107,6 +124,7 @@ fn test_build_run_rust_ok() {
                             fn main() {{
                                 let test = ();
                                 println!("foo bar");
+                                println!(env!("BUILD_VAR"));
                                 foo::asdf();
                             }}
                         "#},
@@ -120,6 +138,10 @@ fn test_build_run_rust_ok() {
                         "#},
                     },
                 ],
+                env_vars: vec![EnvVar {
+                    name: "BUILD_VAR".into(),
+                    value: "test123".into(),
+                }],
                 compile_limits: Default::default(),
             },
             run: Default::default(),
@@ -132,7 +154,7 @@ fn test_build_run_rust_ok() {
     assert!(build.resource_usage.time >= 1 && build.resource_usage.time <= 2000);
     assert!(build.resource_usage.memory >= 100 && response.run.resource_usage.memory <= 10000);
     assert_eq!(response.run.status, 0);
-    assert_eq!(response.run.stdout, "foo bar\n");
+    assert_eq!(response.run.stdout, "foo bar\ntest123\n");
     assert_eq!(response.run.stderr, "test 1337\n");
     assert!(response.run.resource_usage.time <= 100);
     assert!(
@@ -151,6 +173,7 @@ fn test_build_cached() {
                 name: "test.rs".into(),
                 content: "fn main() { println!(\"test\"); }".into(),
             }],
+            env_vars: vec![],
             compile_limits: Default::default(),
         },
         run: Default::default(),
@@ -188,6 +211,7 @@ fn test_build_then_run() {
                 name: "test.rs".into(),
                 content: "fn main() { println!(\"hello world\"); }".into(),
             }],
+            env_vars: vec![],
             compile_limits: Default::default(),
         })
         .unwrap();

@@ -22,6 +22,7 @@ proptest! {
             build: BuildRequest {
                 environment: "python".into(),
                 files: build_files,
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
             run: RunRequest{files: run_files, ..Default::default()},
@@ -45,6 +46,7 @@ proptest! {
                         }}
                     "#}
                 }],
+                env_vars: vec![],
                 compile_limits,
             },
             run: Default::default(),
@@ -67,6 +69,7 @@ proptest! {
                         }}
                     "#}
                 }],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
             run: RunRequest{run_limits, ..Default::default()},
@@ -91,9 +94,10 @@ proptest! {
                         print(len(sys.stdin.read()))
                     "#}
                 }],
+                env_vars: vec![],
                 compile_limits: Default::default(),
             },
-            run: RunRequest{files, stdin, args, run_limits: Default::default()},
+            run: RunRequest{files, stdin, args, env_vars: vec![], run_limits: Default::default()},
         }).unwrap();
         assert_eq!(result.run.status, 0);
         assert_eq!(result.run.stdout.trim(), expected);
@@ -117,12 +121,14 @@ proptest! {
             build: BuildRequest {
                 environment: environment.to_owned(),
                 files: build_files,
+                env_vars: vec![],
                 compile_limits
             },
             run: RunRequest {
                 stdin,
                 args,
                 files: run_files,
+                env_vars: vec![],
                 run_limits
             }
         }).ok();
