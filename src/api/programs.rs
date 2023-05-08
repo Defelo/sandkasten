@@ -6,8 +6,8 @@ use poem_ext::response;
 use poem_openapi::{param::Path, payload::Json, OpenApi};
 use regex::Regex;
 use sandkasten_client::schemas::programs::{
-    BuildRequest, BuildResult, BuildRunRequest, BuildRunResult, File, LimitExceeded, RunRequest,
-    RunResult,
+    BuildRequest, BuildResult, BuildRunRequest, BuildRunResult, EnvVar, File, LimitExceeded,
+    RunRequest, RunResult,
 };
 use tokio::sync::Semaphore;
 use uuid::Uuid;
@@ -35,6 +35,9 @@ impl ProgramsApi {
     async fn run(&self, data: Json<BuildRunRequest>) -> BuildRun::Response {
         if !check_files(&data.0.build.files) || !check_files(&data.0.run.files) {
             return BuildRun::invalid_file_names();
+        }
+        if !check_env_vars(&data.0.build.env_vars) || !check_env_vars(&data.0.run.env_vars) {
+            return BuildRun::invalid_env_vars();
         }
         let _guard = self.request_semaphore.acquire().await?;
         let (
@@ -93,6 +96,9 @@ impl ProgramsApi {
         if !check_files(&data.0.files) {
             return Build::invalid_file_names();
         }
+        if !check_env_vars(&data.0.env_vars) {
+            return Build::invalid_env_vars();
+        }
         let _guard = self.request_semaphore.acquire().await?;
         match tokio::spawn(build_program(
             Arc::clone(&self.config),
@@ -116,6 +122,9 @@ impl ProgramsApi {
     async fn run_program(&self, program_id: Path<Uuid>, data: Json<RunRequest>) -> Run::Response {
         if !check_files(&data.0.files) {
             return Run::invalid_file_names();
+        }
+        if !check_env_vars(&data.0.env_vars) {
+            return Run::invalid_env_vars();
         }
         let _guard = self.request_semaphore.acquire().await?;
         match tokio::spawn(run_program(
@@ -145,6 +154,8 @@ response!(BuildRun = {
     CompileError(400, error) => RunResult,
     /// File names are not unique.
     InvalidFileNames(400, error),
+    /// Environment variable names are not valid.
+    InvalidEnvVars(400, error),
     /// The specified compile limits are too high.
     CompileLimitsExceeded(400, error) => Vec<LimitExceeded>,
     /// The specified run limits are too high.
@@ -160,6 +171,8 @@ response!(Build = {
     CompileError(400, error) => RunResult,
     /// File names are not unique.
     InvalidFileNames(400, error),
+    /// Environment variable names are not valid.
+    InvalidEnvVars(400, error),
     /// The specified compile limits are too high.
     CompileLimitsExceeded(400, error) => Vec<LimitExceeded>,
 });
@@ -169,6 +182,8 @@ response!(Run = {
     Ok(200) => RunResult,
     /// File names are not unique.
     InvalidFileNames(400, error),
+    /// Environment variable names are not valid.
+    InvalidEnvVars(400, error),
     /// Program does not exist.
     ProgramNotFound(404, error),
     /// The specified run limits are too high.
@@ -179,4 +194,8 @@ fn check_files(files: &[File]) -> bool {
     let invalid_names = Lazy::new(|| Regex::new(r"^\.*$").unwrap());
     files.iter().all(|f| !invalid_names.is_match(&f.name))
         && files.iter().map(|f| &f.name).collect::<HashSet<_>>().len() == files.len()
+}
+
+fn check_env_vars(env_vars: &[EnvVar]) -> bool {
+    env_vars.iter().all(|e| e.name != "_")
 }

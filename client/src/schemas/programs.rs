@@ -86,7 +86,7 @@ pub struct EnvVar {
     )]
     pub name: String,
     /// The value of the environment variable.
-    #[cfg_attr(feature = "poem-openapi", oai(validator(max_length = 4096)))]
+    #[cfg_attr(feature = "poem-openapi", oai(validator(pattern = "^[^\0]{0,256}$")))]
     pub value: String,
 }
 
@@ -115,6 +115,8 @@ pub enum BuildRunError {
     CompileError(RunResult),
     /// File names are not unique.
     InvalidFileNames,
+    /// Environment variable names are not valid.
+    InvalidEnvVars,
     /// The specified compile limits are too high.
     CompileLimitsExceeded(Vec<LimitExceeded>),
     /// The specified run limits are too high.
@@ -144,6 +146,8 @@ pub enum BuildError {
     CompileError(RunResult),
     /// File names are not unique.
     InvalidFileNames,
+    /// Environment variable names are not valid.
+    InvalidEnvVars,
     /// The specified compile limits are too high.
     CompileLimitsExceeded(Vec<LimitExceeded>),
 }
@@ -170,6 +174,8 @@ pub struct RunResult {
 pub enum RunError {
     /// File names are not unique.
     InvalidFileNames,
+    /// Environment variable names are not valid.
+    InvalidEnvVars,
     /// Program does not exist.
     ProgramNotFound,
     /// The specified run limits are too high.
