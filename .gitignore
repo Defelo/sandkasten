@@ -4,3 +4,5 @@
 /result
 /box
 /program
+/lcov*.info
+/lcov_html

@@ -76,10 +76,19 @@
     ${pkgs.lcov}/bin/lcov -a lcov-server.info -a lcov-tests.info -o lcov.info
     exit $out
   '';
+  cov = pkgs.writeShellScript "cov.sh" ''
+    rm -rf lcov*.info lcov_html
+    ${test-script} "''${1:-16}"
+    ${pkgs.lcov}/bin/genhtml -o lcov_html lcov.info
+  '';
   scripts = pkgs.stdenv.mkDerivation {
     name = "scripts";
     unpackPhase = "true";
-    installPhase = "mkdir -p $out/bin && ln -s ${test-script} $out/bin/integration-tests";
+    installPhase = ''
+      mkdir -p $out/bin \
+        && ln -s ${test-script} $out/bin/integration-tests \
+        && ln -s ${cov} $out/bin/cov
+    '';
   };
 in {
   default = pkgs.mkShell ({
