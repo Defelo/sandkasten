@@ -357,6 +357,21 @@ fn test_build_errors() {
 
     let Error::ErrorResponse(err) = client
         .build(&BuildRequest {
+            environment: "rust".into(),
+            files: vec![File {
+                name: "test.rs".into(),
+                content: "".into(),
+            }],
+            ..Default::default()
+        })
+        .unwrap_err() else { panic!() };
+    assert!(matches!(
+        *err,
+        ErrorResponse::Inner(BuildError::CompileError(_))
+    ));
+
+    let Error::ErrorResponse(err) = client
+        .build(&BuildRequest {
             environment: "python".into(),
             files: vec![File {
                 name: ".".into(),
