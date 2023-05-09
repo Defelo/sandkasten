@@ -39,7 +39,7 @@ pub async fn build_program(
             &env.version,
             &env.compile_script,
             &data.files,
-            &data.environment,
+            &data.env_vars,
         ))?)
         .finalize();
     let id = Uuid::from_u128(

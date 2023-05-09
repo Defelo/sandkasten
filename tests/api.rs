@@ -293,8 +293,11 @@ fn test_build_run_errors() {
                     name: "test.rs".into(),
                     content: "fn main() {}".into(),
                 }],
+                env_vars: vec![EnvVar {
+                    name: "x".into(),
+                    value: uuid::Uuid::new_v4().to_string(),
+                }],
                 compile_limits: LimitsOpt {cpus: Some(4096), ..Default::default()},
-                ..Default::default()
             },
             run: Default::default(),
         })
@@ -391,11 +394,14 @@ fn test_build_errors() {
                 name: "test.rs".into(),
                 content: "fn main() {}".into(),
             }],
+            env_vars: vec![EnvVar {
+                name: "x".into(),
+                value: uuid::Uuid::new_v4().to_string(),
+            }],
             compile_limits: LimitsOpt {
                 cpus: Some(4096),
                 ..Default::default()
             },
-            ..Default::default()
         })
         .unwrap_err() else { panic!() };
     let ErrorResponse::Inner(BuildError::CompileLimitsExceeded(mut les)) = *err else {panic!()};
