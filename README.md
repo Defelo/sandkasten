@@ -124,7 +124,8 @@ need to have a Sandkasten instance running on `127.0.0.1:8000`. You can also spe
 instance via the `TARGET` environment variable. If you only want to run the integration tests that
 do not require a nix development shell, you can omit the `-F nix`. In the development shell you can
 also run the `integration-tests` command to automatically start a temporary sandkasten instance and
-run the integration tests against it.
+run the integration tests against it. There is also a `cov` command that runs the integration tests
+and writes an html coverage report to `lcov_html/index.html`.
 
 ### Packages
 All packages are defined using nix expressions in

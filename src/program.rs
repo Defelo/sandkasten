@@ -39,7 +39,7 @@ pub async fn build_program(
             &env.version,
             &env.compile_script,
             &data.files,
-            &data.environment,
+            &data.env_vars,
         ))?)
         .finalize();
     let id = Uuid::from_u128(
@@ -67,6 +67,15 @@ pub async fn build_program(
                 fs::write(path.join("compile_result"), serialized).await?;
             }
             fs::write(path.join("ok"), []).await?;
+            fs::write(
+                path.join("last_run"),
+                time::SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs()
+                    .to_string(),
+            )
+            .await?;
             Ok((
                 BuildResult {
                     program_id: id,
@@ -77,8 +86,10 @@ pub async fn build_program(
             ))
         }
         Err(err) => {
-            if let Err(err) = fs::remove_dir_all(&path).await {
-                error!("could not remove program directory {path:?}: {err}");
+            if fs::try_exists(&path).await? {
+                if let Err(err) = fs::remove_dir_all(&path).await {
+                    error!("could not remove program directory {path:?}: {err}");
+                }
             }
             Err(err)
         }
@@ -162,16 +173,6 @@ pub async fn run_program(
         },
     )
     .await??)
-}
-
-/// Delete a program's directly and all its contents.
-pub async fn delete_program(config: &Config, program_id: Uuid) -> Result<(), DeleteProgramError> {
-    let path = config.programs_dir.join(program_id.to_string());
-    if !fs::try_exists(&path).await? {
-        return Err(DeleteProgramError::ProgramNotFound);
-    }
-    fs::remove_dir_all(path).await?;
-    Ok(())
 }
 
 pub async fn prune_programs(
@@ -262,14 +263,6 @@ pub enum RunProgramError {
     RunError(#[from] RunError),
     #[error("limits exceeded: {0:?}")]
     LimitsExceeded(Vec<LimitExceeded>),
-}
-
-#[derive(Debug, Error)]
-pub enum DeleteProgramError {
-    #[error("program does not exist")]
-    ProgramNotFound,
-    #[error("io error: {0}")]
-    IOError(#[from] std::io::Error),
 }
 
 async fn store_program(

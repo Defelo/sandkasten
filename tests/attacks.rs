@@ -25,7 +25,13 @@ fn test_no_internet() {
                 env_vars: vec![],
                 compile_limits: Default::default(),
             },
-            run: Default::default(),
+            run: RunRequest {
+                run_limits: LimitsOpt {
+                    network: Some(false),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
         })
         .unwrap();
     assert_eq!(response.run.status, 1);
