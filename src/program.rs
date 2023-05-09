@@ -86,8 +86,10 @@ pub async fn build_program(
             ))
         }
         Err(err) => {
-            if let Err(err) = fs::remove_dir_all(&path).await {
-                error!("could not remove program directory {path:?}: {err}");
+            if fs::try_exists(&path).await? {
+                if let Err(err) = fs::remove_dir_all(&path).await {
+                    error!("could not remove program directory {path:?}: {err}");
+                }
             }
             Err(err)
         }
