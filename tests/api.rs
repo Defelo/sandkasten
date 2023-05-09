@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use indoc::formatdoc;
 use regex::Regex;
 use sandkasten_client::{
@@ -506,4 +508,56 @@ fn test_network() {
     let re = Regex::new(r"^200 IPv[46],[^,]+,.+$").unwrap();
     assert!(re.is_match(&result.run.stdout));
     assert!(result.run.stderr.is_empty());
+}
+
+#[test]
+#[ignore]
+fn test_build_race() {
+    let client = Arc::new(client());
+
+    for _ in 0..16 {
+        let x = uuid::Uuid::new_v4();
+        let threads = (0..256)
+            .map(|i| {
+                let client = Arc::clone(&client);
+                std::thread::spawn(move || {
+                    client.build(&BuildRequest {
+                        environment: "rust".into(),
+                        files: vec![File {
+                            name: "test.rs".into(),
+                            content: "fn main() { println!(\"hi there\"); }".into(),
+                        }],
+                        env_vars: vec![EnvVar {
+                            name: "x".into(),
+                            value: format!("{x} {}", i / 64),
+                        }],
+                        ..Default::default()
+                    })
+                })
+            })
+            .collect::<Vec<_>>();
+        let results = threads
+            .into_iter()
+            .map(|t| t.join().unwrap().unwrap())
+            .collect::<Vec<_>>();
+        let res = results.first().unwrap();
+        assert!(results
+            .iter()
+            .take(64)
+            .all(|r| r.program_id == res.program_id));
+        assert!(results
+            .iter()
+            .all(|r| r.compile_result.as_ref().unwrap().status == 0));
+        assert!(results
+            .iter()
+            .all(|r| r.compile_result.as_ref().unwrap().stdout.is_empty()));
+        assert!(results
+            .iter()
+            .all(|r| r.compile_result.as_ref().unwrap().stderr.is_empty()));
+
+        let run = client.run(res.program_id, &Default::default()).unwrap();
+        assert_eq!(run.status, 0);
+        assert_eq!(run.stdout, "hi there\n");
+        assert!(run.stderr.is_empty());
+    }
 }

@@ -67,6 +67,15 @@ pub async fn build_program(
                 fs::write(path.join("compile_result"), serialized).await?;
             }
             fs::write(path.join("ok"), []).await?;
+            fs::write(
+                path.join("last_run"),
+                time::SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs()
+                    .to_string(),
+            )
+            .await?;
             Ok((
                 BuildResult {
                     program_id: id,
