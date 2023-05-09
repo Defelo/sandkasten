@@ -59,6 +59,7 @@
         jobs_dir = "jobs";
         program_ttl = 60;
         prune_programs_interval = 30;
+        run_limits = config.run_limits // {network = true;};
       }));
   };
   test-script = pkgs.writeShellScript "integration-tests.sh" ''

@@ -1,4 +1,5 @@
 use indoc::formatdoc;
+use regex::Regex;
 use sandkasten_client::{
     schemas::{
         programs::{
@@ -471,4 +472,32 @@ fn test_run_errors() {
     assert_eq!(le.name, "cpus");
     assert_eq!(le.max_value, 1);
     assert!(les.pop().is_none());
+}
+
+#[test]
+#[ignore]
+fn test_network() {
+    let result = client()
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "python".into(),
+                files: vec![File {
+                    name: "test.py".into(),
+                    content: formatdoc! {r#"
+                        from http.client import *
+                        c=HTTPConnection("ip6.me")
+                        c.request("GET", "http://ip6.me/api/")
+                        r=c.getresponse()
+                        print(r.status, r.read().decode().strip(), end='')
+                    "#},
+                }],
+                ..Default::default()
+            },
+            run: Default::default(),
+        })
+        .unwrap();
+    assert_eq!(result.run.status, 0);
+    let re = Regex::new(r"^200 IPv[46],[^,]+,.+$").unwrap();
+    assert!(re.is_match(&result.run.stdout));
+    assert!(result.run.stderr.is_empty());
 }
