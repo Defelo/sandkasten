@@ -1,10 +1,13 @@
 use indoc::formatdoc;
-use sandkasten_client::schemas::{
-    programs::{
-        BuildRequest, BuildRunError, BuildRunRequest, BuildRunResult, EnvVar, File, RunRequest,
-        RunResult,
+use sandkasten_client::{
+    schemas::{
+        programs::{
+            BuildError, BuildRequest, BuildRunError, BuildRunRequest, BuildRunResult, EnvVar, File,
+            LimitsOpt, RunError, RunRequest, RunResult,
+        },
+        ErrorResponse,
     },
-    ErrorResponse,
+    Error,
 };
 
 use crate::common::client;
@@ -219,4 +222,253 @@ fn test_build_then_run() {
     let run = client.run(build.program_id, &Default::default()).unwrap();
     assert_eq!(run.status, 0);
     assert_eq!(run.stdout, "hello world\n");
+}
+
+#[test]
+#[ignore]
+fn test_build_run_errors() {
+    let client = client();
+
+    let Error::ErrorResponse(err) = client
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "this_environment_does_not_exist".into(),
+                files: vec![File {
+                    name: "test".into(),
+                    content: "".into(),
+                }],
+                ..Default::default()
+            },
+            run: Default::default(),
+        })
+        .unwrap_err() else { panic!() };
+    assert!(matches!(
+        *err,
+        ErrorResponse::Inner(BuildRunError::EnvironmentNotFound)
+    ));
+
+    let Error::ErrorResponse(err) = client
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "python".into(),
+                files: vec![File {
+                    name: ".".into(),
+                    content: "".into(),
+                }],
+                ..Default::default()
+            },
+            run: Default::default(),
+        })
+        .unwrap_err() else { panic!() };
+    assert!(matches!(
+        *err,
+        ErrorResponse::Inner(BuildRunError::InvalidFileNames)
+    ));
+
+    let Error::ErrorResponse(err) = client
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "python".into(),
+                files: vec![File {
+                    name: "test.py".into(),
+                    content: "".into(),
+                }],
+                env_vars: vec![EnvVar {name: "_".into(), value: "".into()}],
+                ..Default::default()
+            },
+            run: Default::default(),
+        })
+        .unwrap_err() else { panic!() };
+    assert!(matches!(
+        *err,
+        ErrorResponse::Inner(BuildRunError::InvalidEnvVars)
+    ));
+
+    let Error::ErrorResponse(err) = client
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "rust".into(),
+                files: vec![File {
+                    name: "test.rs".into(),
+                    content: "fn main() {}".into(),
+                }],
+                compile_limits: LimitsOpt {cpus: Some(4096), ..Default::default()},
+                ..Default::default()
+            },
+            run: Default::default(),
+        })
+        .unwrap_err() else { panic!() };
+    let ErrorResponse::Inner(BuildRunError::CompileLimitsExceeded(mut les)) = *err else {panic!()};
+    let le = les.pop().unwrap();
+    assert_eq!(le.name, "cpus");
+    assert_eq!(le.max_value, 1);
+    assert!(les.pop().is_none());
+
+    let Error::ErrorResponse(err) = client
+        .build_and_run(&BuildRunRequest {
+            build: BuildRequest {
+                environment: "rust".into(),
+                files: vec![File {
+                    name: "test.rs".into(),
+                    content: "fn main() {}".into(),
+                }],
+                ..Default::default()
+            },
+            run: RunRequest {
+                run_limits: LimitsOpt {
+                    time: Some(65536), ..Default::default()
+                },
+                ..Default::default()
+            },
+        })
+        .unwrap_err() else { panic!() };
+    let ErrorResponse::Inner(BuildRunError::RunLimitsExceeded(mut les)) = *err else {panic!()};
+    let le = les.pop().unwrap();
+    assert_eq!(le.name, "time");
+    assert_eq!(le.max_value, 5);
+    assert!(les.pop().is_none());
+}
+
+#[test]
+#[ignore]
+fn test_build_errors() {
+    let client = client();
+
+    let Error::ErrorResponse(err) = client
+        .build(&BuildRequest {
+            environment: "this_environment_does_not_exist".into(),
+            files: vec![File {
+                name: "test".into(),
+                content: "".into(),
+            }],
+            ..Default::default()
+        })
+        .unwrap_err() else { panic!() };
+    assert!(matches!(
+        *err,
+        ErrorResponse::Inner(BuildError::EnvironmentNotFound)
+    ));
+
+    let Error::ErrorResponse(err) = client
+        .build(&BuildRequest {
+            environment: "python".into(),
+            files: vec![File {
+                name: ".".into(),
+                content: "".into(),
+            }],
+            ..Default::default()
+        })
+        .unwrap_err() else { panic!() };
+    assert!(matches!(
+        *err,
+        ErrorResponse::Inner(BuildError::InvalidFileNames)
+    ));
+
+    let Error::ErrorResponse(err) = client
+        .build(&BuildRequest {
+            environment: "python".into(),
+            files: vec![File {
+                name: "test.py".into(),
+                content: "".into(),
+            }],
+            env_vars: vec![EnvVar {
+                name: "_".into(),
+                value: "".into(),
+            }],
+            ..Default::default()
+        })
+        .unwrap_err() else { panic!() };
+    assert!(matches!(
+        *err,
+        ErrorResponse::Inner(BuildError::InvalidEnvVars)
+    ));
+
+    let Error::ErrorResponse(err) = client
+        .build(&BuildRequest {
+            environment: "rust".into(),
+            files: vec![File {
+                name: "test.rs".into(),
+                content: "fn main() {}".into(),
+            }],
+            compile_limits: LimitsOpt {
+                cpus: Some(4096),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .unwrap_err() else { panic!() };
+    let ErrorResponse::Inner(BuildError::CompileLimitsExceeded(mut les)) = *err else {panic!()};
+    let le = les.pop().unwrap();
+    assert_eq!(le.name, "cpus");
+    assert_eq!(le.max_value, 1);
+    assert!(les.pop().is_none());
+}
+
+#[test]
+#[ignore]
+fn test_run_errors() {
+    let client = client();
+
+    let program_id = client
+        .build(&BuildRequest {
+            environment: "python".into(),
+            files: vec![File {
+                name: "test.py".into(),
+                content: "print('Hello World')".into(),
+            }],
+            ..Default::default()
+        })
+        .unwrap()
+        .program_id;
+
+    let Error::ErrorResponse(err) = client
+        .run("00000000-0000-0000-0000-000000000000", &Default::default())
+        .unwrap_err() else { panic!() };
+    assert!(matches!(
+        *err,
+        ErrorResponse::Inner(RunError::ProgramNotFound)
+    ));
+
+    let Error::ErrorResponse(err) = client
+        .run(program_id, &RunRequest {
+            files: vec![File {
+                name: ".".into(),
+                content: "".into(),
+            }],
+            ..Default::default()
+        })
+        .unwrap_err() else { panic!() };
+    assert!(matches!(
+        *err,
+        ErrorResponse::Inner(RunError::InvalidFileNames)
+    ));
+
+    let Error::ErrorResponse(err) = client
+        .run(program_id, &RunRequest {
+            env_vars: vec![EnvVar {
+                name: "_".into(),
+                value: "".into(),
+            }],
+            ..Default::default()
+        })
+        .unwrap_err() else { panic!() };
+    assert!(matches!(
+        *err,
+        ErrorResponse::Inner(RunError::InvalidEnvVars)
+    ));
+
+    let Error::ErrorResponse(err) = client
+        .run(program_id, &RunRequest {
+            run_limits: LimitsOpt {
+                cpus: Some(4096),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .unwrap_err() else { panic!() };
+    let ErrorResponse::Inner(RunError::RunLimitsExceeded(mut les)) = *err else {panic!()};
+    let le = les.pop().unwrap();
+    assert_eq!(le.name, "cpus");
+    assert_eq!(le.max_value, 1);
+    assert!(les.pop().is_none());
 }
