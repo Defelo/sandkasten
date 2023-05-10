@@ -22,6 +22,14 @@ in
           // (builtins.mapAttrs (k: v: types.bool) limits.bool);
       in {
         enable = mkEnableOption "sandkasten";
+        uid = mkOption {
+          type = types.nullOr types.int;
+          default = null;
+        };
+        gid = mkOption {
+          type = types.nullOr types.int;
+          default = null;
+        };
         host = mkOption {
           type = types.str;
           default = "0.0.0.0";
@@ -89,9 +97,12 @@ in
           };
         };
         users.users.sandkasten = {
+          inherit (cfg) uid;
           group = "sandkasten";
           isSystemUser = true;
         };
-        users.groups.sandkasten = {};
+        users.groups.sandkasten = {
+          inherit (cfg) gid;
+        };
       };
     }
