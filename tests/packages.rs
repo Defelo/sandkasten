@@ -2,7 +2,9 @@
 
 use std::collections::HashMap;
 
-use sandkasten_client::schemas::programs::{BuildRequest, BuildRunRequest, File, RunRequest};
+use sandkasten_client::schemas::programs::{
+    BuildRequest, BuildRunRequest, File, MainFile, RunRequest,
+};
 use serde::Deserialize;
 
 use crate::common::client;
@@ -22,9 +24,9 @@ fn test_package(id: &str) {
     match client().build_and_run(&BuildRunRequest {
         build: BuildRequest {
             environment: id.to_owned(),
+            main_file: environment.test.main_file,
             files: environment.test.files,
-            env_vars: vec![],
-            compile_limits: Default::default(),
+            ..Default::default()
         },
         run: RunRequest {
             stdin: Some("stdin".into()),
@@ -33,8 +35,7 @@ fn test_package(id: &str) {
                 name: "test.txt".into(),
                 content: "hello world".into(),
             }],
-            env_vars: vec![],
-            run_limits: Default::default(),
+            ..Default::default()
         },
     }) {
         Ok(response) => {
@@ -68,5 +69,6 @@ struct Environment {
 
 #[derive(Debug, Deserialize)]
 struct Test {
+    main_file: MainFile,
     files: Vec<File>,
 }

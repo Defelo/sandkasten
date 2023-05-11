@@ -38,6 +38,7 @@ pub async fn build_program(
             &env.name,
             &env.version,
             &env.compile_script,
+            &data.main_file,
             &data.files,
             &data.env_vars,
         ))?)
@@ -247,8 +248,8 @@ pub enum BuildProgramError {
     CompilationFailed(RunResult),
     #[error("postcard error: {0}")]
     PostcardError(#[from] postcard::Error),
-    #[error("no main file")]
-    NoMainFile,
+    #[error("conflicting filenames")]
+    ConflictingFilenames,
     #[error("limits exceeded: {0:?}")]
     LimitsExceeded(Vec<LimitExceeded>),
 }
@@ -280,15 +281,16 @@ async fn store_program(
 
     fs::create_dir_all(path.join("files")).await?;
     fs::write(path.join("run_script"), &env.run_script).await?;
-    fs::write(
-        path.join("main_file"),
-        &data
-            .files
-            .first()
-            .ok_or(BuildProgramError::NoMainFile)?
-            .name,
-    )
-    .await?;
+
+    let main_file_name = data
+        .main_file
+        .name
+        .as_ref()
+        .unwrap_or(&env.default_main_file_name);
+    if data.files.iter().any(|f| f.name == *main_file_name) {
+        return Err(BuildProgramError::ConflictingFilenames);
+    }
+    fs::write(path.join("main_file"), main_file_name).await?;
 
     let compile_result = if let Some(compile_script) = &env.compile_script {
         // run compile script and copy output to program dir
@@ -297,7 +299,17 @@ async fn store_program(
         let result = with_tempdir(
             config.jobs_dir.join(job_id.to_string()),
             |tmpdir| async move {
+                let main_file_name = data
+                    .main_file
+                    .name
+                    .as_ref()
+                    .unwrap_or(&env.default_main_file_name);
                 fs::create_dir_all(tmpdir.join("box")).await?;
+                fs::write(
+                    tmpdir.join("box").join(main_file_name),
+                    &data.main_file.content,
+                )
+                .await?;
                 for file in &data.files {
                     fs::write(tmpdir.join("box").join(&file.name), &file.content).await?;
                 }
@@ -305,6 +317,7 @@ async fn store_program(
                     nsjail: &environments.nsjail_path,
                     time: &environments.time_path,
                     compile_script,
+                    main_file_name,
                     data: &data,
                     path,
                     tmpdir: &tmpdir,
@@ -320,6 +333,11 @@ async fn store_program(
         Some(result)
     } else {
         // copy files to program dir
+        fs::write(
+            path.join("files").join(main_file_name),
+            data.main_file.content,
+        )
+        .await?;
         for file in data.files {
             fs::write(path.join("files").join(file.name), file.content).await?;
         }
@@ -334,6 +352,7 @@ async fn compile_program(
         nsjail,
         time,
         compile_script,
+        main_file_name,
         data,
         path,
         tmpdir,
@@ -345,10 +364,8 @@ async fn compile_program(
         time,
         tmpdir,
         program: compile_script,
-        args: &data
-            .files
-            .iter()
-            .map(|f| f.name.as_str())
+        args: &std::iter::once(main_file_name)
+            .chain(data.files.iter().map(|f| f.name.as_str()))
             .collect::<Vec<_>>(),
         envvars: &data
             .env_vars
@@ -389,6 +406,7 @@ struct CompileProgram<'a> {
     nsjail: &'a str,
     time: &'a str,
     compile_script: &'a str,
+    main_file_name: &'a str,
     data: &'a BuildRequest,
     path: &'a Path,
     tmpdir: &'a Path,

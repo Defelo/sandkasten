@@ -22,7 +22,7 @@
   envs = dev:
     builtins.mapAttrs (k: v:
       {
-        inherit (v) name version;
+        inherit (v) name version default_main_file_name;
         compile_script =
           if builtins.isNull v.compile_script
           then null

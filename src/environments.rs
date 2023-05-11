@@ -23,6 +23,7 @@ pub struct Environments {
 pub struct Environment {
     pub name: String,
     pub version: String,
+    pub default_main_file_name: String,
     pub compile_script: Option<String>,
     pub run_script: String,
 }
