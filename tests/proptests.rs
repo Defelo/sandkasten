@@ -8,7 +8,7 @@ use once_cell::unsync::Lazy;
 use proptest::{collection, option, prelude::*, string::string_regex};
 use regex::Regex;
 use sandkasten_client::schemas::programs::{
-    BuildRequest, BuildRunRequest, EnvVar, File, LimitsOpt, RunRequest,
+    BuildRequest, BuildRunRequest, EnvVar, File, LimitsOpt, MainFile, RunRequest,
 };
 
 use common::client;
@@ -18,10 +18,11 @@ mod common;
 proptest! {
     #[test]
     #[ignore]
-    fn test_files(build_files in files(1, 10, 256), run_files in files(0, 10, 256)) {
+    fn test_files(main_file in main_file(256), build_files in files(1, 10, 256), run_files in files(0, 10, 256)) {
         client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
+                main_file,
                 files: build_files,
                 env_vars: vec![],
                 compile_limits: Default::default(),
@@ -38,17 +39,17 @@ proptest! {
         client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "rust".into(),
-                files: vec![File {
-                    name: "test.rs".into(),
+                main_file: MainFile {
+                    name: Some("test.rs".into()),
                     content: formatdoc! {r#"
                         fn main() {{
                             // {compile_limits:?}
                             println!("Hello World!");
                         }}
                     "#}
-                }],
-                env_vars: vec![],
+                },
                 compile_limits,
+                ..Default::default()
             },
             run: Default::default(),
         }).ok();
@@ -62,16 +63,15 @@ proptest! {
         client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "rust".into(),
-                files: vec![File {
-                    name: "test.rs".into(),
+                main_file: MainFile {
+                    name: Some("test.rs".into()),
                     content: formatdoc! {r#"
                         fn main() {{
                             println!("Hello World!");
                         }}
                     "#}
-                }],
-                env_vars: vec![],
-                compile_limits: Default::default(),
+                },
+                ..Default::default()
             },
             run: RunRequest{run_limits, ..Default::default()},
         }).unwrap();
@@ -86,17 +86,16 @@ proptest! {
         let result = client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
-                files: vec![File {
-                    name: "test.py".into(),
+                main_file: MainFile {
+                    name: Some("test.py".into()),
                     content: formatdoc! {r#"
                         import sys, os
                         print(len(sys.argv))
                         print(len(os.listdir()))
                         print(len(sys.stdin.read()))
                     "#}
-                }],
-                env_vars: vec![],
-                compile_limits: Default::default(),
+                },
+                ..Default::default()
             },
             run: RunRequest{files, stdin, args, env_vars: vec![], run_limits: Default::default()},
         }).unwrap();
@@ -123,12 +122,12 @@ proptest! {
         let result = client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "rust".into(),
-                files: vec![File {
-                    name: "test.rs".into(),
+                main_file: MainFile {
+                    name: Some("test.rs".into()),
                     content: src,
-                }],
+                },
                 env_vars: build_vars.into_iter().map(|(name, value)| EnvVar {name, value}).collect(),
-                compile_limits: Default::default()
+                ..Default::default()
             },
             run: RunRequest {env_vars: run_vars.into_iter().map(|(name, value)| EnvVar {name, value}).collect(), ..Default::default()},
         }).unwrap();
@@ -143,6 +142,7 @@ proptest! {
     #[ignore]
     fn random_bullshit_go(
         environment in valid_environment(),
+        main_file in main_file(16),
         build_files in files(1, 4, 16),
         build_env_vars in env_vars(8, 16),
         compile_limits in compile_limits(),
@@ -155,6 +155,7 @@ proptest! {
         client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: environment.to_owned(),
+                main_file,
                 files: build_files,
                 env_vars: build_env_vars,
                 compile_limits
@@ -182,6 +183,12 @@ prop_compose! {
 prop_compose! {
     fn src_file(max_len: usize) (name in filename(), content in string_regex(&format!("(?s).{{0,{max_len}}}")).unwrap()) -> File {
         File {name, content}
+    }
+}
+
+prop_compose! {
+    fn main_file(max_len: usize) (name in option::of(filename()), content in string_regex(&format!("(?s).{{0,{max_len}}}")).unwrap()) -> MainFile {
+        MainFile {name, content}
     }
 }
 

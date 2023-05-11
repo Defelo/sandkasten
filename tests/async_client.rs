@@ -1,5 +1,5 @@
 use sandkasten_client::{
-    schemas::programs::{BuildRequest, BuildRunRequest, File},
+    schemas::programs::{BuildRequest, BuildRunRequest, MainFile},
     SandkastenClient,
 };
 
@@ -18,10 +18,10 @@ async fn test_build_run() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "rust".into(),
-                files: vec![File {
-                    name: "test.rs".into(),
+                main_file: MainFile {
+                    name: Some("test.rs".into()),
                     content: "fn main() { print!(\"Hello World!\"); }".into(),
-                }],
+                },
                 ..Default::default()
             },
             run: Default::default(),
@@ -40,10 +40,10 @@ async fn test_build_then_run() {
     let result = client()
         .build(&BuildRequest {
             environment: "rust".into(),
-            files: vec![File {
-                name: "test.rs".into(),
+            main_file: MainFile {
+                name: Some("test.rs".into()),
                 content: "fn main() { print!(\"Hello World!\"); }".into(),
-            }],
+            },
             ..Default::default()
         })
         .await

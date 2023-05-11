@@ -1,6 +1,6 @@
 use indoc::formatdoc;
 use sandkasten_client::schemas::programs::{
-    BuildRequest, BuildRunRequest, File, LimitsOpt, RunRequest,
+    BuildRequest, BuildRunRequest, LimitsOpt, MainFile, RunRequest,
 };
 
 use crate::common::client;
@@ -14,16 +14,15 @@ fn test_no_internet() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
-                files: vec![File {
-                    name: "test.py".into(),
+                main_file: MainFile {
+                    name: Some("test.py".into()),
                     content: formatdoc! {r#"
                         from http.client import *
                         c=HTTPConnection("1.1.1.1")
                         c.request("GET", "http://1.1.1.1")
                     "#},
-                }],
-                env_vars: vec![],
-                compile_limits: Default::default(),
+                },
+                ..Default::default()
             },
             run: RunRequest {
                 run_limits: LimitsOpt {
@@ -48,16 +47,15 @@ fn test_forkbomb() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
-                files: vec![File {
-                    name: "test.py".into(),
+                main_file: MainFile {
+                    name: Some("test.py".into()),
                     content: formatdoc! {"
                         import os
                         while True:
                             os.fork()
                     "},
-                }],
-                env_vars: vec![],
-                compile_limits: Default::default(),
+                },
+                ..Default::default()
             },
             run: Default::default(),
         })
@@ -77,8 +75,8 @@ fn test_stdoutbomb() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "rust".into(),
-                files: vec![File {
-                    name: "test.rs".into(),
+                main_file: MainFile {
+                    name: Some("test.rs".into()),
                     content: formatdoc! {r#"
                         fn main() {{
                             loop {{
@@ -87,9 +85,8 @@ fn test_stdoutbomb() {
                             }}
                         }}
                     "#},
-                }],
-                env_vars: vec![],
-                compile_limits: Default::default(),
+                },
+                ..Default::default()
             },
             run: RunRequest {
                 run_limits: LimitsOpt {
@@ -114,16 +111,15 @@ fn test_flood_memory() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
-                files: vec![File {
-                    name: "test.py".into(),
+                main_file: MainFile {
+                    name: Some("test.py".into()),
                     content: formatdoc! {r#"
                         x = [1]
                         while True:
                             x += x
                     "#},
-                }],
-                env_vars: vec![],
-                compile_limits: Default::default(),
+                },
+                ..Default::default()
             },
             run: RunRequest {
                 run_limits: LimitsOpt {
@@ -148,8 +144,8 @@ fn test_combination() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
-                files: vec![File {
-                    name: "test.py".into(),
+                main_file: MainFile {
+                    name: Some("test.py".into()),
                     content: formatdoc! {r#"
                         import os
                         for _ in range(10):
@@ -158,9 +154,8 @@ fn test_combination() {
                         while True:
                             x += x
                     "#},
-                }],
-                env_vars: vec![],
-                compile_limits: Default::default(),
+                },
+                ..Default::default()
             },
             run: RunRequest {
                 run_limits: LimitsOpt {
@@ -184,14 +179,13 @@ fn test_large_file() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "bash".into(),
-                files: vec![File {
-                    name: "test.sh".into(),
+                main_file: MainFile {
+                    name: Some("test.sh".into()),
                     content: formatdoc! {r#"
                         dd if=/dev/urandom of=/tmp/test
                     "#},
-                }],
-                env_vars: vec![],
-                compile_limits: Default::default(),
+                },
+                ..Default::default()
             },
             run: Default::default(),
         })
@@ -207,8 +201,8 @@ fn test_many_files() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "bash".into(),
-                files: vec![File {
-                    name: "test.sh".into(),
+                main_file: MainFile {
+                    name: Some("test.sh".into()),
                     content: formatdoc! {r#"
                         cd /tmp
                         i=0
@@ -217,9 +211,8 @@ fn test_many_files() {
                             i=$((i+1))
                         done
                     "#},
-                }],
-                env_vars: vec![],
-                compile_limits: Default::default(),
+                },
+                ..Default::default()
             },
             run: Default::default(),
         })

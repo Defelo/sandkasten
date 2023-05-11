@@ -14,6 +14,8 @@ pub struct Environment {
     pub name: String,
     /// The version of the environment.
     pub version: String,
+    /// The default name of the main file that is used if no filename is specified.
+    pub default_main_file_name: String,
 }
 
 /// A map of environments where the key represents the id of the environment.
@@ -39,6 +41,7 @@ impl Example for ListEnvironmentsResponse {
                 Environment {
                     name: "Rust".into(),
                     version: "1.64.0".into(),
+                    default_main_file_name: "code.rs".into(),
                 },
             ),
             (
@@ -46,6 +49,7 @@ impl Example for ListEnvironmentsResponse {
                 Environment {
                     name: "Python".into(),
                     version: "3.11.1".into(),
+                    default_main_file_name: "code.py".into(),
                 },
             ),
         ]))

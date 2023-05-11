@@ -22,11 +22,10 @@ pub struct BuildRunRequest {
 pub struct BuildRequest {
     /// The environment to use for building and running the program.
     pub environment: String,
-    /// A list of source files. The first file is usually used as entrypoint to the program.
-    #[cfg_attr(
-        feature = "poem-openapi",
-        oai(validator(min_items = 1, max_items = 10))
-    )]
+    /// The main source file that represents the entrypoint to the program.
+    pub main_file: MainFile,
+    /// A list of additional source files.
+    #[cfg_attr(feature = "poem-openapi", oai(default, validator(max_items = 10)))]
     pub files: Vec<File>,
     /// A list of environment variables to set during the build step.
     #[cfg_attr(feature = "poem-openapi", oai(default, validator(max_items = 16)))]
@@ -70,6 +69,21 @@ pub struct File {
         oai(validator(pattern = r"^[a-zA-Z0-9._-]{1,32}$"))
     )]
     pub name: String,
+    /// The content of the file.
+    #[cfg_attr(feature = "poem-openapi", oai(validator(max_length = 65536)))]
+    pub content: String,
+}
+
+/// The main source file that is put in the working directory of the build process.
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "poem-openapi", derive(Object))]
+pub struct MainFile {
+    /// The name of the file. If omitted, a default name is chosen based on the selected environment.
+    #[cfg_attr(
+        feature = "poem-openapi",
+        oai(default, validator(pattern = r"^[a-zA-Z0-9._-]{1,32}$"))
+    )]
+    pub name: Option<String>,
     /// The content of the file.
     #[cfg_attr(feature = "poem-openapi", oai(validator(max_length = 65536)))]
     pub content: String,

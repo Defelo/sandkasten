@@ -6,7 +6,7 @@ use sandkasten_client::{
     schemas::{
         programs::{
             BuildError, BuildRequest, BuildRunError, BuildRunRequest, BuildRunResult, EnvVar, File,
-            LimitsOpt, RunError, RunRequest, RunResult,
+            LimitsOpt, MainFile, RunError, RunRequest, RunResult,
         },
         ErrorResponse,
     },
@@ -32,10 +32,9 @@ fn test_build_run_python() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
-                files: vec![
-                    File {
-                        name: "test.py".into(),
-                        content: formatdoc! {"
+                main_file: MainFile {
+                    name: Some("test.py".into()),
+                    content: formatdoc! {"
                             from foo import add, mul
                             import sys
                             import time
@@ -46,19 +45,17 @@ fn test_build_run_python() {
                             time.sleep(0.456)
                             exit(42)
                         "},
-                    },
-                    File {
-                        name: "foo.py".into(),
-                        content: formatdoc! {"
+                },
+                files: vec![File {
+                    name: "foo.py".into(),
+                    content: formatdoc! {"
                             def add(a, b):
                               return a + b
                             def mul(a, b):
                               return a * b
                         "},
-                    },
-                ],
-                env_vars: vec![],
-                compile_limits: Default::default(),
+                }],
+                ..Default::default()
             },
             run: RunRequest {
                 env_vars: vec![
@@ -92,12 +89,11 @@ fn test_build_run_rust_compilation_error() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "rust".into(),
-                files: vec![File {
-                    name: "test.rs".into(),
+                main_file: MainFile {
+                    name: Some("test.rs".into()),
                     content: "fn main() { fn_not_found(); }".into(),
-                }],
-                env_vars: vec![],
-                compile_limits: Default::default(),
+                },
+                ..Default::default()
             },
             run: Default::default(),
         })
@@ -122,33 +118,31 @@ fn test_build_run_rust_ok() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "rust".into(),
-                files: vec![
-                    File {
-                        name: "test.rs".into(),
-                        content: formatdoc! {r#"
-                            mod foo;
-                            fn main() {{
-                                let test = ();
-                                println!("foo bar");
-                                println!(env!("BUILD_VAR"));
-                                foo::asdf();
-                            }}
-                        "#},
-                    },
-                    File {
-                        name: "foo.rs".into(),
-                        content: formatdoc! {r#"
-                            pub fn asdf() {{
-                                eprintln!("test {{}}", 7 * 191);
-                            }}
-                        "#},
-                    },
-                ],
+                main_file: MainFile {
+                    name: Some("test.rs".into()),
+                    content: formatdoc! {r#"
+                        mod foo;
+                        fn main() {{
+                            let test = ();
+                            println!("foo bar");
+                            println!(env!("BUILD_VAR"));
+                            foo::asdf();
+                        }}
+                    "#},
+                },
+                files: vec![File {
+                    name: "foo.rs".into(),
+                    content: formatdoc! {r#"
+                        pub fn asdf() {{
+                            eprintln!("test {{}}", 7 * 191);
+                        }}
+                    "#},
+                }],
                 env_vars: vec![EnvVar {
                     name: "BUILD_VAR".into(),
                     value: "test123".into(),
                 }],
-                compile_limits: Default::default(),
+                ..Default::default()
             },
             run: Default::default(),
         })
@@ -175,12 +169,11 @@ fn test_build_cached() {
     let request = BuildRunRequest {
         build: BuildRequest {
             environment: "rust".into(),
-            files: vec![File {
-                name: "test.rs".into(),
+            main_file: MainFile {
+                name: Some("test.rs".into()),
                 content: "fn main() { println!(\"test\"); }".into(),
-            }],
-            env_vars: vec![],
-            compile_limits: Default::default(),
+            },
+            ..Default::default()
         },
         run: Default::default(),
     };
@@ -213,12 +206,11 @@ fn test_build_then_run() {
     let build = client
         .build(&BuildRequest {
             environment: "rust".into(),
-            files: vec![File {
-                name: "test.rs".into(),
+            main_file: MainFile {
+                name: Some("test.rs".into()),
                 content: "fn main() { println!(\"hello world\"); }".into(),
-            }],
-            env_vars: vec![],
-            compile_limits: Default::default(),
+            },
+            ..Default::default()
         })
         .unwrap();
     assert_eq!(build.compile_result.unwrap().status, 0);
@@ -236,10 +228,10 @@ fn test_build_run_errors() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "this_environment_does_not_exist".into(),
-                files: vec![File {
-                    name: "test".into(),
+                main_file: MainFile {
+                    name: Some("test".into()),
                     content: "".into(),
-                }],
+                },
                 ..Default::default()
             },
             run: Default::default(),
@@ -254,10 +246,10 @@ fn test_build_run_errors() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
-                files: vec![File {
-                    name: ".".into(),
+                main_file: MainFile {
+                    name: Some(".".into()),
                     content: "".into(),
-                }],
+                },
                 ..Default::default()
             },
             run: Default::default(),
@@ -291,15 +283,16 @@ fn test_build_run_errors() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "rust".into(),
-                files: vec![File {
-                    name: "test.rs".into(),
+                main_file: MainFile {
+                    name: Some("test.rs".into()),
                     content: "fn main() {}".into(),
-                }],
+                },
                 env_vars: vec![EnvVar {
                     name: "x".into(),
                     value: uuid::Uuid::new_v4().to_string(),
                 }],
                 compile_limits: LimitsOpt {cpus: Some(4096), ..Default::default()},
+                ..Default::default()
             },
             run: Default::default(),
         })
@@ -314,10 +307,10 @@ fn test_build_run_errors() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "rust".into(),
-                files: vec![File {
-                    name: "test.rs".into(),
+                main_file: MainFile {
+                    name: Some("test.rs".into()),
                     content: "fn main() {}".into(),
-                }],
+                },
                 ..Default::default()
             },
             run: RunRequest {
@@ -407,10 +400,10 @@ fn test_build_errors() {
     let Error::ErrorResponse(err) = client
         .build(&BuildRequest {
             environment: "rust".into(),
-            files: vec![File {
-                name: "test.rs".into(),
+            main_file: MainFile {
+                name: Some("test.rs".into()),
                 content: "fn main() {}".into(),
-            }],
+            },
             env_vars: vec![EnvVar {
                 name: "x".into(),
                 value: uuid::Uuid::new_v4().to_string(),
@@ -419,6 +412,7 @@ fn test_build_errors() {
                 cpus: Some(4096),
                 ..Default::default()
             },
+            ..Default::default()
         })
         .unwrap_err() else { panic!() };
     let ErrorResponse::Inner(BuildError::CompileLimitsExceeded(mut les)) = *err else {panic!()};
@@ -504,8 +498,8 @@ fn test_network() {
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
-                files: vec![File {
-                    name: "test.py".into(),
+                main_file: MainFile {
+                    name: Some("test.py".into()),
                     content: formatdoc! {r#"
                         from http.client import *
                         c=HTTPConnection("ip6.me")
@@ -513,7 +507,7 @@ fn test_network() {
                         r=c.getresponse()
                         print(r.status, r.read().decode().strip(), end='')
                     "#},
-                }],
+                },
                 ..Default::default()
             },
             run: Default::default(),
@@ -538,10 +532,10 @@ fn test_build_race() {
                 std::thread::spawn(move || {
                     client.build(&BuildRequest {
                         environment: "rust".into(),
-                        files: vec![File {
-                            name: "test.rs".into(),
+                        main_file: MainFile {
+                            name: Some("test.rs".into()),
                             content: "fn main() { println!(\"hi there\"); }".into(),
-                        }],
+                        },
                         env_vars: vec![EnvVar {
                             name: "x".into(),
                             value: format!("{x} {}", i / 64),

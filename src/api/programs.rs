@@ -7,7 +7,7 @@ use poem_openapi::{param::Path, payload::Json, OpenApi};
 use regex::Regex;
 use sandkasten_client::schemas::programs::{
     BuildRequest, BuildResult, BuildRunRequest, BuildRunResult, EnvVar, File, LimitExceeded,
-    RunRequest, RunResult,
+    MainFile, RunRequest, RunResult,
 };
 use tokio::sync::Semaphore;
 use uuid::Uuid;
@@ -33,7 +33,10 @@ impl ProgramsApi {
     /// Build and immediately run a program.
     #[oai(path = "/run", method = "post")]
     async fn run(&self, data: Json<BuildRunRequest>) -> BuildRun::Response {
-        if !check_files(&data.0.build.files) || !check_files(&data.0.run.files) {
+        if !check_mainfile(&data.0.build.main_file)
+            || !check_files(&data.0.build.files)
+            || !check_files(&data.0.run.files)
+        {
             return BuildRun::invalid_file_names();
         }
         if !check_env_vars(&data.0.build.env_vars) || !check_env_vars(&data.0.run.env_vars) {
@@ -63,6 +66,7 @@ impl ProgramsApi {
             Err(BuildProgramError::CompilationFailed(result)) => {
                 return BuildRun::compile_error(result)
             }
+            Err(BuildProgramError::ConflictingFilenames) => return BuildRun::invalid_file_names(),
             Err(BuildProgramError::LimitsExceeded(lim)) => {
                 return BuildRun::compile_limits_exceeded(lim)
             }
@@ -93,7 +97,7 @@ impl ProgramsApi {
     /// Upload and compile a program.
     #[oai(path = "/programs", method = "post")]
     async fn build_program(&self, data: Json<BuildRequest>) -> Build::Response {
-        if !check_files(&data.0.files) {
+        if !check_mainfile(&data.0.main_file) || !check_files(&data.0.files) {
             return Build::invalid_file_names();
         }
         if !check_env_vars(&data.0.env_vars) {
@@ -112,6 +116,7 @@ impl ProgramsApi {
             Ok((result, _)) => Build::ok(result),
             Err(BuildProgramError::EnvironmentNotFound(_)) => Build::environment_not_found(),
             Err(BuildProgramError::CompilationFailed(result)) => Build::compile_error(result),
+            Err(BuildProgramError::ConflictingFilenames) => Build::invalid_file_names(),
             Err(BuildProgramError::LimitsExceeded(lim)) => Build::compile_limits_exceeded(lim),
             Err(err) => Err(err.into()),
         }
@@ -190,10 +195,21 @@ response!(Run = {
     RunLimitsExceeded(400, error) => Vec<LimitExceeded>,
 });
 
-fn check_files(files: &[File]) -> bool {
+fn check_filename(name: &str) -> bool {
     let invalid_names = Lazy::new(|| Regex::new(r"^\.*$").unwrap());
-    files.iter().all(|f| !invalid_names.is_match(&f.name))
+    !invalid_names.is_match(name)
+}
+
+fn check_files(files: &[File]) -> bool {
+    files.iter().all(|f| check_filename(&f.name))
         && files.iter().map(|f| &f.name).collect::<HashSet<_>>().len() == files.len()
+}
+
+fn check_mainfile(main_file: &MainFile) -> bool {
+    main_file
+        .name
+        .as_ref()
+        .map_or(true, |name| check_filename(name))
 }
 
 fn check_env_vars(env_vars: &[EnvVar]) -> bool {

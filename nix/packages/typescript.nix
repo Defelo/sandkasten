@@ -17,6 +17,7 @@
 in {
   name = "TypeScript";
   version = typescript.version;
+  default_main_file_name = "code.ts";
   compile_script = ''
     ${coreutils}/bin/cp $(${coreutils}/bin/ls -A) /tmp
     cd /tmp
@@ -28,25 +29,22 @@ in {
     shift
     ${nodejs}/bin/node "$main" "$@"
   '';
+  test.main_file.content = ''
+    import { bar } from "./foo";
+    import * as fs from "fs";
+
+    if (fs.readFileSync(0).toString() != "stdin") process.exit(1);
+
+    if (process.argv.length-2 != 3) process.exit(2);
+    if (process.argv[2] != "foo") process.exit(3);
+    if (process.argv[3] != "bar") process.exit(4);
+    if (process.argv[4] != "baz") process.exit(5);
+
+    if (fs.readFileSync("test.txt").toString() != "hello world") process.exit(6);
+
+    bar()
+  '';
   test.files = [
-    {
-      name = "test.ts";
-      content = ''
-        import { bar } from "./foo";
-        import * as fs from "fs";
-
-        if (fs.readFileSync(0).toString() != "stdin") process.exit(1);
-
-        if (process.argv.length-2 != 3) process.exit(2);
-        if (process.argv[2] != "foo") process.exit(3);
-        if (process.argv[3] != "bar") process.exit(4);
-        if (process.argv[4] != "baz") process.exit(5);
-
-        if (fs.readFileSync("test.txt").toString() != "hello world") process.exit(6);
-
-        bar()
-      '';
-    }
     {
       name = "foo.ts";
       content = ''

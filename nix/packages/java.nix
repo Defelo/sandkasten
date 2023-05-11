@@ -7,6 +7,7 @@
 }: {
   name = "Java";
   version = jdk.version;
+  default_main_file_name = "code.java";
   compile_script = ''
     set -e
     ${jdk}/bin/javac -d /program "$1"
@@ -29,33 +30,30 @@
     mem=$((mem/128))
     ${jdk}/bin/java -Xms$mem -Xmx$mem -cp /program "$(${coreutils}/bin/cat /program/.main)" "$@"
   '';
-  test.files = [
-    {
-      name = "test.java";
-      content = ''
-        import java.io.IOException;
-        import java.util.Scanner;
-        import java.nio.file.Files;
-        import java.nio.file.Paths;
+  test.main_file.content = ''
+    import java.io.IOException;
+    import java.util.Scanner;
+    import java.nio.file.Files;
+    import java.nio.file.Paths;
 
-        class FooBar {
-          public static void main(String[] args) throws IOException {
-            Scanner s = new Scanner(System.in);
-            if (!s.next().equals("stdin")) System.exit(1);
+    class FooBar {
+      public static void main(String[] args) throws IOException {
+        Scanner s = new Scanner(System.in);
+        if (!s.next().equals("stdin")) System.exit(1);
 
-            if (args.length != 3) System.exit(2);
-            if (!args[0].equals("foo")) System.exit(3);
-            if (!args[1].equals("bar")) System.exit(4);
-            if (!args[2].equals("baz")) System.exit(5);
+        if (args.length != 3) System.exit(2);
+        if (!args[0].equals("foo")) System.exit(3);
+        if (!args[1].equals("bar")) System.exit(4);
+        if (!args[2].equals("baz")) System.exit(5);
 
-            String content = Files.readString(Paths.get("test.txt"));
-            if (!content.equals("hello world")) System.exit(6);
+        String content = Files.readString(Paths.get("test.txt"));
+        if (!content.equals("hello world")) System.exit(6);
 
-            Foo.bar();
-          }
-        }
-      '';
+        Foo.bar();
+      }
     }
+  '';
+  test.files = [
     {
       name = "Foo.java";
       content = ''
