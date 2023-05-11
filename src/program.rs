@@ -150,6 +150,7 @@ pub async fn run_program(
 
     let run_script = fs::read_to_string(path.join("run_script")).await?;
     let main_file = fs::read_to_string(path.join("main_file")).await?;
+    let closure = fs::read_to_string(path.join("closure")).await?;
 
     let job_id = Uuid::new_v4();
     let _guard = job_lock.write(job_id).await;
@@ -169,6 +170,7 @@ pub async fn run_program(
                 program_path: &path.join("files"),
                 tmpdir: &tmpdir,
                 limits,
+                closure: &closure,
             })
             .await
         },
@@ -281,6 +283,7 @@ async fn store_program(
 
     fs::create_dir_all(path.join("files")).await?;
     fs::write(path.join("run_script"), &env.run_script).await?;
+    fs::write(path.join("closure"), &env.closure).await?;
 
     let main_file_name = data
         .main_file
@@ -322,6 +325,7 @@ async fn store_program(
                     path,
                     tmpdir: &tmpdir,
                     limits,
+                    closure: &env.closure,
                 })
                 .await
             },
@@ -357,6 +361,7 @@ async fn compile_program(
         path,
         tmpdir,
         limits,
+        closure,
     }: CompileProgram<'_>,
 ) -> Result<RunResult, RunError> {
     RunConfig {
@@ -376,26 +381,25 @@ async fn compile_program(
         stdin: None,
         mounts: &[
             Mount {
-                dest: "/nix/store",
-                typ: MountType::ReadOnly { src: "/nix/store" },
-            },
-            Mount {
-                dest: "/program",
+                dest: "/program".into(),
                 typ: MountType::ReadWrite {
-                    src: &path.join("files").display().to_string(),
+                    src: path.join("files").display().to_string().into(),
                 },
             },
             Mount {
-                dest: "/box",
+                dest: "/box".into(),
                 typ: MountType::ReadOnly {
-                    src: &tmpdir.join("box").display().to_string(),
+                    src: tmpdir.join("box").display().to_string().into(),
                 },
             },
             Mount {
-                dest: "/tmp",
+                dest: "/tmp".into(),
                 typ: MountType::Temp { size: limits.tmpfs },
             },
-        ],
+        ]
+        .into_iter()
+        .chain(mounts_from_closure(closure).await?)
+        .collect::<Vec<_>>(),
         limits,
     }
     .run()
@@ -411,6 +415,7 @@ struct CompileProgram<'a> {
     path: &'a Path,
     tmpdir: &'a Path,
     limits: Limits,
+    closure: &'a str,
 }
 
 async fn execute_program(
@@ -423,6 +428,7 @@ async fn execute_program(
         program_path,
         tmpdir,
         limits,
+        closure,
     }: ExecuteProgram<'_>,
 ) -> Result<RunResult, RunError> {
     RunConfig {
@@ -442,26 +448,25 @@ async fn execute_program(
         stdin: data.stdin.as_deref(),
         mounts: &[
             Mount {
-                dest: "/nix/store",
-                typ: MountType::ReadOnly { src: "/nix/store" },
-            },
-            Mount {
-                dest: "/program",
+                dest: "/program".into(),
                 typ: MountType::ReadOnly {
-                    src: &program_path.display().to_string(),
+                    src: program_path.display().to_string().into(),
                 },
             },
             Mount {
-                dest: "/box",
+                dest: "/box".into(),
                 typ: MountType::ReadOnly {
-                    src: &tmpdir.join("box").display().to_string(),
+                    src: tmpdir.join("box").display().to_string().into(),
                 },
             },
             Mount {
-                dest: "/tmp",
+                dest: "/tmp".into(),
                 typ: MountType::Temp { size: limits.tmpfs },
             },
-        ],
+        ]
+        .into_iter()
+        .chain(mounts_from_closure(closure).await?)
+        .collect::<Vec<_>>(),
         limits,
     }
     .run()
@@ -477,4 +482,19 @@ struct ExecuteProgram<'a> {
     program_path: &'a Path,
     tmpdir: &'a Path,
     limits: Limits,
+    closure: &'a str,
+}
+
+async fn mounts_from_closure(closure: &str) -> Result<Vec<Mount>, std::io::Error> {
+    Ok(fs::read_to_string(closure)
+        .await?
+        .trim()
+        .lines()
+        .map(|line| Mount {
+            dest: line.to_owned().into(),
+            typ: MountType::ReadOnly {
+                src: line.to_owned().into(),
+            },
+        })
+        .collect())
 }

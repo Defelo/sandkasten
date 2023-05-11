@@ -26,4 +26,5 @@ pub struct Environment {
     pub default_main_file_name: String,
     pub compile_script: Option<String>,
     pub run_script: String,
+    pub closure: String,
 }

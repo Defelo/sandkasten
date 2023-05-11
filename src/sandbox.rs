@@ -1,4 +1,4 @@
-use std::{future::Future, path::Path, process::Stdio, string::FromUtf8Error};
+use std::{borrow::Cow, future::Future, path::Path, process::Stdio, string::FromUtf8Error};
 
 use sandkasten_client::schemas::programs::{Limits, ResourceUsage, RunResult};
 use thiserror::Error;
@@ -24,17 +24,17 @@ pub struct RunConfig<'a> {
 
 #[derive(Debug)]
 pub struct Mount<'a> {
-    pub dest: &'a str,
+    pub dest: Cow<'a, str>,
     pub typ: MountType<'a>,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub enum MountType<'a> {
     ReadOnly {
-        src: &'a str,
+        src: Cow<'a, str>,
     },
     ReadWrite {
-        src: &'a str,
+        src: Cow<'a, str>,
     },
     Temp {
         /// in MB
@@ -69,15 +69,23 @@ impl RunConfig<'_> {
             cmd.arg("-E").arg(format!("{name}={value}"));
         }
 
-        for &Mount { dest, typ } in self.mounts {
+        for Mount { dest, typ } in self.mounts {
             match typ {
                 MountType::ReadOnly { src } => {
-                    cmd.arg("-R").arg(format!("{src}:{dest}"));
+                    if src != dest {
+                        cmd.arg("-R").arg(format!("{src}:{dest}"));
+                    } else {
+                        cmd.arg("-R").arg(&**src);
+                    }
                 }
                 MountType::ReadWrite { src } => {
-                    cmd.arg("-B").arg(format!("{src}:{dest}"));
+                    if src != dest {
+                        cmd.arg("-B").arg(format!("{src}:{dest}"));
+                    } else {
+                        cmd.arg("-B").arg(&**src);
+                    }
                 }
-                MountType::Temp { size } => {
+                &MountType::Temp { size } => {
                     if size > 0 {
                         cmd.arg("-m").arg(format!("none:{dest}:tmpfs:size={size}M"));
                     }
