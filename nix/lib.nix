@@ -21,13 +21,19 @@
   };
   envs = dev:
     builtins.mapAttrs (k: v:
-      {
+      rec {
         inherit (v) name version default_main_file_name;
         compile_script =
           if builtins.isNull v.compile_script
           then null
           else pkgs.writeShellScript "${k}-compile.sh" v.compile_script;
         run_script = pkgs.writeShellScript "${k}-run.sh" v.run_script;
+        closure = (rootPaths: "${pkgs.closureInfo {inherit rootPaths;}}/store-paths") ([run_script]
+          ++ (
+            if compile_script != null
+            then [compile_script]
+            else []
+          ));
       }
       // pkgs.lib.optionalAttrs dev {inherit (v) test;})
     packages;
