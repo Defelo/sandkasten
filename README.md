@@ -22,10 +22,10 @@ environments and to enforce the specified resource limits. Additionally
 program. Programs are always run in a chroot environment using nsjail, which contains only the
 following directories:
 
-- `/nix/store` (ro mount from host)
 - `/program` (rw in compile steps, ro in run steps) contains the compiled program
 - `/box` (ro) current working directory which contains the specified files for compile/run steps
 - `/tmp` (rw, tmpfs)
+- the paths in `/nix/store` that are needed by the selected environment (ro mount from host)
 - some files in `/dev` and `/etc` which are needed for some packages to work properly
 
 Programs are uniquely identified using the hash value of their source files and selected
