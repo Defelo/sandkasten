@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// The request data for building and running a program.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct BuildRunRequest {
     /// The data for the build step.
@@ -17,7 +17,7 @@ pub struct BuildRunRequest {
 }
 
 /// The request data for building a program.
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Clone, Serialize, Default)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct BuildRequest {
     /// The environment to use for building and running the program.
@@ -36,7 +36,7 @@ pub struct BuildRequest {
 }
 
 /// The request data for running a program.
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Clone, Serialize, Default)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct RunRequest {
     /// The stdin input the process reads.
@@ -60,7 +60,7 @@ pub struct RunRequest {
 }
 
 /// A file that is put in the working directory of the build/run process.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct File {
     /// The name of the file.
@@ -75,7 +75,7 @@ pub struct File {
 }
 
 /// The main source file that is put in the working directory of the build process.
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct MainFile {
     /// The name of the file. If omitted, a default name is chosen based on the selected environment.
@@ -90,7 +90,7 @@ pub struct MainFile {
 }
 
 /// An environment variable that is set for the build/run process.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct EnvVar {
     /// The name of the environment variable.
@@ -105,7 +105,7 @@ pub struct EnvVar {
 }
 
 /// The results of building and running a program.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct BuildRunResult {
     /// A unique identifier of the program that was built.
@@ -120,7 +120,7 @@ pub struct BuildRunResult {
 }
 
 /// The error responses that may be returned when building and running a program.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "error", content = "details", rename_all = "snake_case")]
 pub enum BuildRunError {
     /// Environment does not exist.
@@ -138,7 +138,7 @@ pub enum BuildRunError {
 }
 
 /// The results of building a program.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct BuildResult {
     /// A unique identifier of the program that was built.
@@ -151,7 +151,7 @@ pub struct BuildResult {
 }
 
 /// The error responses that may be returned when building a program.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "error", content = "details", rename_all = "snake_case")]
 pub enum BuildError {
     /// Environment does not exist.
@@ -167,7 +167,7 @@ pub enum BuildError {
 }
 
 /// The results of running (or compiling) a program.
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct RunResult {
     /// The exit code of the processes.
@@ -183,7 +183,7 @@ pub struct RunResult {
 }
 
 /// The error responses that may be returned when running a program.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "error", content = "details", rename_all = "snake_case")]
 pub enum RunError {
     /// File names are not unique.
@@ -197,7 +197,7 @@ pub enum RunError {
 }
 
 /// The amount of resources a process used.
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct ResourceUsage {
     /// The number of **milliseconds** the process ran.
@@ -207,7 +207,7 @@ pub struct ResourceUsage {
 }
 
 /// Information about a build/run limit that has been exceeded.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct LimitExceeded {
     /// The name of the limit.
@@ -229,7 +229,7 @@ macro_rules! limits {
         }
 
         /// The resource limits of a process. Omit a value to use the default limit.
-        #[derive(Debug, Default, Serialize)]
+        #[derive(Debug, Clone, Default, Serialize)]
         #[cfg_attr(feature = "poem-openapi", derive(Object))]
         pub struct LimitsOpt {
             $(

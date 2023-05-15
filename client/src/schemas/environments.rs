@@ -7,7 +7,7 @@ use poem_openapi::{types::Example, NewType, Object};
 use serde::{Deserialize, Serialize};
 
 /// A package that can build and run programs.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct Environment {
     /// The display name of the environment (e.g. `Rust` or `C++`).
@@ -19,7 +19,7 @@ pub struct Environment {
 }
 
 /// A map of environments where the key represents the id of the environment.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "poem-openapi", derive(NewType))]
 #[cfg_attr(
     feature = "poem-openapi",

@@ -53,7 +53,7 @@ mod client {
     use url::Url;
 
     /// An asynchronous client for Sandkasten.
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub struct SandkastenClient {
         base_url: Url,
         client: reqwest::Client,
@@ -61,7 +61,7 @@ mod client {
 
     /// A synchronous client for Sandkasten.
     #[cfg(feature = "blocking")]
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub struct BlockingSandkastenClient {
         base_url: Url,
         client: reqwest::blocking::Client,

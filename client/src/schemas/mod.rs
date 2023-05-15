@@ -6,7 +6,7 @@ pub mod environments;
 pub mod programs;
 
 /// The error responses that any endpoint may return.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "error", content = "reason", rename_all = "snake_case")]
 pub enum GeneralError {
     /// 422 Unprocessable Content
@@ -16,7 +16,7 @@ pub enum GeneralError {
 }
 
 /// The error responses that Sandkasten may return.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(untagged)]
 pub enum ErrorResponse<E> {
     /// An error response that any endpoint may return.
