@@ -19,6 +19,13 @@ mod common;
 
 #[test]
 #[ignore]
+fn test_version() {
+    let version = client().version().unwrap();
+    assert_eq!(version, env!("CARGO_PKG_VERSION"));
+}
+
+#[test]
+#[ignore]
 fn test_environments() {
     let environments = client().list_environments().unwrap();
     assert_eq!(environments.get("python").unwrap().name, "Python");

@@ -5,6 +5,13 @@ use sandkasten_client::{
 
 #[tokio::test]
 #[ignore]
+async fn test_version() {
+    let version = client().version().await.unwrap();
+    assert_eq!(version, env!("CARGO_PKG_VERSION"));
+}
+
+#[tokio::test]
+#[ignore]
 async fn test_environments() {
     let environments = client().list_environments().await.unwrap();
     assert_eq!(environments.get("python").unwrap().name, "Python");

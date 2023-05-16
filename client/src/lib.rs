@@ -49,6 +49,7 @@ mod client {
         },
         ErrorResponse,
     };
+    use serde::Deserialize;
     use std::collections::HashMap;
     use url::Url;
 
@@ -75,6 +76,11 @@ mod client {
                 client: reqwest::Client::new(),
             }
         }
+
+        /// Return the version of the sandkasten server.
+        pub async fn version(&self) -> Result<String> {
+            Ok(self.openapi_spec().await?.info.version)
+        }
     }
 
     #[cfg(feature = "blocking")]
@@ -85,6 +91,11 @@ mod client {
                 base_url,
                 client: reqwest::blocking::Client::new(),
             }
+        }
+
+        /// Return the version of the sandkasten server.
+        pub fn version(&self) -> Result<String> {
+            Ok(self.openapi_spec()?.info.version)
         }
     }
 
@@ -106,11 +117,11 @@ mod client {
     pub type Result<T, E = ()> = std::result::Result<T, Error<E>>;
 
     macro_rules! endpoints {
-        ($( $(#[doc = $doc:literal])* $func:ident( $(path: $args:ident,)* $(json: $data:ty)? ): $method:ident $path:literal => $ok:ty $(, $err:ty)?; )*) => {
+        ($( $(#[doc = $doc:literal])* $vis:vis $func:ident( $(path: $args:ident,)* $(json: $data:ty)? ): $method:ident $path:literal => $ok:ty $(, $err:ty)?; )*) => {
             impl SandkastenClient {
                 $(
                     $(#[doc = $doc])*
-                    pub async fn $func(&self, $($args: impl Display,)* $(data: &$data)?) -> Result<$ok, $($err)?> {
+                    $vis async fn $func(&self, $($args: impl Display,)* $(data: &$data)?) -> Result<$ok, $($err)?> {
                         let response = self
                             .client
                             .$method(self.base_url.join(&format!($path))?)
@@ -130,7 +141,7 @@ mod client {
             impl BlockingSandkastenClient {
                 $(
                     $(#[doc = $doc])*
-                    pub fn $func(&self, $($args: impl Display,)* $(data: &$data)?) -> Result<$ok, $($err)?> {
+                    $vis fn $func(&self, $($args: impl Display,)* $(data: &$data)?) -> Result<$ok, $($err)?> {
                         let response = self
                             .client
                             .$method(self.base_url.join(&format!($path))?)
@@ -149,12 +160,24 @@ mod client {
 
     endpoints! {
         /// Return a list of all environments.
-        list_environments(): get "environments" => HashMap<String, Environment>;
+        pub list_environments(): get "environments" => HashMap<String, Environment>;
         /// Build and immediately run a program.
-        build_and_run(json: BuildRunRequest): post "run" => BuildRunResult, BuildRunError;
+        pub build_and_run(json: BuildRunRequest): post "run" => BuildRunResult, BuildRunError;
         /// Upload and compile a program.
-        build(json: BuildRequest): post "programs" => BuildResult, BuildError;
+        pub build(json: BuildRequest): post "programs" => BuildResult, BuildError;
         /// Run a program that has previously been built.
-        run(path: program_id, json: RunRequest): post "programs/{program_id}/run" => RunResult, RunError;
+        pub run(path: program_id, json: RunRequest): post "programs/{program_id}/run" => RunResult, RunError;
+
+        openapi_spec(): get "openapi.json" => OpenAPISpec;
+    }
+
+    #[derive(Deserialize)]
+    struct OpenAPISpec {
+        info: OpenAPISpecInfo,
+    }
+
+    #[derive(Deserialize)]
+    struct OpenAPISpecInfo {
+        version: String,
     }
 }
