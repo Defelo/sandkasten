@@ -5,7 +5,6 @@ description = "Sandkasten client library for running untrusted code"
 license = "MIT"
 documentation = "https://docs.rs/sandkasten-client/"
 repository = "https://github.com/Defelo/sandkasten"
-readme = "../README.md"
 edition = "2021"
 rust-version = "1.64.0"
 publish = true
