@@ -1,32 +1,4 @@
-//! [Sandkasten](https://github.com/Defelo/sandkasten) client library for running untrusted code
-//!
-//! #### Example
-//! ```no_run
-//! use sandkasten_client::{
-//!     schemas::programs::{BuildRequest, BuildRunRequest, File},
-//!     SandkastenClient,
-//! };
-//!
-//! # async fn f() {
-//! let client = SandkastenClient::new("http://your-sandkasten-instance".parse().unwrap());
-//! let result = client
-//!     .build_and_run(&BuildRunRequest {
-//!         build: BuildRequest {
-//!             environment: "python".into(),
-//!             files: vec![File {
-//!                 name: "test.py".into(),
-//!                 content: "print(6 * 7, end='')".into(),
-//!             }],
-//!             ..Default::default()
-//!         },
-//!         run: Default::default(),
-//!     })
-//!     .await
-//!     .unwrap();
-//! assert_eq!(result.run.stdout, "42");
-//! # }
-//! ```
-
+#![doc = include_str!("../README.md")]
 #![forbid(unsafe_code)]
 #![warn(clippy::dbg_macro, clippy::use_debug, clippy::todo)]
 #![warn(missing_docs, missing_debug_implementations)]
