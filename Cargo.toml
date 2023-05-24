@@ -38,7 +38,7 @@ uuid.workspace = true
 
 [dev-dependencies]
 indoc = { version = "2.0.1", default-features = false }
-proptest = "1.1.0"
+proptest = "1.2.0"
 sandkasten-client = { path = "client", default-features = false, features = ["reqwest", "blocking"] }
 
 [features]
