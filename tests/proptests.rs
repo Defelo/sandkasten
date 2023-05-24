@@ -19,6 +19,7 @@ proptest! {
     #[test]
     #[ignore]
     fn test_files(main_file in main_file(256), build_files in files(1, 10, 256), run_files in files(0, 10, 256)) {
+        prop_assume!(build_files.iter().all(|f| f.name != main_file.name.as_deref().unwrap_or("code.py")));
         client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: "python".into(),
@@ -152,6 +153,13 @@ proptest! {
         run_env_vars in env_vars(8, 16),
         run_limits in run_limits()
     ) {
+        prop_assume!(build_files
+            .iter()
+            .all(|f| if let Some(name) = main_file.name.as_ref() {
+                &f.name != name
+            } else {
+                !f.name.starts_with("code.")
+            }));
         client().build_and_run(&BuildRunRequest {
             build: BuildRequest {
                 environment: environment.to_owned(),

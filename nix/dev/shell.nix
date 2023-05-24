@@ -75,6 +75,7 @@
     ${pkgs.curl}/bin/curl -X POST localhost:8000/test/exit
     wait $pid
     ${pkgs.lcov}/bin/lcov -a lcov-server.info -a lcov-tests.info -o lcov.info
+    ${pkgs.gnugrep}/bin/grep -E -o '^cc [0-9a-f]{64}' tests/proptests.proptest-regressions
     exit $out
   '';
   cov = pkgs.writeShellScript "cov.sh" ''
