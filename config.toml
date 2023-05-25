@@ -13,6 +13,8 @@ prune_programs_interval = 60
 
 max_concurrent_jobs = 64
 
+base_resource_usage_runs = 20
+
 [compile_limits]
 cpus = 1
 time = 30  # seconds

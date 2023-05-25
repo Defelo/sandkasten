@@ -40,8 +40,12 @@ pub struct ListEnvironmentsResponse(pub HashMap<String, Environment>);
 pub struct BaseResourceUsage {
     /// The base resource usage of the build step.
     pub build: Option<ResourceUsage>,
-    /// The base resource usage of the run step.
-    pub run: ResourceUsage,
+    /// The minimum base resource usage of the run step.
+    pub run_min: ResourceUsage,
+    /// The average base resource usage of the run step.
+    pub run_avg: ResourceUsage,
+    /// The maximum base resource usage of the run step.
+    pub run_max: ResourceUsage,
 }
 
 #[cfg(feature = "poem-openapi")]

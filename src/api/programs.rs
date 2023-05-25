@@ -78,7 +78,7 @@ impl ProgramsApi {
             Arc::clone(&self.environments),
             program_id,
             data.0.run,
-            read_guard,
+            &read_guard,
             Arc::clone(&self.job_lock),
         )
         .await
@@ -141,7 +141,7 @@ impl ProgramsApi {
             Arc::clone(&self.environments),
             program_id.0,
             data.0,
-            self.program_lock.read(program_id.0).await,
+            &self.program_lock.read(program_id.0).await,
             Arc::clone(&self.job_lock),
         )
         .await

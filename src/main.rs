@@ -3,6 +3,7 @@
 
 use std::{sync::Arc, time::Duration};
 
+use anyhow::ensure;
 use fnct::{backend::AsyncRedisBackend, format::PostcardFormatter, AsyncCache};
 use poem::{listener::TcpListener, middleware::Tracing, EndpointExt, Route, Server};
 use poem_ext::panic_handler::PanicHandler;
@@ -24,6 +25,7 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Loading config");
     let config = config::load()?;
+    ensure!(config.base_resource_usage_runs >= 1);
     if !fs::try_exists(&config.programs_dir).await? {
         fs::create_dir_all(&config.programs_dir).await?;
     }

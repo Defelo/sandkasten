@@ -33,4 +33,6 @@ pub struct Config {
 
     pub compile_limits: Limits,
     pub run_limits: Limits,
+
+    pub base_resource_usage_runs: usize,
 }

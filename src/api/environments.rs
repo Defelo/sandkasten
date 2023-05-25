@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{iter::Map, slice::Iter, sync::Arc};
 
 use fnct::key;
 use key_rwlock::KeyRwLock;
@@ -6,7 +6,7 @@ use poem_ext::{response, responses::ErrorResponse, shield_mw::shield};
 use poem_openapi::{param::Path, OpenApi};
 use sandkasten_client::schemas::{
     environments::{BaseResourceUsage, Environment, ListEnvironmentsResponse},
-    programs::BuildRequest,
+    programs::{BuildRequest, ResourceUsage},
 };
 use tokio::sync::Semaphore;
 use uuid::Uuid;
@@ -27,6 +27,7 @@ pub struct EnvironmentsApi {
     pub program_lock: Arc<KeyRwLock<Uuid>>,
     pub job_lock: Arc<KeyRwLock<Uuid>>,
     pub cache: Arc<Cache>,
+    pub bru_lock: Arc<KeyRwLock<String>>,
 }
 
 #[OpenApi(tag = "Tags::Environments")]
@@ -63,6 +64,7 @@ impl EnvironmentsApi {
             return GetBaseResourceUsage::environment_not_found();
         };
 
+        let _guard = self.bru_lock.write(name.0.clone()).await;
         let result = self
             .cache
             .cached_result(key!(&name.0), &[], None, async {
@@ -120,18 +122,37 @@ async fn get_base_resource_usage(
     )
     .await?;
 
-    let run = run_program(
-        config,
-        environments,
-        build.program_id,
-        Default::default(),
-        _guard,
-        job_lock,
-    )
-    .await?;
+    let mut res = Vec::with_capacity(config.base_resource_usage_runs);
+    for _ in 0..config.base_resource_usage_runs {
+        res.push(
+            run_program(
+                Arc::clone(&config),
+                Arc::clone(&environments),
+                build.program_id,
+                Default::default(),
+                &_guard,
+                Arc::clone(&job_lock),
+            )
+            .await?
+            .resource_usage,
+        );
+    }
 
     Ok(BaseResourceUsage {
         build: build.compile_result.map(|x| x.resource_usage),
-        run: run.resource_usage,
+        run_min: acc(&res, |x| x.min().unwrap()),
+        run_max: acc(&res, |x| x.max().unwrap()),
+        run_avg: acc(&res, |x| {
+            let n = x.len();
+            x.sum::<u64>() / n as u64
+        }),
     })
+}
+
+type Acc = fn(Map<Iter<ResourceUsage>, fn(&ResourceUsage) -> u64>) -> u64;
+fn acc(res: &[ResourceUsage], f: Acc) -> ResourceUsage {
+    ResourceUsage {
+        time: f(res.iter().map(|r| r.time)),
+        memory: f(res.iter().map(|r| r.memory)),
+    }
 }
