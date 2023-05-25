@@ -3,9 +3,11 @@
 
 use std::{sync::Arc, time::Duration};
 
+use fnct::{backend::AsyncRedisBackend, format::PostcardFormatter, AsyncCache};
 use poem::{listener::TcpListener, middleware::Tracing, EndpointExt, Route, Server};
 use poem_ext::panic_handler::PanicHandler;
 use poem_openapi::OpenApiService;
+use redis::{aio::ConnectionManager, Client};
 use tokio::fs;
 use tracing::{error, info};
 
@@ -46,6 +48,14 @@ async fn main() -> anyhow::Result<()> {
     info!("Loading environments");
     let environments = Arc::new(environments::load()?);
 
+    info!("Connecting to redis");
+    let redis = ConnectionManager::new(Client::open(config.redis_url.clone())?).await?;
+    let cache = AsyncCache::new(
+        AsyncRedisBackend::new(redis, "sandkasten".into()),
+        PostcardFormatter,
+        Duration::from_secs(config.cache_ttl),
+    );
+
     let program_lock = Default::default();
     let job_lock = Default::default();
 
@@ -70,6 +80,7 @@ async fn main() -> anyhow::Result<()> {
             Arc::clone(&environments),
             program_lock,
             job_lock,
+            Arc::new(cache),
         ),
         "Sandkasten",
         env!("CARGO_PKG_VERSION"),

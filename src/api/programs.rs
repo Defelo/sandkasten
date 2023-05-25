@@ -25,7 +25,7 @@ pub struct ProgramsApi {
     pub environments: Arc<Environments>,
     pub program_lock: Arc<KeyRwLock<Uuid>>,
     pub job_lock: Arc<KeyRwLock<Uuid>>,
-    pub request_semaphore: Semaphore,
+    pub request_semaphore: Arc<Semaphore>,
 }
 
 #[OpenApi(tag = "Tags::Programs")]

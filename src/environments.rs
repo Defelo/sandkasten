@@ -1,6 +1,7 @@
 use std::{collections::HashMap, env};
 
 use config::{ConfigError, File};
+use sandkasten_client::schemas::programs;
 use serde::Deserialize;
 
 pub fn load() -> Result<Environments, ConfigError> {
@@ -27,4 +28,11 @@ pub struct Environment {
     pub compile_script: Option<String>,
     pub run_script: String,
     pub closure: String,
+    pub test: Test,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Test {
+    pub main_file: programs::MainFile,
+    pub files: Vec<programs::File>,
 }

@@ -3,6 +3,7 @@ use std::{env, path::PathBuf};
 use config::{ConfigError, File};
 use sandkasten_client::schemas::programs::Limits;
 use serde::Deserialize;
+use url::Url;
 
 pub fn load() -> Result<Config, ConfigError> {
     config::Config::builder()
@@ -18,6 +19,9 @@ pub struct Config {
     pub host: String,
     pub port: u16,
     pub server: String,
+
+    pub redis_url: Url,
+    pub cache_ttl: u64, // in seconds
 
     pub programs_dir: PathBuf,
     pub jobs_dir: PathBuf,

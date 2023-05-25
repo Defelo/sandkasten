@@ -20,9 +20,9 @@
     };
   };
   envs = dev:
-    builtins.mapAttrs (k: v:
-      rec {
-        inherit (v) name version default_main_file_name;
+    builtins.mapAttrs (
+      k: v: rec {
+        inherit (v) name version default_main_file_name test;
         compile_script =
           if builtins.isNull v.compile_script
           then null
@@ -35,7 +35,7 @@
             else []
           ));
       }
-      // pkgs.lib.optionalAttrs dev {inherit (v) test;})
+    )
     packages;
   environments = dev:
     pkgs.writeText "environments.json" (builtins.toJSON {

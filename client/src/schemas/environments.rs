@@ -6,6 +6,8 @@ use std::collections::HashMap;
 use poem_openapi::{types::Example, NewType, Object};
 use serde::{Deserialize, Serialize};
 
+use super::programs::ResourceUsage;
+
 /// A package that can build and run programs.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
@@ -31,6 +33,16 @@ pub struct Environment {
     )
 )]
 pub struct ListEnvironmentsResponse(pub HashMap<String, Environment>);
+
+/// The base resource usage of an environment.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "poem-openapi", derive(Object))]
+pub struct BaseResourceUsage {
+    /// The base resource usage of the build step.
+    pub build: Option<ResourceUsage>,
+    /// The base resource usage of the run step.
+    pub run: ResourceUsage,
+}
 
 #[cfg(feature = "poem-openapi")]
 impl Example for ListEnvironmentsResponse {
