@@ -2,7 +2,7 @@ use std::{collections::HashSet, sync::Arc};
 
 use key_rwlock::KeyRwLock;
 use once_cell::unsync::Lazy;
-use poem_ext::response;
+use poem_ext::{response, shield_mw::shield};
 use poem_openapi::{param::Path, payload::Json, OpenApi};
 use regex::Regex;
 use sandkasten_client::schemas::programs::{
@@ -31,7 +31,7 @@ pub struct ProgramsApi {
 #[OpenApi(tag = "Tags::Programs")]
 impl ProgramsApi {
     /// Build and immediately run a program.
-    #[oai(path = "/run", method = "post")]
+    #[oai(path = "/run", method = "post", transform = "shield")]
     async fn run(&self, data: Json<BuildRunRequest>) -> BuildRun::Response {
         if !check_mainfile(&data.0.build.main_file)
             || !check_files(&data.0.build.files)
@@ -50,14 +50,14 @@ impl ProgramsApi {
                 compile_result,
             },
             read_guard,
-        ) = match tokio::spawn(build_program(
+        ) = match build_program(
             Arc::clone(&self.config),
             Arc::clone(&self.environments),
             data.0.build,
             Arc::clone(&self.program_lock),
             Arc::clone(&self.job_lock),
-        ))
-        .await?
+        )
+        .await
         {
             Ok(result) => result,
             Err(BuildProgramError::EnvironmentNotFound(_)) => {
@@ -73,15 +73,15 @@ impl ProgramsApi {
             Err(err) => return Err(err.into()),
         };
 
-        match tokio::spawn(run_program(
+        match run_program(
             Arc::clone(&self.config),
             Arc::clone(&self.environments),
             program_id,
             data.0.run,
             read_guard,
             Arc::clone(&self.job_lock),
-        ))
-        .await?
+        )
+        .await
         {
             Ok(run_result) => BuildRun::ok(BuildRunResult {
                 program_id,
@@ -95,7 +95,7 @@ impl ProgramsApi {
     }
 
     /// Upload and compile a program.
-    #[oai(path = "/programs", method = "post")]
+    #[oai(path = "/programs", method = "post", transform = "shield")]
     async fn build_program(&self, data: Json<BuildRequest>) -> Build::Response {
         if !check_mainfile(&data.0.main_file) || !check_files(&data.0.files) {
             return Build::invalid_file_names();
@@ -104,14 +104,14 @@ impl ProgramsApi {
             return Build::invalid_env_vars();
         }
         let _guard = self.request_semaphore.acquire().await?;
-        match tokio::spawn(build_program(
+        match build_program(
             Arc::clone(&self.config),
             Arc::clone(&self.environments),
             data.0,
             Arc::clone(&self.program_lock),
             Arc::clone(&self.job_lock),
-        ))
-        .await?
+        )
+        .await
         {
             Ok((result, _)) => Build::ok(result),
             Err(BuildProgramError::EnvironmentNotFound(_)) => Build::environment_not_found(),
@@ -123,7 +123,11 @@ impl ProgramsApi {
     }
 
     /// Run a program that has previously been built.
-    #[oai(path = "/programs/:program_id/run", method = "post")]
+    #[oai(
+        path = "/programs/:program_id/run",
+        method = "post",
+        transform = "shield"
+    )]
     async fn run_program(&self, program_id: Path<Uuid>, data: Json<RunRequest>) -> Run::Response {
         if !check_files(&data.0.files) {
             return Run::invalid_file_names();
@@ -132,15 +136,15 @@ impl ProgramsApi {
             return Run::invalid_env_vars();
         }
         let _guard = self.request_semaphore.acquire().await?;
-        match tokio::spawn(run_program(
+        match run_program(
             Arc::clone(&self.config),
             Arc::clone(&self.environments),
             program_id.0,
             data.0,
             self.program_lock.read(program_id.0).await,
             Arc::clone(&self.job_lock),
-        ))
-        .await?
+        )
+        .await
         {
             Ok(result) => Run::ok(result),
             Err(RunProgramError::ProgramNotFound) => Run::program_not_found(),
