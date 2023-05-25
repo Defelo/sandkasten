@@ -5,7 +5,7 @@ use poem_openapi::OpenApi;
 use tokio::sync::Semaphore;
 use uuid::Uuid;
 
-use crate::{config::Config, environments::Environments};
+use crate::{config::Config, environments::Environments, Cache};
 
 use self::{environments::EnvironmentsApi, programs::ProgramsApi};
 
@@ -23,13 +23,21 @@ pub fn get_api(
     environments: Arc<Environments>,
     program_lock: Arc<KeyRwLock<Uuid>>,
     job_lock: Arc<KeyRwLock<Uuid>>,
+    cache: Arc<Cache>,
 ) -> impl OpenApi {
+    let request_semaphore = Arc::new(Semaphore::new(config.max_concurrent_jobs));
     (
         EnvironmentsApi {
             environments: Arc::clone(&environments),
+            request_semaphore: Arc::clone(&request_semaphore),
+            program_lock: Arc::clone(&program_lock),
+            job_lock: Arc::clone(&job_lock),
+            config: Arc::clone(&config),
+            cache,
+            bru_lock: Arc::new(KeyRwLock::new()),
         },
         ProgramsApi {
-            request_semaphore: Semaphore::new(config.max_concurrent_jobs),
+            request_semaphore,
             program_lock,
             job_lock,
             config,

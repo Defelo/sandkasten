@@ -2,6 +2,9 @@ host = "0.0.0.0"
 port = 8000
 server = "/"
 
+redis_url = "redis://127.0.0.1:6379/0"
+cache_ttl = 3600
+
 programs_dir = "/programs"
 jobs_dir = "/jobs"
 
@@ -9,6 +12,8 @@ program_ttl = 600
 prune_programs_interval = 60
 
 max_concurrent_jobs = 64
+
+base_resource_usage_runs = 20
 
 [compile_limits]
 cpus = 1

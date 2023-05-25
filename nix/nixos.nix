@@ -42,6 +42,14 @@ in
           type = types.str;
           default = "/";
         };
+        redis_url = mkOption {
+          type = types.str;
+          default = conf.redis_url;
+        };
+        cache_ttl = mkOption {
+          type = types.int;
+          default = conf.cache_ttl;
+        };
         programs_dir = mkOption {
           type = types.path;
           default = "/srv/sandkasten/programs";
@@ -61,6 +69,10 @@ in
         max_concurrent_jobs = mkOption {
           type = types.int;
           default = conf.max_concurrent_jobs;
+        };
+        base_resource_usage_runs = mkOption {
+          type = types.int;
+          default = conf.base_resource_usage_runs;
         };
         compile_limits = builtins.mapAttrs (k: v:
           mkOption {

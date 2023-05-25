@@ -126,7 +126,7 @@ pub async fn run_program(
     environments: Arc<Environments>,
     program_id: Uuid,
     data: RunRequest,
-    _program_guard: OwnedRwLockReadGuard<()>,
+    _program_guard: &OwnedRwLockReadGuard<()>,
     job_lock: Arc<KeyRwLock<Uuid>>,
 ) -> Result<RunResult, RunProgramError> {
     let limits = data
