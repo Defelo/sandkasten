@@ -48,6 +48,14 @@ pub struct BaseResourceUsage {
     pub run_max: ResourceUsage,
 }
 
+/// The error responses that may be returned when calculating the base resource usage.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(tag = "error", content = "details", rename_all = "snake_case")]
+pub enum GetBaseResourceUsageError {
+    /// Environment does not exist.
+    EnvironmentNotFound,
+}
+
 #[cfg(feature = "poem-openapi")]
 impl Example for ListEnvironmentsResponse {
     fn example() -> Self {

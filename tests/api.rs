@@ -34,6 +34,14 @@ fn test_environments() {
 
 #[test]
 #[ignore]
+fn test_get_base_resource_usage() {
+    let client = client();
+    client.get_base_resource_usage("rust").unwrap();
+    client.get_base_resource_usage("python").unwrap();
+}
+
+#[test]
+#[ignore]
 fn test_build_run_python() {
     let response = client()
         .build_and_run(&BuildRunRequest {

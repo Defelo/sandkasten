@@ -14,7 +14,7 @@ mod client {
     use std::fmt::Display;
 
     use crate::schemas::{
-        environments::Environment,
+        environments::{BaseResourceUsage, Environment, GetBaseResourceUsageError},
         programs::{
             BuildError, BuildRequest, BuildResult, BuildRunError, BuildRunRequest, BuildRunResult,
             RunError, RunRequest, RunResult,
@@ -89,7 +89,7 @@ mod client {
     pub type Result<T, E = ()> = std::result::Result<T, Error<E>>;
 
     macro_rules! endpoints {
-        ($( $(#[doc = $doc:literal])* $vis:vis $func:ident( $(path: $args:ident,)* $(json: $data:ty)? ): $method:ident $path:literal => $ok:ty $(, $err:ty)?; )*) => {
+        ($( $(#[doc = $doc:literal])* $vis:vis $func:ident( $(path: $args:ident),* $(,)? $(json: $data:ty)? ): $method:ident $path:literal => $ok:ty $(, $err:ty)?; )*) => {
             impl SandkastenClient {
                 $(
                     $(#[doc = $doc])*
@@ -133,6 +133,8 @@ mod client {
     endpoints! {
         /// Return a list of all environments.
         pub list_environments(): get "environments" => HashMap<String, Environment>;
+        /// Return the base resource usage of an environment when running just a very basic program.
+        pub get_base_resource_usage(path: environment): get "environments/{environment}/resource_usage" => BaseResourceUsage, GetBaseResourceUsageError;
         /// Build and immediately run a program.
         pub build_and_run(json: BuildRunRequest): post "run" => BuildRunResult, BuildRunError;
         /// Upload and compile a program.

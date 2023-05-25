@@ -20,6 +20,14 @@ async fn test_environments() {
 
 #[tokio::test]
 #[ignore]
+async fn test_get_base_resource_usage() {
+    let client = client();
+    client.get_base_resource_usage("rust").await.unwrap();
+    client.get_base_resource_usage("python").await.unwrap();
+}
+
+#[tokio::test]
+#[ignore]
 async fn test_build_run() {
     let result = client()
         .build_and_run(&BuildRunRequest {
