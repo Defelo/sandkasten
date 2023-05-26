@@ -1,6 +1,6 @@
 use std::{env, path::PathBuf};
 
-use config::{ConfigError, File};
+use config::{ConfigError, Environment, File};
 use sandkasten_client::schemas::programs::Limits;
 use serde::Deserialize;
 use url::Url;
@@ -10,6 +10,7 @@ pub fn load() -> Result<Config, ConfigError> {
         .add_source(File::with_name(
             &env::var("CONFIG_PATH").unwrap_or("config.toml".to_owned()),
         ))
+        .add_source(Environment::default().separator("__"))
         .build()?
         .try_deserialize()
 }
