@@ -80,6 +80,7 @@ Not available (yet).
     {
       services.sandkasten = {
         enable = true;
+        redis_url = "redis+unix:///${config.services.redis.servers.sandkasten.unixSocket}";
         # example config:
         host = "0.0.0.0";
         port = 8080;
@@ -87,11 +88,16 @@ Not available (yet).
         run_limits.time = 10;
         # for a full list of configuration options, see `config.toml`
       };
+      services.redis.servers.sandkasten = {
+        enable = true;
+        user = "sandkasten";
+      };
     }
     ```
 
 ### Nix flake
 ```bash
+nix shell nixpkgs#redis --command redis-server &
 CONFIG_PATH=config.toml nix run github:Defelo/sandkasten
 ```
 

@@ -8,6 +8,7 @@ services:
     privileged: true
     environment:
       RUST_LOG: info,sandkasten=debug
+      REDIS_URL: redis://redis:6379/0
     volumes:
       - ./config.toml:/config.toml:ro
     tmpfs:
@@ -15,3 +16,6 @@ services:
       - /programs:exec,uid=65534,gid=65534
     ports:
       - 127.0.0.1:8000:8000
+  redis:
+    image: redis:alpine
+    restart: always
