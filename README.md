@@ -145,9 +145,9 @@ the package is working. When creating a new package, don't forget to add it to
 The compile script of a package is executed whenever a new program has been uploaded. When this
 script is run, the current working directory (`/box`) contains all the source files and the command
 line arguments contain the names of the source files in the same order as they were specified by
-the client. It is assumed that the first file always provides the entrypoint into the program. The
-purpose of the compile script is to compile the provided program and store the result (plus any
-files that may be needed to run the program) in `/program`.
+the client (starting with `main_file` which represents the entrypoint into the program). The purpose
+of the compile script is to compile the provided program and store the result (plus any files that
+may be needed to run the program) in `/program`.
 
 If a package does not have a compile script, the source files are instead copied directly into the
 program directory.
@@ -157,10 +157,10 @@ The run script of a package is executed whenever a program is executed. When thi
 current working directory (`/box`) contains the files that have been specified in the run step (if
 any) and `/program` contains the files that have been produced by the corresponding compile script
 previously (or the source files if the packages does not have a compile script). The first command
-line argument is always the name of the first source file (which is assumed to be the entrypoint
-into the program). In most cases, this is only relevant for interpreted languages (like Python) and
-can be ignored for most compiled languages. All other command line arguments are the ones specified
-by the client and should be forwarded to the actual program.
+line argument is always the name of the `main_file` (which represents the entrypoint into the
+program). In most cases, this is only relevant for interpreted languages (like Python) and can be
+ignored for most compiled languages. All other command line arguments are the ones specified by the
+client and should be forwarded to the actual program.
 
 #### Test program
 Every package should provide a test program that checks the following:
