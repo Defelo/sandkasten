@@ -9,6 +9,9 @@ pub use client::*;
 
 pub mod schemas;
 
+/// The version of this client.
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[cfg(feature = "reqwest")]
 mod client {
     use std::fmt::Display;

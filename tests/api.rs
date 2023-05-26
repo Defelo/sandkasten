@@ -22,6 +22,7 @@ mod common;
 fn test_version() {
     let version = client().version().unwrap();
     assert_eq!(version, env!("CARGO_PKG_VERSION"));
+    assert_eq!(version, sandkasten_client::VERSION);
 }
 
 #[test]
