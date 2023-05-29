@@ -33,7 +33,7 @@ sandkasten-client = { path = "client", default-features = false, features = ["po
 serde.workspace = true
 sha2 = { version = "0.10.6", default-features = false }
 thiserror.workspace = true
-tokio = { version = "1.28.1", default-features = false, features = ["rt-multi-thread", "macros", "process", "time"] }
+tokio = { version = "1.28.2", default-features = false, features = ["rt-multi-thread", "macros", "process", "time"] }
 tracing = { version = "0.1.37", default-features = false }
 tracing-subscriber = { version = "0.3.17", default-features = false, features = ["fmt", "ansi"] }
 url = { version = "2.3.1", default-features = false, features = ["serde"] }
