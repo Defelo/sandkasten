@@ -88,8 +88,7 @@
   '';
   setup-nsjail = pkgs.writeShellScript "setup-nsjail.sh" ''
     if [[ "$UID" != 0 ]]; then
-      echo run as root
-      exit 1
+      exec sudo "$0" "$@"
     fi
     cp ${pkgs.nsjail}/bin/nsjail .nsjail
     chmod +s .nsjail
