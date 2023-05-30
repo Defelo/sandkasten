@@ -407,8 +407,8 @@ async fn compile_program(
 }
 
 struct CompileProgram<'a> {
-    nsjail: &'a str,
-    time: &'a str,
+    nsjail: &'a Path,
+    time: &'a Path,
     compile_script: &'a str,
     main_file_name: &'a str,
     data: &'a BuildRequest,
@@ -474,8 +474,8 @@ async fn execute_program(
 }
 
 struct ExecuteProgram<'a> {
-    nsjail: &'a str,
-    time: &'a str,
+    nsjail: &'a Path,
+    time: &'a Path,
     run_script: &'a str,
     main_file: &'a str,
     data: &'a RunRequest,

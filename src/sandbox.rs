@@ -10,8 +10,8 @@ use tracing::error;
 
 #[derive(Debug)]
 pub struct RunConfig<'a> {
-    pub nsjail: &'a str,
-    pub time: &'a str,
+    pub nsjail: &'a Path,
+    pub time: &'a Path,
     pub tmpdir: &'a Path,
     pub program: &'a str,
     pub args: &'a [&'a str],
@@ -60,10 +60,15 @@ impl RunConfig<'_> {
             .args(["--cwd", self.cwd])
             .args(["--max_cpus", &self.limits.cpus.to_string()])
             .args(["--time_limit", &self.limits.time.to_string()])
-            .args(["--rlimit_as", &self.limits.memory.to_string()])
+            .args(["--detect_cgroupv2"])
+            .args([
+                "--cgroup_mem_max",
+                &(self.limits.memory * 1024 * 1024).to_string(),
+            ])
+            .args(["--cgroup_mem_swap_max", "0"])
             .args(["--rlimit_fsize", &self.limits.filesize.to_string()])
             .args(["--rlimit_nofile", &self.limits.file_descriptors.to_string()])
-            .args(["--rlimit_nproc", &self.limits.processes.to_string()]);
+            .args(["--cgroup_pids_max", &self.limits.processes.to_string()]);
 
         for &(name, value) in self.envvars {
             cmd.arg("-E").arg(format!("{name}={value}"));

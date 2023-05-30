@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env};
+use std::{collections::HashMap, env, path::PathBuf};
 
 use config::{ConfigError, File};
 use sandkasten_client::schemas::programs;
@@ -11,13 +11,18 @@ pub fn load() -> Result<Environments, ConfigError> {
         ))
         .build()?
         .try_deserialize()
+        .map(|x: Environments| Environments {
+            nsjail_path: x.nsjail_path.canonicalize().unwrap(),
+            time_path: x.time_path.canonicalize().unwrap(),
+            ..x
+        })
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Environments {
     pub environments: HashMap<String, Environment>,
-    pub nsjail_path: String,
-    pub time_path: String,
+    pub nsjail_path: PathBuf,
+    pub time_path: PathBuf,
 }
 
 #[derive(Debug, Deserialize)]
