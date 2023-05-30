@@ -10,6 +10,7 @@ in
     version,
     compile_script,
     run_script,
+    ...
   }:
     pkgs.stdenv.mkDerivation {
       inherit version;
