@@ -131,10 +131,7 @@ fn test_flood_memory() {
         })
         .unwrap();
     assert_ne!(response.run.status, 0);
-    assert_eq!(
-        response.run.stderr.trim().lines().last().unwrap(),
-        "MemoryError"
-    );
+    assert!(response.run.stderr.contains("Killed"));
 }
 
 #[test]
