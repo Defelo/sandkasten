@@ -1,5 +1,5 @@
 {python311, ...}: let
-  pkgs = p: with p; [numpy pandas scipy sympy pycrypto requests];
+  pkgs = p: with p; [numpy];
 in {
   name = "Python";
   version = python311.version;
