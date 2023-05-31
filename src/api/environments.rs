@@ -67,7 +67,7 @@ impl EnvironmentsApi {
         let _guard = self.bru_lock.write(name.0.clone()).await;
         let result = self
             .cache
-            .cached_result(key!(&name.0), &[], None, async {
+            .cached_result(key!(&name.0), &[], None, || async {
                 let _guard = self
                     .request_semaphore
                     .acquire_many(self.config.max_concurrent_jobs as _)
