@@ -61,10 +61,8 @@ impl RunConfig<'_> {
             .args(["--cwd", self.cwd])
             .args(["--max_cpus", &self.limits.cpus.to_string()])
             .args(["--time_limit", &self.limits.time.to_string()])
-            .args(["--rlimit_as", &self.limits.memory.to_string()])
             .args(["--rlimit_fsize", &self.limits.filesize.to_string()])
-            .args(["--rlimit_nofile", &self.limits.file_descriptors.to_string()])
-            .args(["--rlimit_nproc", &self.limits.processes.to_string()]);
+            .args(["--rlimit_nofile", &self.limits.file_descriptors.to_string()]);
 
         if self.use_cgroup {
             cmd.args(["--detect_cgroupv2"])
@@ -74,6 +72,9 @@ impl RunConfig<'_> {
                 ])
                 .args(["--cgroup_mem_swap_max", "0"])
                 .args(["--cgroup_pids_max", &self.limits.processes.to_string()]);
+        } else {
+            cmd.args(["--rlimit_as", &self.limits.memory.to_string()])
+                .args(["--rlimit_nproc", &self.limits.processes.to_string()]);
         }
 
         for &(name, value) in self.envvars {
