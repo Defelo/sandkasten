@@ -86,18 +86,26 @@
     ${test-script} "''${1:-16}"
     ${pkgs.lcov}/bin/genhtml -o lcov_html lcov.info
   '';
+  setup-nsjail = pkgs.writeShellScript "setup-nsjail.sh" ''
+    if [[ "$UID" != 0 ]]; then
+      exec sudo "$0" "$@"
+    fi
+    cp ${pkgs.nsjail}/bin/nsjail .nsjail
+    chmod +s .nsjail
+  '';
   scripts = pkgs.stdenv.mkDerivation {
     name = "scripts";
     unpackPhase = "true";
     installPhase = ''
       mkdir -p $out/bin \
         && ln -s ${test-script} $out/bin/integration-tests \
-        && ln -s ${cov} $out/bin/cov
+        && ln -s ${cov} $out/bin/cov \
+        && ln -s ${setup-nsjail} $out/bin/setup-nsjail
     '';
   };
 in {
   default = pkgs.mkShell ({
-      packages = [pkgs.nsjail pkgs.cargo-llvm-cov pkgs.lcov pkgs.redis time scripts];
+      packages = [pkgs.cargo-llvm-cov pkgs.lcov pkgs.redis time scripts];
       RUST_LOG = "info,sandkasten=trace,difft=off";
     }
     // test-env);

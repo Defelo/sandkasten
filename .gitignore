@@ -6,3 +6,4 @@
 /program
 /lcov*.info
 /lcov_html
+/.nsjail

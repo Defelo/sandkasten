@@ -36,4 +36,6 @@ pub struct Config {
     pub run_limits: Limits,
 
     pub base_resource_usage_runs: usize,
+
+    pub use_cgroup: bool,
 }

@@ -22,14 +22,6 @@ in
           // (builtins.mapAttrs (k: v: types.bool) limits.bool);
       in {
         enable = mkEnableOption "sandkasten";
-        uid = mkOption {
-          type = types.nullOr types.int;
-          default = null;
-        };
-        gid = mkOption {
-          type = types.nullOr types.int;
-          default = null;
-        };
         host = mkOption {
           type = types.str;
           default = "0.0.0.0";
@@ -74,6 +66,10 @@ in
           type = types.int;
           default = conf.base_resource_usage_runs;
         };
+        use_cgroup = mkOption {
+          type = types.bool;
+          default = conf.use_cgroup;
+        };
         compile_limits = builtins.mapAttrs (k: v:
           mkOption {
             type = limit_types.${k};
@@ -92,14 +88,6 @@ in
           wantedBy = ["multi-user.target"];
           serviceConfig = {
             ExecStart = "${default}/bin/sandkasten";
-            ExecStartPre = [
-              "+${pkgs.coreutils}/bin/mkdir -p ${cfg.programs_dir}"
-              "+${pkgs.coreutils}/bin/mkdir -p ${cfg.jobs_dir}"
-              "+${pkgs.coreutils}/bin/chown sandkasten:sandkasten ${cfg.programs_dir}"
-              "+${pkgs.coreutils}/bin/chown sandkasten:sandkasten ${cfg.jobs_dir}"
-            ];
-            User = "sandkasten";
-            Group = "sandkasten";
             Restart = "always";
             RestartSec = 0;
             OOMPolicy = "continue";
@@ -107,14 +95,6 @@ in
           environment = {
             CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON cfg);
           };
-        };
-        users.users.sandkasten = {
-          inherit (cfg) uid;
-          group = "sandkasten";
-          isSystemUser = true;
-        };
-        users.groups.sandkasten = {
-          inherit (cfg) gid;
         };
       };
     }

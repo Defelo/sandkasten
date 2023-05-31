@@ -57,7 +57,7 @@ jobs:
           name: sandkasten
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
       - name: integration tests
-        run: nix develop .#test --command integration-tests
+        run: nix develop .#test --command sh -c "setup-nsjail && integration-tests"
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v3
         with:

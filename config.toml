@@ -15,10 +15,12 @@ max_concurrent_jobs = 64
 
 base_resource_usage_runs = 20
 
+use_cgroup = true
+
 [compile_limits]
 cpus = 1
 time = 30  # seconds
-memory = 4096  # mb
+memory = 1024  # mb
 tmpfs = 256  # mb
 filesize = 16  # mb
 file_descriptors = 256
@@ -30,7 +32,7 @@ network = false
 [run_limits]
 cpus = 1
 time = 5  # seconds
-memory = 3072  # mb
+memory = 256  # mb
 tmpfs = 256  # mb
 filesize = 16  # mb
 file_descriptors = 256

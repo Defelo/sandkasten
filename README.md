@@ -96,15 +96,21 @@ Not available (yet).
     ```
 
 ### Nix flake
-```bash
-nix shell nixpkgs#redis --command redis-server &
-CONFIG_PATH=config.toml nix run github:Defelo/sandkasten
+```
+# nix shell nixpkgs#redis --command redis-server &
+# CONFIG_PATH=config.toml nix run github:Defelo/sandkasten
 ```
 
 ### Docker
-```bash
-docker compose up -d
 ```
+# docker compose up -d
+```
+
+**Warning:** Unfortunately the `cgroup` options of `nsjail` do not work when running in Docker.
+Therefore only the `rlimit` options are set to enforce the resource limits, which means that for
+example the memory limit applies to each process individually (e.g. if your resource limits are
+`memory=1024` and `processes=64`, a single program could consume a total of 64GB of memory by
+spawning 64 processes that all consume 1GB individually).
 
 ## Development
 
@@ -117,8 +123,12 @@ The following components are needed for a working development environment:
 If you also have [direnv](https://github.com/direnv/direnv) installed, you can just use
 `direnv allow` to setup your shell for development. Otherwise you can also use `nix develop`
 to enter a development shell. This will add some tools to your `PATH` and set a few environment
-variables that are needed by Sandkasten and some of the integration tests. In the development shell
-you can just use `cargo run` to start the application.
+variables that are needed by Sandkasten and some of the integration tests. The first time you enter
+the development shell, you should run the `setup-nsjail` command, which will copy the `nsjail`
+binary into your current working directoy, `chown` it to `root` and set the `setuid` bit to allow
+Sandkasten to run this binary as root without having to run Sandkasten itself as root (but of
+course you could also do that). In the development shell you can just use `cargo run` to start the
+application.
 
 ### Unit tests
 To run the unit tests, you can just use `cargo test`. This only requires you to have a working rust
@@ -127,11 +137,11 @@ toolchain, but you should not need to setup nix for this.
 ### Integration tests
 To run the integration tests, you can use `cargo test -F nix -- --ignored`. For this to work you
 need to have a Sandkasten instance running on `127.0.0.1:8000`. You can also specify a different
-instance via the `TARGET` environment variable. If you only want to run the integration tests that
-do not require a nix development shell, you can omit the `-F nix`. In the development shell you can
-also run the `integration-tests` command to automatically start a temporary sandkasten instance and
-run the integration tests against it. There is also a `cov` command that runs the integration tests
-and writes an html coverage report to `lcov_html/index.html`.
+instance via the `TARGET_HOST` environment variable. If you only want to run the integration tests
+that do not require a nix development shell, you can omit the `-F nix`. In the development shell you
+can also run the `integration-tests` command to automatically start a temporary sandkasten instance
+and run the integration tests against it. There is also a `cov` command that runs the integration
+tests and writes an html coverage report to `lcov_html/index.html`.
 
 ### Packages
 All packages are defined using nix expressions in
