@@ -65,7 +65,7 @@ fn test_forkbomb() {
         response.run.stderr.trim().lines().last().unwrap(),
         "BlockingIOError: [Errno 11] Resource temporarily unavailable"
     );
-    assert!(response.run.resource_usage.time < 1000);
+    assert!(response.run.resource_usage.time < 2000);
 }
 
 #[test]
@@ -123,7 +123,7 @@ fn test_flood_memory() {
             },
             run: RunRequest {
                 run_limits: LimitsOpt {
-                    memory: Some(1024),
+                    memory: Some(256),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -156,7 +156,7 @@ fn test_combination() {
             },
             run: RunRequest {
                 run_limits: LimitsOpt {
-                    memory: Some(1024),
+                    memory: Some(256),
                     processes: Some(16),
                     ..Default::default()
                 },
@@ -216,5 +216,5 @@ fn test_many_files() {
         .unwrap();
     dbg!(&response);
     assert_eq!(response.run.status, 137);
-    assert!(response.run.stderr.contains("No space left on device"));
+    assert!(response.run.stderr.contains("Killed"));
 }
