@@ -96,14 +96,14 @@ Not available (yet).
     ```
 
 ### Nix flake
-```bash
-nix shell nixpkgs#redis --command redis-server &
-CONFIG_PATH=config.toml nix run github:Defelo/sandkasten
+```
+# nix shell nixpkgs#redis --command redis-server &
+# CONFIG_PATH=config.toml nix run github:Defelo/sandkasten
 ```
 
 ### Docker
-```bash
-docker compose up -d
+```
+# docker compose up -d
 ```
 
 **Warning:** Unfortunately the `cgroup` options of `nsjail` do not work when running in Docker.
