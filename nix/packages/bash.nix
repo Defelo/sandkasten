@@ -5,6 +5,9 @@
 } @ pkgs: {
   name = "Bash";
   version = bash.version;
+  meta = {
+    inherit (bash.meta) description longDescription homepage;
+  };
   default_main_file_name = "code.sh";
   compile_script = null;
   run_script = let

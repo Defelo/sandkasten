@@ -7,6 +7,9 @@
 }: {
   name = "Java";
   version = jdk.version;
+  meta = {
+    inherit (jdk.meta) homepage;
+  };
   default_main_file_name = "code.java";
   compile_script = ''
     set -e

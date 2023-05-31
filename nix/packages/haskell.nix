@@ -6,6 +6,13 @@
 }: {
   name = "Haskell";
   version = ghc.version;
+  meta = {
+    compiler = {
+      name = "GHC";
+      version = ghc.version;
+      inherit (ghc.meta) description homepage;
+    };
+  };
   default_main_file_name = "code.hs";
   compile_script = ''
     ${coreutils}/bin/cp $(${coreutils}/bin/ls -A) /tmp

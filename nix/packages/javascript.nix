@@ -1,6 +1,13 @@
 {nodejs, ...}: {
   name = "JavaScript";
   version = nodejs.version;
+  meta = {
+    runtime = {
+      name = "NodeJS";
+      version = nodejs.version;
+      inherit (nodejs.meta) description homepage;
+    };
+  };
   default_main_file_name = "code.js";
   compile_script = null;
   run_script = ''${nodejs}/bin/node /program/"$@"'';

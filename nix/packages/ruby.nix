@@ -3,6 +3,9 @@
 in {
   name = "Ruby";
   version = toString ruby.version;
+  meta = {
+    inherit (ruby.meta) description homepage;
+  };
   default_main_file_name = "code.rb";
   compile_script = null;
   run_script = ''${ruby}/bin/ruby -I/program /program/"$@"'';

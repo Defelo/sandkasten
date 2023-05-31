@@ -1,6 +1,9 @@
 {perl, ...}: {
   name = "Perl";
   version = perl.version;
+  meta = {
+    inherit (perl.meta) homepage;
+  };
   default_main_file_name = "code.pl";
   compile_script = null;
   run_script = ''${perl}/bin/perl -I/program /program/"$@"'';

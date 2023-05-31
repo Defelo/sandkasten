@@ -25,8 +25,15 @@
   };
   envs = dev:
     builtins.mapAttrs (
-      k: v: rec {
-        inherit (v) name version default_main_file_name test;
+      k: {
+        name,
+        version,
+        meta ? {},
+        default_main_file_name,
+        test,
+        ...
+      } @ v: rec {
+        inherit name version meta default_main_file_name test;
         compile_script =
           if builtins.isNull v.compile_script
           then null
