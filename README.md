@@ -123,8 +123,12 @@ The following components are needed for a working development environment:
 If you also have [direnv](https://github.com/direnv/direnv) installed, you can just use
 `direnv allow` to setup your shell for development. Otherwise you can also use `nix develop`
 to enter a development shell. This will add some tools to your `PATH` and set a few environment
-variables that are needed by Sandkasten and some of the integration tests. In the development shell
-you can just use `cargo run` to start the application.
+variables that are needed by Sandkasten and some of the integration tests. The first time you enter
+the development shell, you should run the `setup-nsjail` command, which will copy the `nsjail`
+binary into your current working directoy, `chown` it to `root` and set the `setuid` bit to allow
+Sandkasten to run this binary as root without having to run Sandkasten itself as root (but of
+course you could also do that). In the development shell you can just use `cargo run` to start the
+application.
 
 ### Unit tests
 To run the unit tests, you can just use `cargo test`. This only requires you to have a working rust
