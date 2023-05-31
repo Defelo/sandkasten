@@ -80,17 +80,12 @@ Not available (yet).
     {
       services.sandkasten = {
         enable = true;
-        redis_url = "redis+unix:///${config.services.redis.servers.sandkasten.unixSocket}";
         # example config:
         host = "0.0.0.0";
         port = 8080;
         max_concurrent_jobs = 16;
         run_limits.time = 10;
         # for a full list of configuration options, see `config.toml`
-      };
-      services.redis.servers.sandkasten = {
-        enable = true;
-        user = "sandkasten";
       };
     }
     ```

@@ -34,6 +34,10 @@ in
           type = types.str;
           default = "/";
         };
+        redis = mkOption {
+          type = types.bool;
+          default = true;
+        };
         redis_url = mkOption {
           type = types.str;
           default = conf.redis_url;
@@ -93,7 +97,16 @@ in
             OOMPolicy = "continue";
           };
           environment = {
-            CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON cfg);
+            CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON (cfg
+              // (optionalAttrs cfg.redis {
+                redis_url = "redis+unix:///${config.services.redis.servers.sandkasten.unixSocket}";
+              })));
+          };
+        };
+        services.redis = mkIf cfg.redis {
+          servers.sandkasten = {
+            enable = true;
+            save = [];
           };
         };
       };
