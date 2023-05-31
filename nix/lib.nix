@@ -43,7 +43,10 @@
     packages;
   environments = dev:
     pkgs.writeText "environments.json" (builtins.toJSON {
-      nsjail_path = "./.nsjail";
+      nsjail_path =
+        if dev
+        then "./.nsjail"
+        else "${pkgs.nsjail}/bin/nsjail";
       time_path = "${time}/bin/time";
       environments = envs dev;
     });

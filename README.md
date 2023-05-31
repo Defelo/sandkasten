@@ -106,6 +106,12 @@ CONFIG_PATH=config.toml nix run github:Defelo/sandkasten
 docker compose up -d
 ```
 
+**Warning:** Unfortunately the `cgroup` options of `nsjail` do not work when running in Docker.
+Therefore only the `rlimit` options are set to enforce the resource limits, which means that for
+example the memory limit applies to each process individually (e.g. if your resource limits are
+`memory=1024` and `processes=64`, a single program could consume a total of 64GB of memory by
+spawning 64 processes that all consume 1GB individually).
+
 ## Development
 
 ### Setup instructions

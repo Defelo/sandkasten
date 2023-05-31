@@ -171,6 +171,7 @@ pub async fn run_program(
                 tmpdir: &tmpdir,
                 limits,
                 closure: &closure,
+                use_cgroup: config.use_cgroup,
             })
             .await
         },
@@ -326,6 +327,7 @@ async fn store_program(
                     tmpdir: &tmpdir,
                     limits,
                     closure: &env.closure,
+                    use_cgroup: config.use_cgroup,
                 })
                 .await
             },
@@ -362,11 +364,13 @@ async fn compile_program(
         tmpdir,
         limits,
         closure,
+        use_cgroup,
     }: CompileProgram<'_>,
 ) -> Result<RunResult, RunError> {
     RunConfig {
         nsjail,
         time,
+        use_cgroup,
         tmpdir,
         program: compile_script,
         args: &std::iter::once(main_file_name)
@@ -416,6 +420,7 @@ struct CompileProgram<'a> {
     tmpdir: &'a Path,
     limits: Limits,
     closure: &'a str,
+    use_cgroup: bool,
 }
 
 async fn execute_program(
@@ -429,11 +434,13 @@ async fn execute_program(
         tmpdir,
         limits,
         closure,
+        use_cgroup,
     }: ExecuteProgram<'_>,
 ) -> Result<RunResult, RunError> {
     RunConfig {
         nsjail,
         time,
+        use_cgroup,
         tmpdir,
         program: run_script,
         args: &std::iter::once(main_file)
@@ -483,6 +490,7 @@ struct ExecuteProgram<'a> {
     tmpdir: &'a Path,
     limits: Limits,
     closure: &'a str,
+    use_cgroup: bool,
 }
 
 async fn mounts_from_closure(closure: &str) -> Result<Vec<Mount>, std::io::Error> {

@@ -18,6 +18,9 @@ in
     config = {
       User = "65534:65534";
       Entrypoint = ["${rust}/bin/${cargotoml.package.name}"];
-      Env = ["ENVIRONMENTS_CONFIG_PATH=${environments false}"];
+      Env = [
+        "ENVIRONMENTS_CONFIG_PATH=${environments false}"
+        "USE_CGROUP=false"
+      ];
     };
   }
