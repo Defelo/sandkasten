@@ -5,6 +5,7 @@ use std::collections::HashMap;
 #[cfg(feature = "poem-openapi")]
 use poem_openapi::{types::Example, NewType, Object};
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 use super::programs::ResourceUsage;
 
@@ -18,6 +19,8 @@ pub struct Environment {
     pub version: String,
     /// The default name of the main file that is used if no filename is specified.
     pub default_main_file_name: String,
+    /// Additional metadata specific to the environment.
+    pub meta: Value,
 }
 
 /// A map of environments where the key represents the id of the environment.
@@ -66,6 +69,9 @@ impl Example for ListEnvironmentsResponse {
                     name: "Rust".into(),
                     version: "1.64.0".into(),
                     default_main_file_name: "code.rs".into(),
+                    meta: json!({
+                        "homepage": "https://www.rust-lang.org/"
+                    }),
                 },
             ),
             (
@@ -74,6 +80,9 @@ impl Example for ListEnvironmentsResponse {
                     name: "Python".into(),
                     version: "3.11.1".into(),
                     default_main_file_name: "code.py".into(),
+                    meta: json!({
+                        "packages": ["numpy", "pandas"]
+                    }),
                 },
             ),
         ]))

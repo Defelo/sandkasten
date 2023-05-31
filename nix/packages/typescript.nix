@@ -17,6 +17,18 @@
 in {
   name = "TypeScript";
   version = typescript.version;
+  meta = {
+    compiler = {
+      name = "tsc";
+      version = typescript.version;
+      inherit (typescript.meta) description homepage;
+    };
+    runtime = {
+      name = "NodeJS";
+      version = nodejs.version;
+      inherit (nodejs.meta) description homepage;
+    };
+  };
   default_main_file_name = "code.ts";
   compile_script = ''
     ${coreutils}/bin/cp $(${coreutils}/bin/ls -A) /tmp

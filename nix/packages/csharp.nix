@@ -5,6 +5,9 @@
 }: {
   name = "C#";
   version = dotnet-sdk.version;
+  meta = {
+    inherit (dotnet-sdk.meta) homepage;
+  };
   default_main_file_name = "code.cs";
   compile_script = ''
     ${coreutils}/bin/cp $(${coreutils}/bin/ls -A) /tmp

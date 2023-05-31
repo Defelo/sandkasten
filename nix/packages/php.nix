@@ -1,6 +1,9 @@
 {php, ...}: {
   name = "PHP";
   version = php.version;
+  meta = {
+    inherit (php.meta) description homepage;
+  };
   default_main_file_name = "code.php";
   compile_script = null;
   run_script = ''${php}/bin/php /program/"$@"'';

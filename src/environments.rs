@@ -3,6 +3,7 @@ use std::{collections::HashMap, env, path::PathBuf};
 use config::{ConfigError, File};
 use sandkasten_client::schemas::programs;
 use serde::Deserialize;
+use serde_json::Value;
 
 pub fn load() -> Result<Environments, ConfigError> {
     config::Config::builder()
@@ -29,6 +30,7 @@ pub struct Environments {
 pub struct Environment {
     pub name: String,
     pub version: String,
+    pub meta: Value,
     pub default_main_file_name: String,
     pub compile_script: Option<String>,
     pub run_script: String,

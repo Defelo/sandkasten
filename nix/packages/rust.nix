@@ -5,6 +5,9 @@
 }: {
   name = "Rust";
   version = rustc.version;
+  meta = {
+    inherit (rustc.meta) description homepage;
+  };
   default_main_file_name = "code.rs";
   compile_script = ''PATH=${gcc}/bin/ ${rustc}/bin/rustc -O -o /program/binary "$1"'';
   run_script = ''shift; /program/binary "$@"'';

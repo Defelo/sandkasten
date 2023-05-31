@@ -46,6 +46,7 @@ impl EnvironmentsApi {
                             name: env.name.clone(),
                             version: env.version.clone(),
                             default_main_file_name: env.default_main_file_name.clone(),
+                            meta: env.meta.clone(),
                         },
                     )
                 })

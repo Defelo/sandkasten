@@ -1,8 +1,15 @@
 {gcc, ...}: {
   name = "C";
-  version = gcc.version;
+  version = "17";
+  meta = {
+    compiler = {
+      name = "GCC";
+      version = gcc.version;
+      inherit (gcc.meta) description longDescription homepage;
+    };
+  };
   default_main_file_name = "code.c";
-  compile_script = ''${gcc}/bin/gcc -std=c11 -O2 -o /program/binary "$1"'';
+  compile_script = ''${gcc}/bin/gcc -std=c17 -O2 -o /program/binary "$1"'';
   run_script = ''shift; /program/binary "$@"'';
   test.main_file.content = ''
     #define  _GNU_SOURCE
