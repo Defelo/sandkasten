@@ -61,7 +61,24 @@ Not available (yet).
 
 ## Setup instructions
 
-### NixOS Module
+### Prepare packages
+Before installing Sandkasten, you should setup a Nix profile with the environments that should be
+available on your instance. A full list of installable environments is available at [nix/packages]
+(https://github.com/Defelo/sandkasten/tree/develop/nix/packages). To install a package, you can use
+the following command:
+
+```bash
+nix profile install --profile <path-to-your-profile> github:Defelo/sandkasten#packages.<package-name>
+```
+
+If you want to install all packages, use `all` for the `package-name`. You can also add or remove
+packages later, but you need to restart Sandkasten after doing so. Finally, to enable Sandkasten
+to find your packages, you need to set the `environments_path` config option to
+`<path-to-your-profile>/share/sandkasten/packages`.
+
+### Install Sandkasten
+
+#### NixOS Module
 
 1. Add this repository to your flake inputs:
     ```nix
@@ -93,13 +110,13 @@ Not available (yet).
     }
     ```
 
-### Nix flake
+#### Nix flake
 ```
 # nix shell nixpkgs#redis --command redis-server &
 # CONFIG_PATH=config.toml nix run github:Defelo/sandkasten
 ```
 
-### Docker
+#### Docker
 ```
 # docker compose up -d
 ```
