@@ -4,6 +4,8 @@ use sandkasten::config;
 
 #[test]
 fn test_config() {
+    env::set_var("NSJAIL_PATH", "/");
+    env::set_var("TIME_PATH", "/");
     env::set_var(
         "CONFIG_PATH",
         concat!(env!("CARGO_MANIFEST_DIR"), "/config.toml"),
