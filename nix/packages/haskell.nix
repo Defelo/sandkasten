@@ -1,23 +1,18 @@
-{
-  ghc,
-  coreutils,
-  gcc,
-  ...
-}: {
+{pkgs, ...}: {
   name = "Haskell";
-  version = ghc.version;
+  version = pkgs.ghc.version;
   meta = {
     compiler = {
       name = "GHC";
-      version = ghc.version;
-      inherit (ghc.meta) description homepage;
+      version = pkgs.ghc.version;
+      inherit (pkgs.ghc.meta) description homepage;
     };
   };
   default_main_file_name = "code.hs";
   compile_script = ''
-    ${coreutils}/bin/cp $(${coreutils}/bin/ls -A) /tmp
+    ${pkgs.coreutils}/bin/cp $(${pkgs.coreutils}/bin/ls -A) /tmp
     cd /tmp
-    PATH=${gcc}/bin ${ghc}/bin/ghc -O -o /program/binary --make "$1"
+    PATH=${pkgs.gcc}/bin ${pkgs.ghc}/bin/ghc -O -o /program/binary --make "$1"
   '';
   run_script = ''shift; /program/binary "$@"'';
   test.main_file.content = ''

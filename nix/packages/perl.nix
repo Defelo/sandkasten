@@ -1,12 +1,12 @@
-{perl, ...}: {
+{pkgs, ...}: {
   name = "Perl";
-  version = perl.version;
+  version = pkgs.perl.version;
   meta = {
-    inherit (perl.meta) homepage;
+    inherit (pkgs.perl.meta) homepage;
   };
   default_main_file_name = "code.pl";
   compile_script = null;
-  run_script = ''${perl}/bin/perl -I/program /program/"$@"'';
+  run_script = ''${pkgs.perl}/bin/perl -I/program /program/"$@"'';
   test.main_file.content = ''
     use Foo;
 

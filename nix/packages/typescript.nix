@@ -1,14 +1,7 @@
-{
-  typescript,
-  nodejs,
-  coreutils,
-  stdenv,
-  fetchurl,
-  ...
-}: let
-  node_modules = stdenv.mkDerivation {
+{pkgs, ...}: let
+  node_modules = pkgs.stdenv.mkDerivation {
     name = "node_modules";
-    src = fetchurl {
+    src = pkgs.fetchurl {
       url = "https://registry.npmjs.org/@types/node/-/node-18.15.11.tgz";
       sha512 = "E5Kwq2n4SbMzQOn6wnmBjuK9ouqlURrcZDVfbo9ftDDTFt3nk7ZKK4GMOzoYgnpQJKcxwQw+lGaBvvlMo0qN/Q==";
     };
@@ -16,30 +9,30 @@
   };
 in {
   name = "TypeScript";
-  version = typescript.version;
+  version = pkgs.typescript.version;
   meta = {
     compiler = {
       name = "tsc";
-      version = typescript.version;
-      inherit (typescript.meta) description homepage;
+      version = pkgs.typescript.version;
+      inherit (pkgs.typescript.meta) description homepage;
     };
     runtime = {
       name = "NodeJS";
-      version = nodejs.version;
-      inherit (nodejs.meta) description homepage;
+      version = pkgs.nodejs.version;
+      inherit (pkgs.nodejs.meta) description homepage;
     };
   };
   default_main_file_name = "code.ts";
   compile_script = ''
-    ${coreutils}/bin/cp $(${coreutils}/bin/ls -A) /tmp
+    ${pkgs.coreutils}/bin/cp $(${pkgs.coreutils}/bin/ls -A) /tmp
     cd /tmp
-    ${coreutils}/bin/ln -s ${node_modules}/node_modules .
-    ${typescript}/bin/tsc -m node16 --outDir /program/ "$@"
+    ${pkgs.coreutils}/bin/ln -s ${node_modules}/node_modules .
+    ${pkgs.typescript}/bin/tsc -m node16 --outDir /program/ "$@"
   '';
   run_script = ''
-    main=/program/$(${coreutils}/bin/basename "$1" .ts).js
+    main=/program/$(${pkgs.coreutils}/bin/basename "$1" .ts).js
     shift
-    ${nodejs}/bin/node "$main" "$@"
+    ${pkgs.nodejs}/bin/node "$main" "$@"
   '';
   test.main_file.content = ''
     import { bar } from "./foo";

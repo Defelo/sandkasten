@@ -1,29 +1,25 @@
-{
-  dotnet-sdk,
-  coreutils,
-  ...
-}: {
+{pkgs, ...}: {
   name = "C#";
-  version = dotnet-sdk.version;
+  version = pkgs.dotnet-sdk.version;
   meta = {
-    inherit (dotnet-sdk.meta) homepage;
+    inherit (pkgs.dotnet-sdk.meta) homepage;
   };
   default_main_file_name = "code.cs";
   compile_script = ''
-    ${coreutils}/bin/cp $(${coreutils}/bin/ls -A) /tmp
+    ${pkgs.coreutils}/bin/cp $(${pkgs.coreutils}/bin/ls -A) /tmp
     export HOME=/tmp/.dotnet
     export DOTNET_CLI_TELEMETRY_OPTOUT=1
     cd /tmp
-    ${dotnet-sdk}/bin/dotnet new console -o . --no-restore
-    ${coreutils}/bin/rm Program.cs
-    ${dotnet-sdk}/bin/dotnet restore
-    ${dotnet-sdk}/bin/dotnet build --no-restore -o /program
+    ${pkgs.dotnet-sdk}/bin/dotnet new console -o . --no-restore
+    ${pkgs.coreutils}/bin/rm Program.cs
+    ${pkgs.dotnet-sdk}/bin/dotnet restore
+    ${pkgs.dotnet-sdk}/bin/dotnet build --no-restore -o /program
   '';
   run_script = ''
     shift
     export HOME=/tmp/.dotnet
     export DOTNET_CLI_TELEMETRY_OPTOUT=1
-    ${dotnet-sdk}/bin/dotnet /program/*.dll "$@"
+    ${pkgs.dotnet-sdk}/bin/dotnet /program/*.dll "$@"
   '';
   test.main_file.content = ''
     using System;

@@ -1,16 +1,16 @@
-{nodejs, ...}: {
+{pkgs, ...}: {
   name = "JavaScript";
-  version = nodejs.version;
+  version = pkgs.nodejs.version;
   meta = {
     runtime = {
       name = "NodeJS";
-      version = nodejs.version;
-      inherit (nodejs.meta) description homepage;
+      version = pkgs.nodejs.version;
+      inherit (pkgs.nodejs.meta) description homepage;
     };
   };
   default_main_file_name = "code.js";
   compile_script = null;
-  run_script = ''${nodejs}/bin/node /program/"$@"'';
+  run_script = ''${pkgs.nodejs}/bin/node /program/"$@"'';
   test.main_file.content = ''
     let fs = require("fs");
     let foo = require("./foo.js");
