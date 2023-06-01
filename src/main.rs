@@ -23,6 +23,8 @@ use sandkasten::{
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
+    info!("Starting Sandkasten v{}", env!("CARGO_PKG_VERSION"));
+
     info!("Loading config");
     let config = config::load()?;
     ensure!(config.base_resource_usage_runs >= 1);

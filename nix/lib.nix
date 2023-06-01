@@ -2,11 +2,11 @@
   pkgs,
   pkgs-old,
   ...
-}: {
+}: rec {
   time = import ./time pkgs;
   cargotoml = builtins.fromTOML (builtins.readFile ../Cargo.toml);
   config = builtins.fromTOML (builtins.readFile ../config.toml);
-  packages = import ./packages {inherit pkgs pkgs-old;};
+  packages = import ./packages {inherit pkgs pkgs-old cargotoml;};
   limits = {
     u64 = {
       cpus = {min = 1;};

@@ -17,6 +17,7 @@ pub struct Environment {
     pub run_script: String,
     pub closure: String,
     pub test: Test,
+    pub sandkasten_version: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -26,6 +27,7 @@ pub struct Test {
 }
 
 pub fn load(paths: &[PathBuf]) -> Result<Environments, anyhow::Error> {
+    let version = env!("CARGO_PKG_VERSION");
     let mut out = HashMap::new();
     for path in paths {
         debug!("Loading environments in {}", path.display());
@@ -61,7 +63,7 @@ pub fn load(paths: &[PathBuf]) -> Result<Environments, anyhow::Error> {
                     continue;
                 }
             };
-            let environment = match serde_json::from_str(&content) {
+            let environment: Environment = match serde_json::from_str(&content) {
                 Ok(x) => x,
                 Err(err) => {
                     error!(
@@ -71,6 +73,12 @@ pub fn load(paths: &[PathBuf]) -> Result<Environments, anyhow::Error> {
                     continue;
                 }
             };
+            if environment.sandkasten_version != version {
+                warn!(
+                    "Package {name} was built for a different version of Sandkasten ({})",
+                    environment.sandkasten_version
+                );
+            }
             debug!("Loaded environment {name} from {}", path.display());
             out.insert(name, environment);
         }
