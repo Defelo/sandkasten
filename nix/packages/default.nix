@@ -51,6 +51,7 @@
     };
 in
   derivations
-  // {
+  // rec {
+    combined = f: merge "combined" (f (derivations // {inherit all;}));
     all = merge "all" (builtins.attrValues derivations);
   }

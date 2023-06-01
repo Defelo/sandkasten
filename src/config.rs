@@ -1,4 +1,4 @@
-use std::{env, fs::canonicalize, path::PathBuf};
+use std::{env, path::PathBuf};
 
 use config::{Environment, File};
 use sandkasten_client::schemas::programs::Limits;
@@ -17,11 +17,6 @@ pub fn load() -> Result<Config, anyhow::Error> {
     Ok(Config {
         nsjail_path: conf.nsjail_path.canonicalize()?,
         time_path: conf.time_path.canonicalize()?,
-        environments_path: conf
-            .environments_path
-            .into_iter()
-            .map(canonicalize)
-            .collect::<Result<_, _>>()?,
         ..conf
     })
 }

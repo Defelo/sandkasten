@@ -80,6 +80,9 @@ Not available (yet).
     {
       services.sandkasten = {
         enable = true;
+        environments = p: with p; [
+          rust python typescript  # use `all` to install all environments
+        ];
         # example config:
         host = "0.0.0.0";
         port = 8080;

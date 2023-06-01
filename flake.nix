@@ -25,7 +25,7 @@
     lib = import ./nix/lib.nix {inherit pkgs pkgs-old;};
   in rec {
     packages.${system} = rec {
-      packages = import ./nix/packages {inherit pkgs pkgs-old;};
+      inherit (lib) packages;
       rust = import ./nix/rust.nix {inherit system pkgs fenix naersk;};
       docker = import ./nix/docker.nix {inherit pkgs lib rust;};
       default = import ./nix/default.nix {inherit pkgs lib rust;};
@@ -36,7 +36,7 @@
     };
     devShells.${system} = import ./nix/dev/shell.nix {
       inherit pkgs lib;
-      packages = builtins.removeAttrs packages.${system}.packages ["all"];
+      packages = builtins.removeAttrs lib.packages ["all"];
     };
   };
 }
