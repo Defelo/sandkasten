@@ -1,10 +1,10 @@
 {
   pkgs,
   lib,
-  packages,
   ...
 }: let
   inherit (lib) time config limits;
+  packages = builtins.removeAttrs lib.packages ["all" "combined"];
   test-env = {
     PACKAGES_TEST_SRC = pkgs.writeText "packages_test_src.rs" (builtins.foldl' (acc: pkg:
       acc

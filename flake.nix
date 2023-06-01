@@ -33,9 +33,6 @@
       inherit lib;
       inherit (packages.${system}) default;
     };
-    devShells.${system} = import ./nix/dev/shell.nix {
-      inherit pkgs lib;
-      packages = builtins.removeAttrs lib.packages ["all"];
-    };
+    devShells.${system} = import ./nix/dev/shell.nix {inherit pkgs lib;};
   };
 }
