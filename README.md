@@ -1,6 +1,5 @@
 [![check](https://github.com/Defelo/sandkasten/actions/workflows/check.yml/badge.svg)](https://github.com/Defelo/sandkasten/actions/workflows/check.yml)
 [![test](https://github.com/Defelo/sandkasten/actions/workflows/test.yml/badge.svg)](https://github.com/Defelo/sandkasten/actions/workflows/test.yml)
-[![docker](https://github.com/Defelo/sandkasten/actions/workflows/docker.yml/badge.svg)](https://github.com/Defelo/sandkasten/actions/workflows/docker.yml)
 [![codecov](https://codecov.io/gh/Defelo/sandkasten/branch/develop/graph/badge.svg?token=Y5CE2887KO)](https://codecov.io/gh/Defelo/sandkasten)
 ![Version](https://img.shields.io/github/v/tag/Defelo/sandkasten?include_prereleases&label=version)
 [![dependency status](https://deps.rs/repo/github/Defelo/sandkasten/status.svg)](https://deps.rs/repo/github/Defelo/sandkasten)
@@ -115,17 +114,6 @@ to find your packages, you need to set the `environments_path` config option to
 # nix shell nixpkgs#redis --command redis-server &
 # CONFIG_PATH=config.toml nix run github:Defelo/sandkasten
 ```
-
-#### Docker
-```
-# docker compose up -d
-```
-
-**Warning:** Unfortunately the `cgroup` options of `nsjail` do not work when running in Docker.
-Therefore only the `rlimit` options are set to enforce the resource limits, which means that for
-example the memory limit applies to each process individually (e.g. if your resource limits are
-`memory=1024` and `processes=64`, a single program could consume a total of 64GB of memory by
-spawning 64 processes that all consume 1GB individually).
 
 ## Development
 

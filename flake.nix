@@ -27,7 +27,6 @@
     packages.${system} = rec {
       inherit (lib) packages;
       rust = import ./nix/rust.nix {inherit system pkgs fenix naersk;};
-      docker = import ./nix/docker.nix {inherit pkgs lib rust;};
       default = import ./nix/default.nix {inherit pkgs lib rust;};
     };
     nixosModules.sandkasten = import ./nix/nixos.nix {
