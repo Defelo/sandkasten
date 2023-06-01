@@ -143,8 +143,7 @@ All packages are defined using nix expressions in
 [nix/packages](https://github.com/Defelo/sandkasten/tree/develop/nix/packages). Each package has a
 unique id, a human-readable name, a version, optionally a script to compile a program, a script to
 run a program and a test program that is executed as part of the integration tests to ensure that
-the package is working. When creating a new package, don't forget to add it to
-[nix/packages/default.nix](https://github.com/Defelo/sandkasten/blob/develop/nix/packages/default.nix).
+the package is working.
 
 #### Compile scripts
 The compile script of a package is executed whenever a new program has been uploaded. When this

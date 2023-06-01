@@ -2,21 +2,15 @@
   pkgs,
   pkgs-old,
   ...
-}: {
-  bash = import ./bash.nix pkgs;
-  c = import ./c.nix pkgs;
-  cpp = import ./cpp.nix pkgs;
-  csharp = import ./csharp.nix pkgs;
-  haskell = import ./haskell.nix pkgs;
-  java = import ./java.nix pkgs;
-  javascript = import ./javascript.nix pkgs;
-  kotlin = import ./kotlin.nix pkgs;
-  lua = import ./lua.nix pkgs;
-  perl = import ./perl.nix pkgs;
-  php = import ./php.nix pkgs;
-  python = import ./python.nix pkgs;
-  ruby = import ./ruby.nix pkgs;
-  rust = import ./rust.nix pkgs;
-  swift = import ./swift.nix pkgs-old;
-  typescript = import ./typescript.nix pkgs;
-}
+}: let
+  old = ["swift.nix"];
+  packages = builtins.listToAttrs (map (name: {
+    name = pkgs.lib.removeSuffix ".nix" name;
+    value = import (./. + "/${name}") (
+      if builtins.elem name old
+      then pkgs-old
+      else pkgs
+    );
+  }) (builtins.filter (name: name != "default.nix" && pkgs.lib.hasSuffix ".nix" name) (builtins.attrNames (builtins.readDir ./.))));
+in
+  packages
