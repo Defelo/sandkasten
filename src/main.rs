@@ -48,7 +48,8 @@ async fn main() -> anyhow::Result<()> {
     });
 
     info!("Loading environments");
-    let environments = Arc::new(environments::load()?);
+    let environments = Arc::new(environments::load(&config.environments_path)?);
+    info!("Loaded {} environments", environments.len());
 
     info!("Connecting to redis");
     let redis = ConnectionManager::new(Client::open(config.redis_url.clone())?).await?;

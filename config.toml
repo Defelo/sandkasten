@@ -16,6 +16,10 @@ max_concurrent_jobs = 64
 base_resource_usage_runs = 20
 
 use_cgroup = true
+# nsjail_path = ...
+# time_path = ...
+
+environments_path = ["pkgs/share/sandkasten/packages"]
 
 [compile_limits]
 cpus = 1

@@ -1,11 +1,11 @@
 {
   pkgs,
   lib,
+  packages,
   ...
 }: let
-  inherit (lib) environments packages time config limits;
+  inherit (lib) time config limits;
   test-env = {
-    ENVIRONMENTS_CONFIG_PATH = environments true;
     PACKAGES_TEST_SRC = pkgs.writeText "packages_test_src.rs" (builtins.foldl' (acc: pkg:
       acc
       + ''
@@ -60,6 +60,8 @@
         program_ttl = 60;
         prune_programs_interval = 30;
         run_limits = config.run_limits // {network = true;};
+        nsjail_path = ".nsjail";
+        time_path = "${lib.time}/bin/time";
       }));
   };
   test-script = pkgs.writeShellScript "integration-tests.sh" ''

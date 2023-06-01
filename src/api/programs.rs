@@ -75,7 +75,6 @@ impl ProgramsApi {
 
         match run_program(
             Arc::clone(&self.config),
-            Arc::clone(&self.environments),
             program_id,
             data.0.run,
             &read_guard,
@@ -138,7 +137,6 @@ impl ProgramsApi {
         let _guard = self.request_semaphore.acquire().await?;
         match run_program(
             Arc::clone(&self.config),
-            Arc::clone(&self.environments),
             program_id.0,
             data.0,
             &self.program_lock.read(program_id.0).await,

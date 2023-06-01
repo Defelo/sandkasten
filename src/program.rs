@@ -29,9 +29,11 @@ pub async fn build_program(
     program_lock: Arc<KeyRwLock<Uuid>>,
     job_lock: Arc<KeyRwLock<Uuid>>,
 ) -> Result<(BuildResult, OwnedRwLockReadGuard<()>), BuildProgramError> {
-    let env = environments.environments.get(&data.environment).ok_or(
-        BuildProgramError::EnvironmentNotFound(data.environment.clone()),
-    )?;
+    let env = environments
+        .get(&data.environment)
+        .ok_or(BuildProgramError::EnvironmentNotFound(
+            data.environment.clone(),
+        ))?;
 
     let hash = Sha256::new()
         .chain_update(postcard::to_stdvec(&(
@@ -61,7 +63,7 @@ pub async fn build_program(
         return Ok((cached, _guard.downgrade()));
     }
 
-    match store_program(&config, &environments, data, env, &path, &job_lock).await {
+    match store_program(&config, data, env, &path, &job_lock).await {
         Ok(result) => {
             if let Some(result) = &result {
                 let serialized = postcard::to_stdvec(result)?;
@@ -123,7 +125,6 @@ async fn get_cached_program(
 /// Run a given program and return its output.
 pub async fn run_program(
     config: Arc<Config>,
-    environments: Arc<Environments>,
     program_id: Uuid,
     data: RunRequest,
     _program_guard: &OwnedRwLockReadGuard<()>,
@@ -162,8 +163,8 @@ pub async fn run_program(
                 fs::write(tmpdir.join("box").join(&file.name), &file.content).await?;
             }
             execute_program(ExecuteProgram {
-                nsjail: &environments.nsjail_path,
-                time: &environments.time_path,
+                nsjail: &config.nsjail_path,
+                time: &config.time_path,
                 run_script: &run_script,
                 main_file: &main_file,
                 data: &data,
@@ -271,7 +272,6 @@ pub enum RunProgramError {
 
 async fn store_program(
     config: &Config,
-    environments: &Environments,
     data: BuildRequest,
     env: &Environment,
     path: &Path,
@@ -318,8 +318,8 @@ async fn store_program(
                     fs::write(tmpdir.join("box").join(&file.name), &file.content).await?;
                 }
                 compile_program(CompileProgram {
-                    nsjail: &environments.nsjail_path,
-                    time: &environments.time_path,
+                    nsjail: &config.nsjail_path,
+                    time: &config.time_path,
                     compile_script,
                     main_file_name,
                     data: &data,

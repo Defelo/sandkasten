@@ -1,30 +1,11 @@
-use std::{collections::HashMap, env, path::PathBuf};
+use std::{collections::HashMap, path::PathBuf};
 
-use config::{ConfigError, File};
 use sandkasten_client::schemas::programs;
 use serde::Deserialize;
 use serde_json::Value;
+use tracing::{debug, error, warn};
 
-pub fn load() -> Result<Environments, ConfigError> {
-    config::Config::builder()
-        .add_source(File::with_name(
-            &env::var("ENVIRONMENTS_CONFIG_PATH").unwrap_or("environments.json".to_owned()),
-        ))
-        .build()?
-        .try_deserialize()
-        .map(|x: Environments| Environments {
-            nsjail_path: x.nsjail_path.canonicalize().unwrap(),
-            time_path: x.time_path.canonicalize().unwrap(),
-            ..x
-        })
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Environments {
-    pub environments: HashMap<String, Environment>,
-    pub nsjail_path: PathBuf,
-    pub time_path: PathBuf,
-}
+pub type Environments = HashMap<String, Environment>;
 
 #[derive(Debug, Deserialize)]
 pub struct Environment {
@@ -42,4 +23,57 @@ pub struct Environment {
 pub struct Test {
     pub main_file: programs::MainFile,
     pub files: Vec<programs::File>,
+}
+
+pub fn load(paths: &[PathBuf]) -> Result<Environments, anyhow::Error> {
+    let mut out = HashMap::new();
+    for path in paths {
+        debug!("Loading environments in {}", path.display());
+        for file in match std::fs::read_dir(path) {
+            Ok(x) => x,
+            Err(err) => {
+                error!("Could not open {} directory: {err}", path.display());
+                continue;
+            }
+        } {
+            let file = match file {
+                Ok(x) => x,
+                Err(err) => {
+                    error!("Could not read file in {}: {err}", path.display());
+                    continue;
+                }
+            };
+            let path = file.path();
+            let name = path
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .trim_end_matches(".json")
+                .into();
+            if out.contains_key(&name) {
+                warn!("Skipping environment {name} as it has already been defined previously.");
+                continue;
+            }
+            let content = match std::fs::read_to_string(&path) {
+                Ok(x) => x,
+                Err(err) => {
+                    error!("Could not read file {}: {err}", path.display());
+                    continue;
+                }
+            };
+            let environment = match serde_json::from_str(&content) {
+                Ok(x) => x,
+                Err(err) => {
+                    error!(
+                        "Could not parse content of {} as environment: {err}",
+                        path.display()
+                    );
+                    continue;
+                }
+            };
+            debug!("Loaded environment {name} from {}", path.display());
+            out.insert(name, environment);
+        }
+    }
+    Ok(out)
 }

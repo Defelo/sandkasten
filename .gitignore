@@ -7,3 +7,5 @@
 /lcov*.info
 /lcov_html
 /.nsjail
+/pkgs
+/pkgs-*-link
