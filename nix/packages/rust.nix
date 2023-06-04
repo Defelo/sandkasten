@@ -1,15 +1,11 @@
-{
-  rustc,
-  gcc,
-  ...
-}: {
+{pkgs, ...}: {
   name = "Rust";
-  version = rustc.version;
+  version = pkgs.rustc.version;
   meta = {
-    inherit (rustc.meta) description homepage;
+    inherit (pkgs.rustc.meta) description homepage;
   };
   default_main_file_name = "code.rs";
-  compile_script = ''PATH=${gcc}/bin/ ${rustc}/bin/rustc -O -o /program/binary "$1"'';
+  compile_script = ''PATH=${pkgs.gcc}/bin/ ${pkgs.rustc}/bin/rustc -O -o /program/binary "$1"'';
   run_script = ''shift; /program/binary "$@"'';
   test.main_file.content = ''
     mod foo;

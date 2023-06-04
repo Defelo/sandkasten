@@ -25,9 +25,8 @@
     lib = import ./nix/lib.nix {inherit pkgs pkgs-old;};
   in rec {
     packages.${system} = rec {
-      packages = import ./nix/dev/packages.nix {inherit pkgs lib;};
+      inherit (lib) packages;
       rust = import ./nix/rust.nix {inherit system pkgs fenix naersk;};
-      docker = import ./nix/docker.nix {inherit pkgs lib rust;};
       default = import ./nix/default.nix {inherit pkgs lib rust;};
     };
     nixosModules.sandkasten = import ./nix/nixos.nix {

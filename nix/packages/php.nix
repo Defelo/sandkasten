@@ -1,12 +1,12 @@
-{php, ...}: {
+{pkgs, ...}: {
   name = "PHP";
-  version = php.version;
+  version = pkgs.php.version;
   meta = {
-    inherit (php.meta) description homepage;
+    inherit (pkgs.php.meta) description homepage;
   };
   default_main_file_name = "code.php";
   compile_script = null;
-  run_script = ''${php}/bin/php /program/"$@"'';
+  run_script = ''${pkgs.php}/bin/php /program/"$@"'';
   test.main_file.content = ''
     <?php
 

@@ -1,5 +1,5 @@
-{lua5_4, ...}: let
-  lua = lua5_4;
+{pkgs, ...}: let
+  lua = pkgs.lua5_4;
 in {
   name = "Lua";
   version = lua.version;

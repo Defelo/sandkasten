@@ -1,15 +1,15 @@
-{gcc, ...}: {
+{pkgs, ...}: {
   name = "C";
   version = "17";
   meta = {
     compiler = {
       name = "GCC";
-      version = gcc.version;
-      inherit (gcc.meta) description longDescription homepage;
+      version = pkgs.gcc.version;
+      inherit (pkgs.gcc.meta) description longDescription homepage;
     };
   };
   default_main_file_name = "code.c";
-  compile_script = ''${gcc}/bin/gcc -std=c17 -O2 -o /program/binary "$1"'';
+  compile_script = ''${pkgs.gcc}/bin/gcc -std=c17 -O2 -o /program/binary "$1"'';
   run_script = ''shift; /program/binary "$@"'';
   test.main_file.content = ''
     #define  _GNU_SOURCE

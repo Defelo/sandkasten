@@ -3,7 +3,7 @@
   lib,
   ...
 }: let
-  inherit (lib) limits;
+  inherit (lib) limits packages time;
   conf = lib.config;
 in
   {
@@ -74,6 +74,10 @@ in
           type = types.bool;
           default = conf.use_cgroup;
         };
+        environments = mkOption {
+          type = types.anything;
+          default = _: [];
+        };
         compile_limits = builtins.mapAttrs (k: v:
           mkOption {
             type = limit_types.${k};
@@ -97,7 +101,16 @@ in
             OOMPolicy = "continue";
           };
           environment = {
-            CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON (cfg
+            CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON ((builtins.removeAttrs cfg [
+                "enable"
+                "redis"
+                "environments"
+              ])
+              // {
+                nsjail_path = "${pkgs.nsjail}/bin/nsjail";
+                time_path = "${time}/bin/time";
+                environments_path = ["${packages.combined cfg.environments}/share/sandkasten/packages"];
+              }
               // (optionalAttrs cfg.redis {
                 redis_url = "redis+unix:///${config.services.redis.servers.sandkasten.unixSocket}";
               })));

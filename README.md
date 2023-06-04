@@ -1,6 +1,5 @@
 [![check](https://github.com/Defelo/sandkasten/actions/workflows/check.yml/badge.svg)](https://github.com/Defelo/sandkasten/actions/workflows/check.yml)
 [![test](https://github.com/Defelo/sandkasten/actions/workflows/test.yml/badge.svg)](https://github.com/Defelo/sandkasten/actions/workflows/test.yml)
-[![docker](https://github.com/Defelo/sandkasten/actions/workflows/docker.yml/badge.svg)](https://github.com/Defelo/sandkasten/actions/workflows/docker.yml)
 [![codecov](https://codecov.io/gh/Defelo/sandkasten/branch/develop/graph/badge.svg?token=Y5CE2887KO)](https://codecov.io/gh/Defelo/sandkasten)
 ![Version](https://img.shields.io/github/v/tag/Defelo/sandkasten?include_prereleases&label=version)
 [![dependency status](https://deps.rs/repo/github/Defelo/sandkasten/status.svg)](https://deps.rs/repo/github/Defelo/sandkasten)
@@ -61,7 +60,24 @@ Not available (yet).
 
 ## Setup instructions
 
-### NixOS Module
+### Prepare packages
+Before installing Sandkasten, you should setup a Nix profile with the environments that should be
+available on your instance. A full list of installable environments is available at [nix/packages]
+(https://github.com/Defelo/sandkasten/tree/develop/nix/packages). To install a package, you can use
+the following command:
+
+```bash
+nix profile install --profile <path-to-your-profile> github:Defelo/sandkasten#packages.<package-name>
+```
+
+If you want to install all packages, use `all` for the `package-name`. You can also add or remove
+packages later, but you need to restart Sandkasten after doing so. Finally, to enable Sandkasten
+to find your packages, you need to set the `environments_path` config option to
+`<path-to-your-profile>/share/sandkasten/packages`.
+
+### Install Sandkasten
+
+#### NixOS Module
 
 1. Add this repository to your flake inputs:
     ```nix
@@ -80,6 +96,9 @@ Not available (yet).
     {
       services.sandkasten = {
         enable = true;
+        environments = p: with p; [
+          rust python typescript  # use `all` to install all environments
+        ];
         # example config:
         host = "0.0.0.0";
         port = 8080;
@@ -90,22 +109,11 @@ Not available (yet).
     }
     ```
 
-### Nix flake
+#### Nix flake
 ```
 # nix shell nixpkgs#redis --command redis-server &
 # CONFIG_PATH=config.toml nix run github:Defelo/sandkasten
 ```
-
-### Docker
-```
-# docker compose up -d
-```
-
-**Warning:** Unfortunately the `cgroup` options of `nsjail` do not work when running in Docker.
-Therefore only the `rlimit` options are set to enforce the resource limits, which means that for
-example the memory limit applies to each process individually (e.g. if your resource limits are
-`memory=1024` and `processes=64`, a single program could consume a total of 64GB of memory by
-spawning 64 processes that all consume 1GB individually).
 
 ## Development
 
@@ -143,8 +151,7 @@ All packages are defined using nix expressions in
 [nix/packages](https://github.com/Defelo/sandkasten/tree/develop/nix/packages). Each package has a
 unique id, a human-readable name, a version, optionally a script to compile a program, a script to
 run a program and a test program that is executed as part of the integration tests to ensure that
-the package is working. When creating a new package, don't forget to add it to
-[nix/packages/default.nix](https://github.com/Defelo/sandkasten/blob/develop/nix/packages/default.nix).
+the package is working.
 
 #### Compile scripts
 The compile script of a package is executed whenever a new program has been uploaded. When this

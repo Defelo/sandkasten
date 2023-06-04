@@ -6,7 +6,7 @@
   time = import ./time pkgs;
   cargotoml = builtins.fromTOML (builtins.readFile ../Cargo.toml);
   config = builtins.fromTOML (builtins.readFile ../config.toml);
-  packages = import ./packages {inherit pkgs pkgs-old;};
+  packages = import ./packages {inherit pkgs pkgs-old cargotoml;};
   limits = {
     u64 = {
       cpus = {min = 1;};
@@ -23,38 +23,4 @@
       network = {};
     };
   };
-  envs = dev:
-    builtins.mapAttrs (
-      k: {
-        name,
-        version,
-        meta ? {},
-        default_main_file_name,
-        test,
-        ...
-      } @ v: rec {
-        inherit name version meta default_main_file_name test;
-        compile_script =
-          if builtins.isNull v.compile_script
-          then null
-          else pkgs.writeShellScript "${k}-compile.sh" v.compile_script;
-        run_script = pkgs.writeShellScript "${k}-run.sh" v.run_script;
-        closure = (rootPaths: "${pkgs.closureInfo {inherit rootPaths;}}/store-paths") ([run_script]
-          ++ (
-            if compile_script != null
-            then [compile_script]
-            else []
-          ));
-      }
-    )
-    packages;
-  environments = dev:
-    pkgs.writeText "environments.json" (builtins.toJSON {
-      nsjail_path =
-        if dev
-        then "./.nsjail"
-        else "${pkgs.nsjail}/bin/nsjail";
-      time_path = "${time}/bin/time";
-      environments = envs dev;
-    });
 }

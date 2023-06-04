@@ -1,5 +1,5 @@
-{ruby_3_1, ...}: let
-  ruby = ruby_3_1;
+{pkgs, ...}: let
+  ruby = pkgs.ruby_3_1;
 in {
   name = "Ruby";
   version = toString ruby.version;

@@ -1,16 +1,12 @@
-{
-  kotlin,
-  coreutils,
-  ...
-}: {
+{pkgs, ...}: {
   name = "Kotlin";
-  version = kotlin.version;
+  version = pkgs.kotlin.version;
   meta = {
-    inherit (kotlin.meta) description longDescription homepage;
+    inherit (pkgs.kotlin.meta) description longDescription homepage;
   };
   default_main_file_name = "code.kt";
-  compile_script = ''PATH=${coreutils}/bin ${kotlin}/bin/kotlinc -d /program/program.jar "$@"'';
-  run_script = ''shift; PATH=${coreutils}/bin ${kotlin}/bin/kotlin /program/program.jar "$@"'';
+  compile_script = ''PATH=${pkgs.coreutils}/bin ${pkgs.kotlin}/bin/kotlinc -d /program/program.jar "$@"'';
+  run_script = ''shift; PATH=${pkgs.coreutils}/bin ${pkgs.kotlin}/bin/kotlin /program/program.jar "$@"'';
   test.main_file.content = ''
     import foo.bar;
 

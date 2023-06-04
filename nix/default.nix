@@ -4,7 +4,7 @@
   rust,
   ...
 }: let
-  inherit (lib) cargotoml environments;
+  inherit (lib) cargotoml;
 in
   pkgs.stdenv.mkDerivation {
     pname = cargotoml.package.name;
@@ -12,7 +12,6 @@ in
     unpackPhase = "true";
     installPhase = let
       script = pkgs.writeShellScript "${cargotoml.package.name}.sh" ''
-        [[ -n "$ENVIRONMENTS_CONFIG_PATH" ]] || export ENVIRONMENTS_CONFIG_PATH=${environments false}
         ${rust}/bin/${cargotoml.package.name}
       '';
     in "mkdir -p $out/bin && ln -s ${script} $out/bin/${cargotoml.package.name}";

@@ -1,12 +1,8 @@
-{
-  bash,
-  lib,
-  ...
-} @ pkgs: {
+{pkgs, ...}: {
   name = "Bash";
-  version = bash.version;
+  version = pkgs.bash.version;
   meta = {
-    inherit (bash.meta) description longDescription homepage;
+    inherit (pkgs.bash.meta) description longDescription homepage;
   };
   default_main_file_name = "code.sh";
   compile_script = null;
@@ -21,7 +17,7 @@
       jq
       yq
     ];
-  in ''PATH='/program/:${lib.makeBinPath path}' ${bash}/bin/bash /program/"$@"'';
+  in ''PATH='/program/:${pkgs.lib.makeBinPath path}' ${pkgs.bash}/bin/bash /program/"$@"'';
   test.main_file.content = ''
     set -e
 

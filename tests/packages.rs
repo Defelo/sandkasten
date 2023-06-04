@@ -1,23 +1,15 @@
 #![cfg(feature = "nix")]
 
-use std::collections::HashMap;
-
-use sandkasten_client::schemas::programs::{
-    BuildRequest, BuildRunRequest, File, MainFile, RunRequest,
-};
-use serde::Deserialize;
+use sandkasten::environments;
+use sandkasten_client::schemas::programs::{BuildRequest, BuildRunRequest, File, RunRequest};
 
 use crate::common::client;
 
 mod common;
 
 fn test_package(id: &str) {
-    let EnvironmentsConfig { mut environments }: EnvironmentsConfig = config::Config::builder()
-        .add_source(config::File::with_name(env!("ENVIRONMENTS_CONFIG_PATH")))
-        .build()
-        .unwrap()
-        .try_deserialize()
-        .unwrap();
+    let conf = sandkasten::config::load().unwrap();
+    let mut environments = environments::load(&conf.environments_path).unwrap();
 
     let environment = environments.remove(id).unwrap();
 
@@ -55,20 +47,3 @@ fn test_package(id: &str) {
 }
 
 include!(env!("PACKAGES_TEST_SRC"));
-
-#[derive(Debug, Deserialize)]
-struct EnvironmentsConfig {
-    environments: HashMap<String, Environment>,
-}
-
-#[derive(Debug, Deserialize)]
-struct Environment {
-    compile_script: Option<String>,
-    test: Test,
-}
-
-#[derive(Debug, Deserialize)]
-struct Test {
-    main_file: MainFile,
-    files: Vec<File>,
-}

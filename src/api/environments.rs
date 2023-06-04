@@ -37,7 +37,6 @@ impl EnvironmentsApi {
     async fn list_environments(&self) -> ListEnvironments::Response {
         ListEnvironments::ok(ListEnvironmentsResponse(
             self.environments
-                .environments
                 .iter()
                 .map(|(id, env)| {
                     (
@@ -61,7 +60,7 @@ impl EnvironmentsApi {
         transform = "shield"
     )]
     async fn get_base_resource_usage(&self, name: Path<String>) -> GetBaseResourceUsage::Response {
-        let Some(environment) = self.environments.environments.get(&name.0) else {
+        let Some(environment) = self.environments.get(&name.0) else {
             return GetBaseResourceUsage::environment_not_found();
         };
 
@@ -128,7 +127,6 @@ async fn get_base_resource_usage(
         res.push(
             run_program(
                 Arc::clone(&config),
-                Arc::clone(&environments),
                 build.program_id,
                 Default::default(),
                 &_guard,

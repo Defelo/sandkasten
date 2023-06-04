@@ -23,6 +23,8 @@ use sandkasten::{
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
+    info!("Starting Sandkasten v{}", env!("CARGO_PKG_VERSION"));
+
     info!("Loading config");
     let config = config::load()?;
     ensure!(config.base_resource_usage_runs >= 1);
@@ -48,7 +50,8 @@ async fn main() -> anyhow::Result<()> {
     });
 
     info!("Loading environments");
-    let environments = Arc::new(environments::load()?);
+    let environments = Arc::new(environments::load(&config.environments_path)?);
+    info!("Loaded {} environments", environments.len());
 
     info!("Connecting to redis");
     let redis = ConnectionManager::new(Client::open(config.redis_url.clone())?).await?;
