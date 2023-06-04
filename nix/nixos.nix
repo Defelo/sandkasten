@@ -96,9 +96,9 @@ in
           wantedBy = ["multi-user.target"];
           serviceConfig = {
             ExecStart = "${default}/bin/sandkasten";
-            Restart = "always";
-            RestartSec = 0;
-            OOMPolicy = "continue";
+            Restart = lib.mkDefault "always";
+            RestartSec = lib.mkDefault 1;
+            OOMPolicy = lib.mkDefault "continue";
           };
           environment = {
             CONFIG_PATH = pkgs.writeText "config.json" (builtins.toJSON ((builtins.removeAttrs cfg [
