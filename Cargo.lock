@@ -801,9 +801,9 @@ dependencies = [
 
 [[package]]
 name = "key-rwlock"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "954b7404c4add84254f1e6b4073585476bdb52fb854f6dc59bfa18db198f0097"
+checksum = "ae710886ef1c6f43b28f0da0b5f8b872f22c1d99f0f64182195d88523c592ab0"
 dependencies = [
  "tokio",
 ]
