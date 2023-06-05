@@ -29,10 +29,17 @@
       rust = import ./nix/rust.nix {inherit system pkgs fenix naersk;};
       default = import ./nix/default.nix {inherit pkgs lib rust;};
     };
-    nixosModules.sandkasten = import ./nix/nixos.nix {
+    nixosModules.sandkasten = import ./nix/nixos/module.nix {
       inherit lib;
       inherit (packages.${system}) default;
     };
     devShells.${system} = import ./nix/dev/shell.nix {inherit pkgs lib;};
+    nixosConfigurations.sandkasten = nixpkgs.lib.nixosSystem {
+      inherit system;
+      modules = [
+        ./nix/nixos/vm.nix
+        nixosModules.sandkasten
+      ];
+    };
   };
 }
