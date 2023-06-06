@@ -38,7 +38,7 @@ thiserror.workspace = true
 tokio = { version = "1.28.2", default-features = false, features = ["rt-multi-thread", "macros", "process", "time"] }
 tracing = { version = "0.1.37", default-features = false }
 tracing-subscriber = { version = "0.3.17", default-features = false, features = ["fmt", "ansi"] }
-url = { version = "2.3.1", default-features = false, features = ["serde"] }
+url = { version = "2.4.0", default-features = false, features = ["serde"] }
 uuid.workspace = true
 
 [dev-dependencies]
