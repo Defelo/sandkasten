@@ -16,7 +16,7 @@ blocking = ["reqwest", "reqwest/blocking"]
 poem-openapi = ["dep:poem-openapi"]
 
 [dependencies]
-poem-openapi = { version = "2.0.26", default-features = false, optional = true, features = ["uuid"] }
+poem-openapi = { version = "2.0.27", default-features = false, optional = true, features = ["uuid"] }
 reqwest = { version = "0.11.18", default-features = false, optional = true, features = ["json", "rustls-tls"] }
 serde.workspace = true
 serde_json.workspace = true
