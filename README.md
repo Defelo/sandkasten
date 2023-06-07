@@ -59,8 +59,8 @@ Not available (yet).
 
 ## Setup instructions
 The recommended way of installing Sandkasten is to setup a dedicated virtual machine running NixOS.
-To make this setup easier, this repository contains a basic NixOS configuration and an installation
-script.
+To make this setup easier, this repository contains a basic NixOS configuration template and an
+installation script.
 
 ### NixOS VM Setup
 The following steps have been tested on Proxmox VE 7.4-3 x86_64.
@@ -77,16 +77,19 @@ The following steps have been tested on Proxmox VE 7.4-3 x86_64.
     installation. Replace `[disk]` with the path to your hard disk (e.g. `/dev/sda`). Note that
     this will erase all data on the disk you specify.
     ```bash
-    curl -o install-vm.sh https://raw.githubusercontent.com/Defelo/sandkasten/develop/install-vm.sh
-    bash install-vm.sh [disk]
+    curl -o install.sh https://raw.githubusercontent.com/Defelo/sandkasten/develop/install-vm.sh
+    bash install.sh [disk]
     ```
 8. After the script is done, the vm will reboot into the new NixOS installation. The initial root
     password is `sandkasten` if you want to login via ssh. The Sandkasten server is started
     automatically and should be listening on `0.0.0.0:80` by default.
 
-In `/root/sandkasten` you can find a git checkout of this repository. To update Sandkasten run
-`git pull && nixos-rebuild switch --flake .` in this directory. In `nix/nixos/vm.nix` you can also
-find the NixOS configuration of the vm. After making changes to this file run
+In `/root/sandkasten` you can find a [flake](https://nixos.wiki/wiki/Flakes) which contains the
+configuration of your vm. To update Sandkasten and the system packages run
+`nix flake update && nixos-rebuild switch --flake .` in this directory. Here you will also find
+a `sandkasten.nix` which contains the Sandkasten service configuration, a `configuration.nix`
+which contains the system configuration and a `hardware-configuration.nix` which is generated
+automatically by the install script. After making changes to any of these files run
 `nixos-rebuild switch --flake .` to apply them.
 
 ### NixOS Module
