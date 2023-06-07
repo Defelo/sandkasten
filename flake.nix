@@ -34,12 +34,6 @@
       inherit (packages.${system}) default;
     };
     devShells.${system} = import ./nix/dev/shell.nix {inherit pkgs lib;};
-    nixosConfigurations.sandkasten = nixpkgs.lib.nixosSystem {
-      inherit system;
-      modules = [
-        ./nix/nixos/vm.nix
-        nixosModules.sandkasten
-      ];
-    };
+    templates.vm.path = ./nix/nixos/vm;
   };
 }
