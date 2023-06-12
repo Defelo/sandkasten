@@ -48,7 +48,8 @@ pub struct RunRequest {
         oai(default, validator(max_items = 100, pattern = "^[^\0]{0,4096}$"))
     )]
     pub args: Vec<String>,
-    /// A list of additional files that are put in the working directory of the process.
+    /// A list of additional files that are put in the working directory of the
+    /// process.
     #[cfg_attr(feature = "poem-openapi", oai(default, validator(max_items = 10)))]
     pub files: Vec<File>,
     /// A list of environment variables to set during the run step.
@@ -74,11 +75,13 @@ pub struct File {
     pub content: String,
 }
 
-/// The main source file that is put in the working directory of the build process.
+/// The main source file that is put in the working directory of the build
+/// process.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct MainFile {
-    /// The name of the file. If omitted, a default name is chosen based on the selected environment.
+    /// The name of the file. If omitted, a default name is chosen based on the
+    /// selected environment.
     #[cfg_attr(
         feature = "poem-openapi",
         oai(default, validator(pattern = r"^[a-zA-Z0-9._-]{1,32}$"))
@@ -110,16 +113,18 @@ pub struct EnvVar {
 pub struct BuildRunResult {
     /// A unique identifier of the program that was built.
     pub program_id: Uuid,
-    /// The number of seconds after the last execution of the program before it is removed.
+    /// The number of seconds after the last execution of the program before it
+    /// is removed.
     pub ttl: u64,
-    /// The results of compiling the program. Empty iff programs don't need to be compiled in this
-    /// environment.
+    /// The results of compiling the program. Empty iff programs don't need to
+    /// be compiled in this environment.
     pub build: Option<RunResult>,
     /// The results of running the program.
     pub run: RunResult,
 }
 
-/// The error responses that may be returned when building and running a program.
+/// The error responses that may be returned when building and running a
+/// program.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "error", content = "details", rename_all = "snake_case")]
 pub enum BuildRunError {
@@ -143,10 +148,11 @@ pub enum BuildRunError {
 pub struct BuildResult {
     /// A unique identifier of the program that was built.
     pub program_id: Uuid,
-    /// The number of seconds after the last execution of the program before it is removed.
+    /// The number of seconds after the last execution of the program before it
+    /// is removed.
     pub ttl: u64,
-    /// The results of compiling the program. Empty iff programs don't need to be compiled in this
-    /// environment.
+    /// The results of compiling the program. Empty iff programs don't need to
+    /// be compiled in this environment.
     pub compile_result: Option<RunResult>,
 }
 

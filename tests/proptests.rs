@@ -1,8 +1,11 @@
 #![cfg(feature = "nix")]
 
-use std::collections::{BTreeMap, HashSet};
-use std::fmt::Write;
+use std::{
+    collections::{BTreeMap, HashSet},
+    fmt::Write,
+};
 
+use common::client;
 use indoc::formatdoc;
 use once_cell::unsync::Lazy;
 use proptest::{collection, option, prelude::*, string::string_regex};
@@ -10,8 +13,6 @@ use regex::Regex;
 use sandkasten_client::schemas::programs::{
     BuildRequest, BuildRunRequest, EnvVar, File, LimitsOpt, MainFile, RunRequest,
 };
-
-use common::client;
 
 mod common;
 

@@ -12,13 +12,12 @@ use sandkasten_client::schemas::programs::{
 use tokio::sync::Semaphore;
 use uuid::Uuid;
 
+use super::Tags;
 use crate::{
     config::Config,
     environments::Environments,
     program::{build_program, run_program, BuildProgramError, RunProgramError},
 };
-
-use super::Tags;
 
 pub struct ProgramsApi {
     pub config: Arc<Config>,

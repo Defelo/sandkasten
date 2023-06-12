@@ -17,7 +17,8 @@ pub struct Environment {
     pub name: String,
     /// The version of the environment.
     pub version: String,
-    /// The default name of the main file that is used if no filename is specified.
+    /// The default name of the main file that is used if no filename is
+    /// specified.
     pub default_main_file_name: String,
     /// Additional metadata specific to the environment.
     pub meta: Value,
@@ -51,7 +52,8 @@ pub struct BaseResourceUsage {
     pub run_max: ResourceUsage,
 }
 
-/// The error responses that may be returned when calculating the base resource usage.
+/// The error responses that may be returned when calculating the base resource
+/// usage.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "error", content = "details", rename_all = "snake_case")]
 pub enum GetBaseResourceUsageError {

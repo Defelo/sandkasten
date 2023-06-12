@@ -11,14 +11,13 @@ use sandkasten_client::schemas::{
 use tokio::sync::Semaphore;
 use uuid::Uuid;
 
+use super::Tags;
 use crate::{
     config::Config,
     environments::{self, Environments},
     program::{build_program, run_program},
     Cache,
 };
-
-use super::Tags;
 
 pub struct EnvironmentsApi {
     pub environments: Arc<Environments>,
@@ -53,7 +52,8 @@ impl EnvironmentsApi {
         ))
     }
 
-    /// Return the base resource usage of an environment when running just a very basic program.
+    /// Return the base resource usage of an environment when running just a
+    /// very basic program.
     #[oai(
         path = "/environments/:name/resource_usage",
         method = "get",

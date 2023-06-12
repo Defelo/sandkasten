@@ -20,8 +20,8 @@ use crate::{
     sandbox::{with_tempdir, Mount, MountType, RunConfig, RunError},
 };
 
-/// Store (and compile) the uploaded program into a directory in the local fs. Return a unique
-/// identifier for the program.
+/// Store (and compile) the uploaded program into a directory in the local fs.
+/// Return a unique identifier for the program.
 pub async fn build_program(
     config: Arc<Config>,
     environments: Arc<Environments>,

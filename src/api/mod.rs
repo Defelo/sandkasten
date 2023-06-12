@@ -5,9 +5,8 @@ use poem_openapi::OpenApi;
 use tokio::sync::Semaphore;
 use uuid::Uuid;
 
-use crate::{config::Config, environments::Environments, Cache};
-
 use self::{environments::EnvironmentsApi, programs::ProgramsApi};
+use crate::{config::Config, environments::Environments, Cache};
 
 mod environments;
 mod programs;

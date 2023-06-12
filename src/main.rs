@@ -9,15 +9,14 @@ use poem::{listener::TcpListener, middleware::Tracing, EndpointExt, Route, Serve
 use poem_ext::panic_handler::PanicHandler;
 use poem_openapi::OpenApiService;
 use redis::{aio::ConnectionManager, Client};
-use tokio::fs;
-use tracing::{error, info};
-
 use sandkasten::{
     api::get_api,
     config::{self, Config},
     environments,
     program::prune_programs,
 };
+use tokio::fs;
+use tracing::{error, info};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

@@ -14,7 +14,10 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg(feature = "reqwest")]
 mod client {
-    use std::fmt::Display;
+    use std::{collections::HashMap, fmt::Display};
+
+    use serde::Deserialize;
+    use url::Url;
 
     use crate::schemas::{
         environments::{BaseResourceUsage, Environment, GetBaseResourceUsageError},
@@ -24,9 +27,6 @@ mod client {
         },
         ErrorResponse,
     };
-    use serde::Deserialize;
-    use std::collections::HashMap;
-    use url::Url;
 
     /// An asynchronous client for Sandkasten.
     #[derive(Debug, Clone)]
