@@ -44,12 +44,30 @@ pub struct ListEnvironmentsResponse(pub HashMap<String, Environment>);
 pub struct BaseResourceUsage {
     /// The base resource usage of the build step.
     pub build: Option<ResourceUsage>,
-    /// The minimum base resource usage of the run step.
-    pub run_min: ResourceUsage,
-    /// The average base resource usage of the run step.
-    pub run_avg: ResourceUsage,
-    /// The maximum base resource usage of the run step.
-    pub run_max: ResourceUsage,
+    /// The base resource usage of the run step.
+    pub run: RunResourceUsage,
+}
+
+/// The base resource usage of the run step.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "poem-openapi", derive(Object))]
+pub struct RunResourceUsage {
+    /// The number of **milliseconds** the process ran.
+    pub time: BenchmarkResult,
+    /// The amount of memory the process used (in **KB**)
+    pub memory: BenchmarkResult,
+}
+
+/// Accumulated benchmark results.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "poem-openapi", derive(Object))]
+pub struct BenchmarkResult {
+    /// The minimum of the measured values.
+    pub min: u64,
+    /// The average of the measured values.
+    pub avg: u64,
+    /// The maximum of the measured values.
+    pub max: u64,
 }
 
 /// The error responses that may be returned when calculating the base resource
@@ -88,5 +106,27 @@ impl Example for ListEnvironmentsResponse {
                 },
             ),
         ]))
+    }
+}
+
+impl FromIterator<u64> for BenchmarkResult {
+    fn from_iter<T: IntoIterator<Item = u64>>(iter: T) -> Self {
+        let mut iter = iter.into_iter();
+        let first = iter.next().unwrap();
+        let mut min = first;
+        let mut max = first;
+        let mut sum = first;
+        let mut cnt = 1;
+        for x in iter {
+            min = min.min(x);
+            max = max.max(x);
+            sum += x;
+            cnt += 1;
+        }
+        BenchmarkResult {
+            min,
+            max,
+            avg: sum / cnt,
+        }
     }
 }
