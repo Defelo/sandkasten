@@ -1,9 +1,14 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
 use sandkasten_client::schemas::programs;
 use serde::Deserialize;
 use serde_json::Value;
 use tracing::{debug, error, warn};
+
+use crate::VERSION;
 
 pub type Environments = HashMap<String, Environment>;
 
@@ -15,7 +20,7 @@ pub struct Environment {
     pub default_main_file_name: String,
     pub compile_script: Option<String>,
     pub run_script: String,
-    pub closure: String,
+    pub closure: PathBuf,
     pub test: Test,
     pub sandkasten_version: String,
 }
@@ -26,62 +31,57 @@ pub struct Test {
     pub files: Vec<programs::File>,
 }
 
+/// Load [`Environments`] from a list of paths.
 pub fn load(paths: &[PathBuf]) -> Result<Environments, anyhow::Error> {
-    let version = env!("CARGO_PKG_VERSION");
     let mut out = HashMap::new();
     for path in paths {
-        debug!("Loading environments in {}", path.display());
-        for file in match std::fs::read_dir(path) {
-            Ok(x) => x,
-            Err(err) => {
-                error!("Could not open {} directory: {err}", path.display());
-                continue;
-            }
-        } {
-            let file = match file {
-                Ok(x) => x,
-                Err(err) => {
-                    error!("Could not read file in {}: {err}", path.display());
-                    continue;
-                }
-            };
-            let path = file.path();
-            let name = path
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-                .trim_end_matches(".json")
-                .into();
-            if out.contains_key(&name) {
-                warn!("Skipping environment {name} as it has already been defined previously.");
-                continue;
-            }
-            let content = match std::fs::read_to_string(&path) {
-                Ok(x) => x,
-                Err(err) => {
-                    error!("Could not read file {}: {err}", path.display());
-                    continue;
-                }
-            };
-            let environment: Environment = match serde_json::from_str(&content) {
-                Ok(x) => x,
-                Err(err) => {
-                    error!(
-                        "Could not parse content of {} as environment: {err}",
-                        path.display()
-                    );
-                    continue;
-                }
-            };
-            if environment.sandkasten_version != version {
-                warn!(
-                    "Package {name} was built for a different version of Sandkasten ({})",
-                    environment.sandkasten_version
-                );
-            }
-            debug!("Loaded environment {name} from {}", path.display());
-            out.insert(name, environment);
+        if let Err(err) = load_directory(&mut out, path) {
+            error!("Failed to load directory {}: {err:#}", path.display())
         }
     }
     Ok(out)
+}
+
+fn load_directory(out: &mut Environments, path: &Path) -> Result<(), anyhow::Error> {
+    debug!("Loading environments in {}", path.display());
+    for file in std::fs::read_dir(path)? {
+        match file {
+            Ok(file) => {
+                if let Err(err) = load_file(out, &file.path()) {
+                    error!("Failed to load file {}: {err:#}", file.path().display());
+                }
+            }
+            Err(err) => error!("Failed to read file in {}: {err:#}", path.display()),
+        }
+    }
+    Ok(())
+}
+
+fn load_file(out: &mut Environments, path: &Path) -> Result<(), anyhow::Error> {
+    let name = path
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .trim_end_matches(".json")
+        .into();
+
+    if out.contains_key(&name) {
+        warn!("Skipping environment {name} as it has already been defined previously.");
+        return Ok(());
+    }
+
+    let content = std::fs::read_to_string(path)?;
+    let environment: Environment = serde_json::from_str(&content)?;
+
+    if environment.sandkasten_version != VERSION {
+        warn!(
+            "Package {name} was built for a different version of Sandkasten ({})",
+            environment.sandkasten_version
+        );
+    }
+
+    debug!("Loaded environment {name} from {}", path.display());
+    out.insert(name, environment);
+
+    Ok(())
 }

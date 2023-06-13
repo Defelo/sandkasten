@@ -160,8 +160,10 @@ package, you can use the following command:
 nix profile install --profile pkgs .#packages.<package-name>
 ```
 
-If you want to install all packages, use `all` for `<package-name>`. You can also add or remove
-packages later, but you need to restart Sandkasten after doing so.
+If you want to install all packages, use `all` for `<package-name>`. You can also add, upgrade or
+remove packages later, but you need to restart Sandkasten after doing so. See
+[`nix profile --help`](https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-profile.html)
+for details.
 
 #### Start the application
 In the development shell you can just use `cargo run` to start Sandkasten.

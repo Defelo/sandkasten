@@ -23,30 +23,51 @@ pub fn load() -> Result<Config, anyhow::Error> {
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
+    /// The host to listen on.
     pub host: String,
+    /// The port to listen on.
     pub port: u16,
+    /// The path prefix added by a reverse proxy. Set to `"/"` if you don't have
+    /// a reverse proxy.
     pub server: String,
 
+    /// The url of the redis server (see https://docs.rs/redis/latest/redis/#connection-parameters).
     pub redis_url: Url,
-    pub cache_ttl: u64, // in seconds
+    /// The default time to live for cache entries in seconds.
+    pub cache_ttl: u64,
 
+    /// The directory where programs are stored.
     pub programs_dir: PathBuf,
+    /// The directory where files for jobs are stored.
     pub jobs_dir: PathBuf,
 
-    pub program_ttl: u64,             // in seconds
-    pub prune_programs_interval: u64, // in seconds
+    /// The time to live for programs in seconds.
+    pub program_ttl: u64,
+    /// The number of seconds to wait between deleting old programs.
+    pub prune_programs_interval: u64,
 
+    /// The maximum number of jobs that can be run at the same time.
     pub max_concurrent_jobs: usize,
 
+    /// The maximum allowed limits for compile steps.
     pub compile_limits: Limits,
+    /// The maximum allowed limits for run steps.
     pub run_limits: Limits,
 
+    /// The number of times the program is run when measuring the base resource
+    /// usage of an environment.
     pub base_resource_usage_runs: usize,
 
+    /// Whether to use cgroup to set resource limits where possible. It is
+    /// strongly recommended to set this to true in production environments!
     pub use_cgroup: bool,
+    /// The path to the nsjail binary. This binary must have the setuid bit set
+    /// and it must be owned by root OR sandkasten itself must be run as root.
     pub nsjail_path: PathBuf,
+    /// The path to the time binary.
     pub time_path: PathBuf,
 
+    /// A (`:`-separated) list of paths to load environments from.
     #[serde(deserialize_with = "path")]
     pub environments_path: Vec<PathBuf>,
 }

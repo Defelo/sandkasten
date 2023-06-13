@@ -15,7 +15,7 @@ use super::Tags;
 use crate::{
     config::Config,
     environments::{self, Environments},
-    program::{build_program, run_program},
+    program::{build::build_program, run::run_program},
     Cache,
 };
 
@@ -116,6 +116,7 @@ async fn get_base_resource_usage(
     environment_id: &str,
     environment: &environments::Environment,
 ) -> Result<BaseResourceUsage, ErrorResponse> {
+    // compile the program once
     let (build, _guard) = build_program(
         Arc::clone(&config),
         Arc::clone(&environments),
@@ -130,6 +131,7 @@ async fn get_base_resource_usage(
     )
     .await?;
 
+    // run the program multiple times and collect the resource_usage measurements
     let mut results = Vec::with_capacity(config.base_resource_usage_runs);
     for _ in 0..config.base_resource_usage_runs {
         results.push(

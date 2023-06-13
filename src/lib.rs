@@ -10,4 +10,6 @@ pub mod environments;
 pub mod program;
 pub mod sandbox;
 
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub type Cache = AsyncCache<AsyncRedisBackend<ConnectionManager>, PostcardFormatter>;
