@@ -1,4 +1,4 @@
-use std::{future::Future, path::Path};
+use std::{ffi::OsString, future::Future, path::Path};
 
 use tokio::fs;
 use tracing::error;
@@ -16,9 +16,9 @@ async fn mounts_from_closure(closure: &Path) -> Result<Vec<Mount>, std::io::Erro
         .trim()
         .lines()
         .map(|line| Mount {
-            dest: line.to_owned().into(),
+            dest: OsString::from(line).into(),
             typ: MountType::ReadOnly {
-                src: line.to_owned().into(),
+                src: OsString::from(line).into(),
             },
         })
         .collect())

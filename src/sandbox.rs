@@ -1,4 +1,10 @@
-use std::{borrow::Cow, path::Path, process::Stdio, string::FromUtf8Error};
+use std::{
+    borrow::Cow,
+    ffi::{OsStr, OsString},
+    path::Path,
+    process::Stdio,
+    string::FromUtf8Error,
+};
 
 use sandkasten_client::schemas::programs::{Limits, ResourceUsage, RunResult};
 use thiserror::Error;
@@ -25,17 +31,17 @@ pub struct RunConfig<'a> {
 
 #[derive(Debug)]
 pub struct Mount<'a> {
-    pub dest: Cow<'a, str>,
+    pub dest: Cow<'a, OsStr>,
     pub typ: MountType<'a>,
 }
 
 #[derive(Debug, Clone)]
 pub enum MountType<'a> {
     ReadOnly {
-        src: Cow<'a, str>,
+        src: Cow<'a, OsStr>,
     },
     ReadWrite {
-        src: Cow<'a, str>,
+        src: Cow<'a, OsStr>,
     },
     Temp {
         /// Size of tmpfs in MB
@@ -54,7 +60,8 @@ impl RunConfig<'_> {
         let mut cmd = tokio::process::Command::new(self.time);
         cmd.arg("--quiet")
             .args(["--format", "%e %M %x"]) // elapsed time in seconds, max memory usage, exit code
-            .args(["--output", &time_path.display().to_string()])
+            .arg("--output")
+            .arg(&time_path)
             .arg("--")
             .arg(self.nsjail)
             .arg("--really_quiet") // log fatal messages only
@@ -90,22 +97,31 @@ impl RunConfig<'_> {
         for Mount { dest, typ } in self.mounts {
             match typ {
                 MountType::ReadOnly { src } => {
+                    let mut arg = src.clone();
                     if src != dest {
-                        cmd.arg("-R").arg(format!("{src}:{dest}"));
-                    } else {
-                        cmd.arg("-R").arg(&**src);
+                        let arg = arg.to_mut();
+                        arg.reserve_exact(1 + dest.len());
+                        arg.push(OsString::from(":"));
+                        arg.push(dest);
                     }
+                    cmd.arg("-R").arg(arg);
                 }
                 MountType::ReadWrite { src } => {
+                    let mut arg = src.clone();
                     if src != dest {
-                        cmd.arg("-B").arg(format!("{src}:{dest}"));
-                    } else {
-                        cmd.arg("-B").arg(&**src);
+                        let arg = arg.to_mut();
+                        arg.reserve_exact(1 + dest.len());
+                        arg.push(OsString::from(":"));
+                        arg.push(dest);
                     }
+                    cmd.arg("-B").arg(arg);
                 }
                 &MountType::Temp { size } => {
                     if size > 0 {
-                        cmd.arg("-m").arg(format!("none:{dest}:tmpfs:size={size}M"));
+                        let mut arg = OsString::from("none:");
+                        arg.push(dest);
+                        arg.push(format!(":tmpfs:size={size}M"));
+                        cmd.arg("-m").arg(arg);
                     }
                 }
             };

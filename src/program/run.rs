@@ -1,4 +1,5 @@
 use std::{
+    ffi::OsStr,
     path::PathBuf,
     sync::Arc,
     time::{self, UNIX_EPOCH},
@@ -75,19 +76,19 @@ pub async fn run_program(
 
         let mut mounts = vec![
             Mount {
-                dest: "/program".into(),
+                dest: OsStr::new("/program").into(),
                 typ: MountType::ReadOnly {
-                    src: path.join("files").display().to_string().into(),
+                    src: path.join("files").into_os_string().into(),
                 },
             },
             Mount {
-                dest: "/box".into(),
+                dest: OsStr::new("/box").into(),
                 typ: MountType::ReadOnly {
-                    src: tmpdir.join("box").display().to_string().into(),
+                    src: tmpdir.join("box").into_os_string().into(),
                 },
             },
             Mount {
-                dest: "/tmp".into(),
+                dest: OsStr::new("/tmp").into(),
                 typ: MountType::Temp {
                     size: run_limits.tmpfs,
                 },

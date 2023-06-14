@@ -1,4 +1,5 @@
 use std::{
+    ffi::OsStr,
     os::unix::prelude::OsStrExt,
     path::Path,
     sync::Arc,
@@ -248,19 +249,19 @@ async fn compile_program(
 
         let mut mounts = vec![
             Mount {
-                dest: "/program".into(),
+                dest: OsStr::new("/program").into(),
                 typ: MountType::ReadWrite {
-                    src: program_directory.join("files").display().to_string().into(),
+                    src: program_directory.join("files").into_os_string().into(),
                 },
             },
             Mount {
-                dest: "/box".into(),
+                dest: OsStr::new("/box").into(),
                 typ: MountType::ReadOnly {
-                    src: tmpdir.join("box").display().to_string().into(),
+                    src: tmpdir.join("box").into_os_string().into(),
                 },
             },
             Mount {
-                dest: "/tmp".into(),
+                dest: OsStr::new("/tmp").into(),
                 typ: MountType::Temp {
                     size: compile_limits.tmpfs,
                 },
