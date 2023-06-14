@@ -3,10 +3,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use anyhow::Context;
 use sandkasten_client::schemas::programs;
 use serde::Deserialize;
 use serde_json::Value;
-use tracing::{debug, error, warn};
+use tracing::{debug, warn};
 
 use crate::VERSION;
 
@@ -35,24 +36,20 @@ pub struct Test {
 pub fn load(paths: &[PathBuf]) -> Result<Environments, anyhow::Error> {
     let mut out = HashMap::new();
     for path in paths {
-        if let Err(err) = load_directory(&mut out, path) {
-            error!("Failed to load directory {}: {err:#}", path.display())
-        }
+        load_directory(&mut out, path)
+            .with_context(|| format!("Failed to load directory {}", path.display()))?;
     }
     Ok(out)
 }
 
 fn load_directory(out: &mut Environments, path: &Path) -> Result<(), anyhow::Error> {
     debug!("Loading environments in {}", path.display());
-    for file in std::fs::read_dir(path)? {
-        match file {
-            Ok(file) => {
-                if let Err(err) = load_file(out, &file.path()) {
-                    error!("Failed to load file {}: {err:#}", file.path().display());
-                }
-            }
-            Err(err) => error!("Failed to read file in {}: {err:#}", path.display()),
-        }
+    for file in std::fs::read_dir(path)
+        .with_context(|| format!("Failed to read directory {}", path.display()))?
+    {
+        let file = file.with_context(|| format!("Failed to read file in {}", path.display()))?;
+        load_file(out, &file.path())
+            .with_context(|| format!("Failed to load file {}", file.path().display()))?;
     }
     Ok(())
 }
@@ -70,8 +67,10 @@ fn load_file(out: &mut Environments, path: &Path) -> Result<(), anyhow::Error> {
         return Ok(());
     }
 
-    let content = std::fs::read_to_string(path)?;
-    let environment: Environment = serde_json::from_str(&content)?;
+    let content = std::fs::read_to_string(path)
+        .with_context(|| format!("Failed to read {}", path.display()))?;
+    let environment: Environment = serde_json::from_str(&content)
+        .with_context(|| format!("Failed to parse {}", path.display()))?;
 
     if environment.sandkasten_version != VERSION {
         warn!(

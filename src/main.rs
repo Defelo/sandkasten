@@ -1,9 +1,9 @@
 #![forbid(unsafe_code)]
 #![warn(clippy::dbg_macro, clippy::use_debug, clippy::todo)]
 
-use std::{sync::Arc, time::Duration};
+use std::{path::Path, sync::Arc, time::Duration};
 
-use anyhow::ensure;
+use anyhow::{ensure, Context};
 use fnct::{backend::AsyncRedisBackend, format::PostcardFormatter, AsyncCache};
 use key_rwlock::KeyRwLock;
 use poem::{listener::TcpListener, middleware::Tracing, EndpointExt, Route, Server};
@@ -28,24 +28,22 @@ async fn main() -> anyhow::Result<()> {
     info!("Starting Sandkasten v{VERSION}");
 
     info!("Loading config");
-    let config = config::load()?;
+    let config = config::load().context("Failed to load config")?;
     ensure!(config.base_resource_usage_runs >= 1);
 
     info!("Creating directories for jobs and programs");
-    if !fs::try_exists(&config.programs_dir).await? {
-        fs::create_dir_all(&config.programs_dir).await?;
-    }
-    if !fs::try_exists(&config.jobs_dir).await? {
-        fs::create_dir_all(&config.jobs_dir).await?;
-    }
+    create_dir_if_not_exists(&config.programs_dir).await?;
+    create_dir_if_not_exists(&config.jobs_dir).await?;
 
     info!("Pruning jobs directory");
-    for dir in std::fs::read_dir(&config.jobs_dir)? {
-        let path = dir?.path();
+    for dir in std::fs::read_dir(&config.jobs_dir).context("Failed to read jobs directory")? {
+        let path = dir.context("Failed to read jobs directory entry")?.path();
         if path.is_dir() {
-            std::fs::remove_dir_all(path)?;
+            std::fs::remove_dir_all(&path)
+                .with_context(|| format!("Failed to remove directory {}", path.display()))?;
         } else {
-            std::fs::remove_file(path)?;
+            std::fs::remove_file(&path)
+                .with_context(|| format!("Failed to remove file {}", path.display()))?;
         }
     }
 
@@ -56,11 +54,17 @@ async fn main() -> anyhow::Result<()> {
     });
 
     info!("Loading environments");
-    let environments = Arc::new(environments::load(&config.environments_path)?);
+    let environments = Arc::new(
+        environments::load(&config.environments_path).context("Failed to load environments")?,
+    );
     info!("Loaded {} environments", environments.len());
 
     info!("Connecting to redis");
-    let redis = ConnectionManager::new(Client::open(config.redis_url.clone())?).await?;
+    let redis = ConnectionManager::new(
+        Client::open(config.redis_url.clone()).context("Failed to connect to redis")?,
+    )
+    .await
+    .context("Failed to create redis connection manager")?;
     let cache = AsyncCache::new(
         AsyncRedisBackend::new(redis, "sandkasten".into()),
         PostcardFormatter,
@@ -99,7 +103,8 @@ async fn main() -> anyhow::Result<()> {
     info!("Listening on {}:{}", config.host, config.port);
     Server::new(TcpListener::bind((config.host.as_str(), config.port)))
         .run(app)
-        .await?;
+        .await
+        .context("Failed to start server")?;
 
     Ok(())
 }
@@ -113,4 +118,24 @@ async fn prune_old_programs_loop(config: Arc<Config>, program_lock: Arc<KeyRwLoc
             error!("Pruning old programs failed: {err:#}");
         }
     }
+}
+
+/// Create a directory if it does not exist yet. Return an error if the file
+/// exists, but is not a directory.
+async fn create_dir_if_not_exists(path: &Path) -> Result<(), anyhow::Error> {
+    if fs::try_exists(path)
+        .await
+        .with_context(|| format!("Failed to check existence of {}", path.display()))?
+    {
+        let metadata = fs::metadata(path)
+            .await
+            .with_context(|| format!("Failed to read metadata of {}", path.display()))?;
+        anyhow::ensure!(metadata.is_dir(), "{} is not a directory", path.display());
+    } else {
+        fs::create_dir_all(path)
+            .await
+            .with_context(|| format!("Failed to create directory {}", path.display()))?;
+    }
+
+    Ok(())
 }

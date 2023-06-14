@@ -1,5 +1,6 @@
 use std::{env, path::PathBuf};
 
+use anyhow::Context;
 use config::{Environment, File};
 use sandkasten_client::schemas::programs::Limits;
 use serde::{Deserialize, Deserializer};
@@ -11,12 +12,21 @@ pub fn load() -> Result<Config, anyhow::Error> {
             &env::var("CONFIG_PATH").unwrap_or("config.toml".to_owned()),
         ))
         .add_source(Environment::default().separator("__"))
-        .build()?
-        .try_deserialize()?;
+        .build()
+        .context("Failed to load config")?
+        .try_deserialize()
+        .context("Failed to parse config")?;
 
     Ok(Config {
-        nsjail_path: conf.nsjail_path.canonicalize()?,
-        time_path: conf.time_path.canonicalize()?,
+        nsjail_path: conf.nsjail_path.canonicalize().with_context(|| {
+            format!(
+                "Failed to resolve `nsjail_path` {}",
+                conf.nsjail_path.display()
+            )
+        })?,
+        time_path: conf.time_path.canonicalize().with_context(|| {
+            format!("Failed to resolve `time_path` {}", conf.time_path.display())
+        })?,
         ..conf
     })
 }
