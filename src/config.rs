@@ -4,13 +4,14 @@ use anyhow::Context;
 use config::{Environment, File};
 use sandkasten_client::schemas::programs::Limits;
 use serde::{Deserialize, Deserializer};
+use tracing::info;
 use url::Url;
 
 pub fn load() -> Result<Config, anyhow::Error> {
+    let path = env::var("CONFIG_PATH").unwrap_or("config.toml".to_owned());
+    info!("Loading config from {path}");
     let conf: Config = config::Config::builder()
-        .add_source(File::with_name(
-            &env::var("CONFIG_PATH").unwrap_or("config.toml".to_owned()),
-        ))
+        .add_source(File::with_name(&path))
         .add_source(Environment::default().separator("__"))
         .build()
         .context("Failed to load config")?
