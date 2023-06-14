@@ -78,7 +78,9 @@ pub struct Config {
     /// The path to the time binary.
     pub time_path: PathBuf,
 
-    /// A (`:`-separated) list of paths to load environments from.
+    /// A list of paths to load environments from. If specified as an
+    /// environment variable, separate the paths using a `:`
+    /// (e.g. `"/foo/path1:/bar/path2:/baz/path3"`).
     #[serde(deserialize_with = "path")]
     pub environments_path: Vec<PathBuf>,
 }
