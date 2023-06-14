@@ -57,8 +57,10 @@ fn load_directory(out: &mut Environments, path: &Path) -> Result<(), anyhow::Err
 fn load_file(out: &mut Environments, path: &Path) -> Result<(), anyhow::Error> {
     let name = path
         .file_name()
-        .unwrap()
-        .to_string_lossy()
+        .ok_or_else(|| anyhow::anyhow!("Failed to get file name of path {}", path.display()))?;
+    let name = name
+        .to_str()
+        .ok_or_else(|| anyhow::anyhow!("Failed to convert file name {:?} to utf-8 string", name))?
         .trim_end_matches(".json")
         .into();
 
