@@ -33,7 +33,7 @@ pub fn get_api(
             job_lock: Arc::clone(&job_lock),
             config: Arc::clone(&config),
             cache,
-            bru_lock: Arc::new(KeyRwLock::new()),
+            base_resource_usage_lock: Arc::new(KeyRwLock::new()),
         },
         ProgramsApi {
             request_semaphore,

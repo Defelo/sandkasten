@@ -1,12 +1,12 @@
-use std::{iter::Map, slice::Iter, sync::Arc};
+use std::sync::Arc;
 
 use fnct::key;
 use key_rwlock::KeyRwLock;
 use poem_ext::{response, responses::ErrorResponse, shield_mw::shield};
 use poem_openapi::{param::Path, OpenApi};
 use sandkasten_client::schemas::{
-    environments::{BaseResourceUsage, Environment, ListEnvironmentsResponse},
-    programs::{BuildRequest, ResourceUsage},
+    environments::{BaseResourceUsage, Environment, ListEnvironmentsResponse, RunResourceUsage},
+    programs::BuildRequest,
 };
 use tokio::sync::Semaphore;
 use uuid::Uuid;
@@ -15,7 +15,7 @@ use super::Tags;
 use crate::{
     config::Config,
     environments::{self, Environments},
-    program::{build_program, run_program},
+    program::{build::build_program, run::run_program},
     Cache,
 };
 
@@ -26,12 +26,15 @@ pub struct EnvironmentsApi {
     pub program_lock: Arc<KeyRwLock<Uuid>>,
     pub job_lock: Arc<KeyRwLock<Uuid>>,
     pub cache: Arc<Cache>,
-    pub bru_lock: Arc<KeyRwLock<String>>,
+    pub base_resource_usage_lock: Arc<KeyRwLock<String>>,
 }
 
 #[OpenApi(tag = "Tags::Environments")]
 impl EnvironmentsApi {
-    /// Return a list of all environments.
+    /// Return a map of all environments.
+    ///
+    /// The keys represent the environment ids and the values contain additional
+    /// information about the environments.
     #[oai(path = "/environments", method = "get")]
     async fn list_environments(&self) -> ListEnvironments::Response {
         ListEnvironments::ok(ListEnvironmentsResponse(
@@ -52,8 +55,12 @@ impl EnvironmentsApi {
         ))
     }
 
-    /// Return the base resource usage of an environment when running just a
-    /// very basic program.
+    /// Return the base resource usage of an environment.
+    ///
+    /// The base resource usage of an environment is measured by benchmarking a
+    /// very simple program in this environment that barely does anything. Note
+    /// that the compile step is run only once as recompiling the same program
+    /// again and again would take too much time in most cases.
     #[oai(
         path = "/environments/:name/resource_usage",
         method = "get",
@@ -64,7 +71,7 @@ impl EnvironmentsApi {
             return GetBaseResourceUsage::environment_not_found();
         };
 
-        let _guard = self.bru_lock.write(name.0.clone()).await;
+        let _guard = self.base_resource_usage_lock.write(name.0.clone()).await;
         let result = self
             .cache
             .cached_result(key!(&name.0), &[], None, || async {
@@ -100,6 +107,7 @@ response!(GetBaseResourceUsage = {
     EnvironmentNotFound(404, error),
 });
 
+/// Measure the base resource usage of a given environment.
 async fn get_base_resource_usage(
     config: Arc<Config>,
     environments: Arc<Environments>,
@@ -108,6 +116,7 @@ async fn get_base_resource_usage(
     environment_id: &str,
     environment: &environments::Environment,
 ) -> Result<BaseResourceUsage, ErrorResponse> {
+    // compile the program once
     let (build, _guard) = build_program(
         Arc::clone(&config),
         Arc::clone(&environments),
@@ -122,9 +131,10 @@ async fn get_base_resource_usage(
     )
     .await?;
 
-    let mut res = Vec::with_capacity(config.base_resource_usage_runs);
+    // run the program multiple times and collect the resource_usage measurements
+    let mut results = Vec::with_capacity(config.base_resource_usage_runs);
     for _ in 0..config.base_resource_usage_runs {
-        res.push(
+        results.push(
             run_program(
                 Arc::clone(&config),
                 build.program_id,
@@ -139,19 +149,9 @@ async fn get_base_resource_usage(
 
     Ok(BaseResourceUsage {
         build: build.compile_result.map(|x| x.resource_usage),
-        run_min: acc(&res, |x| x.min().unwrap()),
-        run_max: acc(&res, |x| x.max().unwrap()),
-        run_avg: acc(&res, |x| {
-            let n = x.len();
-            x.sum::<u64>() / n as u64
-        }),
+        run: RunResourceUsage {
+            time: results.iter().map(|x| x.time).collect(),
+            memory: results.iter().map(|x| x.memory).collect(),
+        },
     })
-}
-
-type Acc = fn(Map<Iter<ResourceUsage>, fn(&ResourceUsage) -> u64>) -> u64;
-fn acc(res: &[ResourceUsage], f: Acc) -> ResourceUsage {
-    ResourceUsage {
-        time: f(res.iter().map(|r| r.time)),
-        memory: f(res.iter().map(|r| r.memory)),
-    }
 }

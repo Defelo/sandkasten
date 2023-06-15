@@ -160,8 +160,17 @@ package, you can use the following command:
 nix profile install --profile pkgs .#packages.<package-name>
 ```
 
-If you want to install all packages, use `all` for `<package-name>`. You can also add or remove
-packages later, but you need to restart Sandkasten after doing so.
+If you want to install all packages, use `all` for `<package-name>`. You can also add, upgrade or
+remove packages later, but you need to restart Sandkasten after doing so. See
+[`nix profile --help`](https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-profile.html)
+for details.
+
+#### Setup Redis
+Sandkasten uses [Redis](https://redis.io/) for caching. To start a redis server for development,
+simply run `redis-server` in the development shell. Otherwise, if you already have a redis server
+running somewhere, that you would like to use instead, set the environment variable `REDIS_URL`
+to the url of your redis server (see https://docs.rs/redis/latest/redis/#connection-parameters for
+details).
 
 #### Start the application
 In the development shell you can just use `cargo run` to start Sandkasten.

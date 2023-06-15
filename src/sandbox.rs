@@ -1,4 +1,10 @@
-use std::{borrow::Cow, future::Future, path::Path, process::Stdio, string::FromUtf8Error};
+use std::{
+    borrow::Cow,
+    ffi::{OsStr, OsString},
+    path::Path,
+    process::Stdio,
+    string::FromUtf8Error,
+};
 
 use sandkasten_client::schemas::programs::{Limits, ResourceUsage, RunResult};
 use thiserror::Error;
@@ -25,85 +31,102 @@ pub struct RunConfig<'a> {
 
 #[derive(Debug)]
 pub struct Mount<'a> {
-    pub dest: Cow<'a, str>,
+    pub dest: Cow<'a, OsStr>,
     pub typ: MountType<'a>,
 }
 
 #[derive(Debug, Clone)]
 pub enum MountType<'a> {
     ReadOnly {
-        src: Cow<'a, str>,
+        src: Cow<'a, OsStr>,
     },
     ReadWrite {
-        src: Cow<'a, str>,
+        src: Cow<'a, OsStr>,
     },
     Temp {
-        /// in MB
+        /// Size of tmpfs in MB
         size: u64,
     },
 }
 
 impl RunConfig<'_> {
     pub async fn run(&self) -> Result<RunResult, RunError> {
+        // create an empty file which will be used by time to report the resource usage
+        // of the program
         let time_path = self.tmpdir.join("time");
         fs::write(&time_path, Vec::new()).await?;
 
+        // construct the time/nsjail command
         let mut cmd = tokio::process::Command::new(self.time);
-        cmd.arg("-q")
-            .args(["-f", "%e %M %x"])
-            .args(["-o", &time_path.display().to_string()])
+        cmd.arg("--quiet")
+            .args(["--format", "%e %M %x"]) // elapsed time in seconds, max memory usage, exit code
+            .arg("--output")
+            .arg(&time_path)
             .arg("--")
             .arg(self.nsjail)
-            .arg("-Q")
-            .args(["--user", "65534"])
-            .args(["--group", "65534"])
+            .arg("--really_quiet") // log fatal messages only
+            .args(["--user", "65534"]) // user: nobody
+            .args(["--group", "65534"]) // group: nobody
             .args(["--hostname", "box"])
-            .args(["--cwd", self.cwd])
+            .args(["--cwd", self.cwd]) // current working directory
+            // resource limits:
             .args(["--max_cpus", &self.limits.cpus.to_string()])
-            .args(["--time_limit", &self.limits.time.to_string()])
-            .args(["--rlimit_fsize", &self.limits.filesize.to_string()])
+            .args(["--time_limit", &self.limits.time.to_string()]) // in seconds
+            .args(["--rlimit_fsize", &self.limits.filesize.to_string()]) // in MB
             .args(["--rlimit_nofile", &self.limits.file_descriptors.to_string()]);
 
         if self.use_cgroup {
             cmd.args(["--detect_cgroupv2"])
                 .args([
-                    "--cgroup_mem_max",
-                    &(self.limits.memory * 1024 * 1024).to_string(),
+                    "--cgroup_mem_max", // in bytes
+                    &(self.limits.memory * 1000 * 1000).to_string(),
                 ])
                 .args(["--cgroup_mem_swap_max", "0"])
                 .args(["--cgroup_pids_max", &self.limits.processes.to_string()]);
         } else {
-            cmd.args(["--rlimit_as", &self.limits.memory.to_string()])
+            cmd.args(["--rlimit_as", &self.limits.memory.to_string()]) // in MB
                 .args(["--rlimit_nproc", &self.limits.processes.to_string()]);
         }
 
+        // environment variables:
         for &(name, value) in self.envvars {
             cmd.arg("-E").arg(format!("{name}={value}"));
         }
 
+        // mounts:
         for Mount { dest, typ } in self.mounts {
             match typ {
                 MountType::ReadOnly { src } => {
+                    let mut arg = src.clone();
                     if src != dest {
-                        cmd.arg("-R").arg(format!("{src}:{dest}"));
-                    } else {
-                        cmd.arg("-R").arg(&**src);
+                        let arg = arg.to_mut();
+                        arg.reserve_exact(1 + dest.len());
+                        arg.push(OsString::from(":"));
+                        arg.push(dest);
                     }
+                    cmd.arg("-R").arg(arg);
                 }
                 MountType::ReadWrite { src } => {
+                    let mut arg = src.clone();
                     if src != dest {
-                        cmd.arg("-B").arg(format!("{src}:{dest}"));
-                    } else {
-                        cmd.arg("-B").arg(&**src);
+                        let arg = arg.to_mut();
+                        arg.reserve_exact(1 + dest.len());
+                        arg.push(OsString::from(":"));
+                        arg.push(dest);
                     }
+                    cmd.arg("-B").arg(arg);
                 }
                 &MountType::Temp { size } => {
                     if size > 0 {
-                        cmd.arg("-m").arg(format!("none:{dest}:tmpfs:size={size}M"));
+                        let mut arg = OsString::from("none:");
+                        arg.push(dest);
+                        arg.push(format!(":tmpfs:size={size}M"));
+                        cmd.arg("-m").arg(arg);
                     }
                 }
             };
         }
+        // files that are needed by some programs
         cmd.arg("-R").arg("/dev/null");
         cmd.arg("-R").arg("/dev/urandom");
         cmd.arg("-s").arg("/proc/self/fd:/dev/fd");
@@ -122,6 +145,7 @@ impl RunConfig<'_> {
             .stdin(Stdio::piped())
             .spawn()?;
 
+        // pass stdin to process
         if let Some(stdin) = &self.stdin {
             let mut handle = child.stdin.take().unwrap();
             handle.write_all(stdin.as_bytes()).await?;
@@ -133,6 +157,7 @@ impl RunConfig<'_> {
 
         child.wait().await?;
 
+        // read stdout and stderr from process
         let mut stdout = Vec::new();
         let mut stderr = Vec::new();
         stdout_reader
@@ -146,6 +171,7 @@ impl RunConfig<'_> {
         let stdout = String::from_utf8_lossy(&stdout).into_owned();
         let stderr = String::from_utf8_lossy(&stderr).into_owned();
 
+        // read resource usage and status
         let time_file = fs::read_to_string(time_path).await?;
         let mut tf = time_file.split_whitespace();
         let (time, memory, status) = (|| {
@@ -175,20 +201,4 @@ pub enum RunError {
     StringConversionError(#[from] FromUtf8Error),
     #[error("time file has not been created correctly")]
     InvalidTimeFile,
-}
-
-pub async fn with_tempdir<P, A>(
-    path: P,
-    closure: impl FnOnce(P) -> A,
-) -> Result<A::Output, std::io::Error>
-where
-    P: AsRef<Path> + Clone + std::fmt::Debug,
-    A: Future,
-{
-    fs::create_dir_all(&path).await?;
-    let out = closure(path.clone()).await;
-    if let Err(err) = fs::remove_dir_all(&path).await {
-        error!("could not remove tempdir {path:?}: {err}");
-    }
-    Ok(out)
 }

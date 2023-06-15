@@ -16,7 +16,10 @@ use super::Tags;
 use crate::{
     config::Config,
     environments::Environments,
-    program::{build_program, run_program, BuildProgramError, RunProgramError},
+    program::{
+        build::{build_program, BuildProgramError},
+        run::{run_program, RunProgramError},
+    },
 };
 
 pub struct ProgramsApi {
@@ -41,7 +44,9 @@ impl ProgramsApi {
         if !check_env_vars(&data.0.build.env_vars) || !check_env_vars(&data.0.run.env_vars) {
             return BuildRun::invalid_env_vars();
         }
+
         let _guard = self.request_semaphore.acquire().await?;
+
         let (
             BuildResult {
                 program_id,
@@ -101,7 +106,9 @@ impl ProgramsApi {
         if !check_env_vars(&data.0.env_vars) {
             return Build::invalid_env_vars();
         }
+
         let _guard = self.request_semaphore.acquire().await?;
+
         match build_program(
             Arc::clone(&self.config),
             Arc::clone(&self.environments),
@@ -133,7 +140,9 @@ impl ProgramsApi {
         if !check_env_vars(&data.0.env_vars) {
             return Run::invalid_env_vars();
         }
+
         let _guard = self.request_semaphore.acquire().await?;
+
         match run_program(
             Arc::clone(&self.config),
             program_id.0,
