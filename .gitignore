@@ -9,3 +9,4 @@
 /.nsjail
 /pkgs
 /pkgs-*-link
+/dump.rdb
