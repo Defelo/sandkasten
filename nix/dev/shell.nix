@@ -92,7 +92,7 @@
     if [[ "$UID" != 0 ]]; then
       exec sudo "$0" "$@"
     fi
-    cp ${pkgs.nsjail}/bin/nsjail .nsjail
+    cp -a ${pkgs.nsjail}/bin/nsjail .nsjail
     chmod +s .nsjail
   '';
   scripts = pkgs.stdenv.mkDerivation {
