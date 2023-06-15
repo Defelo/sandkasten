@@ -64,7 +64,7 @@ async fn main() -> anyhow::Result<()> {
         Client::open(config.redis_url.clone()).context("Failed to connect to redis")?,
     )
     .await
-    .context("Failed to create redis connection manager")?;
+    .context("Failed to connect to redis")?;
     let cache = AsyncCache::new(
         AsyncRedisBackend::new(redis, "sandkasten".into()),
         PostcardFormatter,
