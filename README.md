@@ -38,11 +38,11 @@ the program.
       are run.
 - [x] Set resource limits for both compile and run steps.
 - [x] Report resource usage for both compile and run steps.
-- [x] Packages are defined via Nix.
+- [x] Packages are defined using [Nix](https://nixos.org/).
 - [x] Programs are deleted automatically if they are not executed anymore.
 - [x] Specify stdin, command line arguments and files in the working directory for run steps.
 - [x] Specify environment variables for both compile and run steps.
-- [x] Client library for rust ([crate](https://crates.io/crates/sandkasten-client), [documentation](https://docs.rs/sandkasten-client))
+- [x] Client library for Rust ([crate](https://crates.io/crates/sandkasten-client), [documentation](https://docs.rs/sandkasten-client))
 
 ### Planned/Ideas
 - [ ] Communicate with running programs via websockets.

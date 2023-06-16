@@ -90,6 +90,8 @@ async fn main() -> anyhow::Result<()> {
         "Sandkasten",
         VERSION,
     )
+    .summary("Run untrusted code in an isolated environment")
+    .description(include_str!("api_description.md"))
     .external_document("/openapi.json")
     .server(&config.server);
     let app = Route::new()
