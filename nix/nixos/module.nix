@@ -70,6 +70,10 @@ in
           type = types.int;
           default = conf.base_resource_usage_runs;
         };
+        base_resource_usage_permits = mkOption {
+          type = types.int;
+          default = conf.base_resource_usage_permits;
+        };
         use_cgroup = mkOption {
           type = types.bool;
           default = conf.use_cgroup;

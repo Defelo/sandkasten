@@ -77,7 +77,7 @@ impl EnvironmentsApi {
             .cached_result(key!(&name.0), &[], None, || async {
                 let _guard = self
                     .request_semaphore
-                    .acquire_many(self.config.max_concurrent_jobs as _)
+                    .acquire_many(self.config.base_resource_usage_permits)
                     .await?;
 
                 get_base_resource_usage(

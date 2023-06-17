@@ -11,9 +11,10 @@ jobs_dir = "/jobs"
 program_ttl = 600
 prune_programs_interval = 60
 
-max_concurrent_jobs = 64
+max_concurrent_jobs = 16
 
 base_resource_usage_runs = 20
+base_resource_usage_permits = 16
 
 use_cgroup = true
 # nsjail_path = ...

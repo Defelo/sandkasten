@@ -68,6 +68,11 @@ pub struct Config {
     /// The number of times the program is run when measuring the base resource
     /// usage of an environment.
     pub base_resource_usage_runs: usize,
+    /// The number of permits to acquire from the internal request semaphore
+    /// when measuring the base resource usage of an environment. If
+    /// set to the value of `max_concurrent_jobs`, no other jobs can run at the
+    /// same time.
+    pub base_resource_usage_permits: u32,
 
     /// Whether to use cgroup to set resource limits where possible. It is
     /// strongly recommended to set this to true in production environments!
