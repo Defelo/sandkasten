@@ -57,7 +57,7 @@ pub struct Config {
     /// The number of seconds to wait between deleting old programs.
     pub prune_programs_interval: u64,
 
-    /// The maximum number of jobs that can be run at the same time.
+    /// The maximum number of jobs that can run at the same time.
     pub max_concurrent_jobs: usize,
 
     /// The maximum allowed limits for compile steps.

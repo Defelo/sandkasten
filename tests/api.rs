@@ -27,6 +27,12 @@ fn test_version() {
 
 #[test]
 #[ignore]
+fn test_config() {
+    client().get_config().unwrap();
+}
+
+#[test]
+#[ignore]
 fn test_environments() {
     let environments = client().list_environments().unwrap();
     assert_eq!(environments.get("python").unwrap().name, "Python");

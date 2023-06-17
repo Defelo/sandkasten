@@ -20,6 +20,7 @@ mod client {
     use url::Url;
 
     use crate::schemas::{
+        configuration::PublicConfig,
         environments::{BaseResourceUsage, Environment, GetBaseResourceUsageError},
         programs::{
             BuildError, BuildRequest, BuildResult, BuildRunError, BuildRunRequest, BuildRunResult,
@@ -134,6 +135,8 @@ mod client {
     }
 
     endpoints! {
+        /// Return the public configuration of Sandkasten.
+        pub get_config(): get "config" => PublicConfig;
         /// Return a list of all environments.
         pub list_environments(): get "environments" => HashMap<String, Environment>;
         /// Return the base resource usage of an environment when running just a very basic program.

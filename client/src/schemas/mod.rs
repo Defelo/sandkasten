@@ -2,6 +2,7 @@
 
 use serde::Deserialize;
 
+pub mod configuration;
 pub mod environments;
 pub mod programs;
 

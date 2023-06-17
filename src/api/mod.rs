@@ -5,14 +5,16 @@ use poem_openapi::OpenApi;
 use tokio::sync::Semaphore;
 use uuid::Uuid;
 
-use self::{environments::EnvironmentsApi, programs::ProgramsApi};
+use self::{configuration::ConfigurationApi, environments::EnvironmentsApi, programs::ProgramsApi};
 use crate::{config::Config, environments::Environments, Cache};
 
+mod configuration;
 mod environments;
 mod programs;
 
 #[derive(poem_openapi::Tags)]
 enum Tags {
+    Configuration,
     Environments,
     Programs,
 }
@@ -26,6 +28,9 @@ pub fn get_api(
 ) -> impl OpenApi {
     let request_semaphore = Arc::new(Semaphore::new(config.max_concurrent_jobs));
     (
+        ConfigurationApi {
+            config: Arc::clone(&config),
+        },
         EnvironmentsApi {
             environments: Arc::clone(&environments),
             request_semaphore: Arc::clone(&request_semaphore),
