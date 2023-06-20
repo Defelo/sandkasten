@@ -39,7 +39,10 @@ fn test_package(id: &str) {
                 assert!(response.build.is_none());
             }
             assert_eq!(response.run.status, 0);
-            assert_eq!(response.run.stdout.trim(), "OK");
+            assert_eq!(
+                response.run.stdout.trim(),
+                environment.test.expected.as_deref().unwrap_or("OK")
+            );
             assert!(response.run.stderr.is_empty());
         }
         Err(_) => panic!("request failed"),

@@ -30,6 +30,7 @@ pub struct Environment {
 pub struct Test {
     pub main_file: programs::MainFile,
     pub files: Vec<programs::File>,
+    pub expected: Option<String>,
 }
 
 /// Load [`Environments`] from a list of paths.
