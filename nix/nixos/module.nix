@@ -72,7 +72,7 @@ in
         };
         base_resource_usage_permits = mkOption {
           type = types.int;
-          default = conf.base_resource_usage_permits;
+          default = cfg.max_concurrent_jobs;
         };
         use_cgroup = mkOption {
           type = types.bool;
