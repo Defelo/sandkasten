@@ -16,7 +16,7 @@ use sandkasten_client::{
 
 #[tokio::main]
 async fn main() {
-    let client = SandkastenClient::new("http://your-sandkasten-instance".parse().unwrap());
+    let client = SandkastenClient::new("http://your-sandkasten-instance").parse().unwrap());
     let result = client
         .build_and_run(&BuildRunRequest {
             build: BuildRequest {
