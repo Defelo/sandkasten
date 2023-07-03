@@ -832,9 +832,9 @@ checksum = "28b29a3cd74f0f4598934efe3aeba42bae0eb4680554128851ebbecb02af14e6"
 
 [[package]]
 name = "itertools"
-version = "0.10.5"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
+checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
 dependencies = [
  "either",
 ]
@@ -1131,9 +1131,9 @@ dependencies = [
 
 [[package]]
 name = "poem-ext"
-version = "0.7.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e3ee00b7325628f17740bfeeb12a7016872b3cd7bf52f32530c425f4ea2517c"
+checksum = "30dbfd837428b17a07693d05068514bd5b113b092e9d51b2df4d4db57af83145"
 dependencies = [
  "itertools",
  "paste",
