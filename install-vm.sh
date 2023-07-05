@@ -2,7 +2,7 @@
 
 set -ex
 
-FLAKE=${FLAKE:-github:Defelo/sandkasten#vm}
+FLAKE=${FLAKE:-github:Defelo/sandkasten/latest#vm}
 DISK=${1:-/dev/sda}
 ROOT=${2:-${DISK}1}
 

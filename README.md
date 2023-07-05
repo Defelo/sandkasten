@@ -66,7 +66,8 @@ To make this setup easier, this repository contains a basic NixOS configuration 
 installation script.
 
 ### NixOS VM Setup
-The following steps have been tested on Proxmox VE 7.4-3 x86_64.
+The following steps have been tested on Proxmox VE 7.4-3 x86_64, Proxmox VE 8.0.3 x86_64 and
+libvirtd 9.4.0 x86_64.
 
 1. Download the minimal NixOS ISO image from https://nixos.org/download.html#nixos-iso
 2. Create a new virtual machine.
@@ -80,7 +81,7 @@ The following steps have been tested on Proxmox VE 7.4-3 x86_64.
     installation. Replace `[disk]` with the path to your hard disk (e.g. `/dev/sda`). Note that
     this will erase all data on the disk you specify.
     ```bash
-    curl -o install.sh https://raw.githubusercontent.com/Defelo/sandkasten/develop/install-vm.sh
+    curl -o install.sh https://raw.githubusercontent.com/Defelo/sandkasten/latest/install-vm.sh
     bash install.sh [disk]
     ```
 8. After the script is done, the vm will reboot into the new NixOS installation. The initial root
@@ -102,7 +103,7 @@ installation:
 1. Add this repository to your flake inputs:
     ```nix
     {
-      inputs.sandkasten.url = "github:Defelo/sandkasten";
+      inputs.sandkasten.url = "github:Defelo/sandkasten/latest";
     }
     ```
 2. Add the module to your NixOS configuration:
