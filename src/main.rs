@@ -14,6 +14,7 @@ use sandkasten::{
     api::get_api,
     config::{self, Config},
     environments,
+    metrics::{self, Metrics},
     program::prune::prune_programs,
     VERSION,
 };
@@ -76,6 +77,8 @@ async fn main() -> anyhow::Result<()> {
     let program_lock = Arc::new(KeyRwLock::new());
     let job_lock = Arc::new(KeyRwLock::new());
 
+    let metrics = Arc::new(Metrics::new().context("Failed to initialize Prometheus metrics")?);
+
     tokio::spawn(prune_old_programs_loop(
         Arc::clone(&config),
         Arc::clone(&program_lock),
@@ -96,11 +99,16 @@ async fn main() -> anyhow::Result<()> {
     .description(include_str!("api_description.md"))
     .external_document("/openapi.json")
     .server(&config.server);
-    let app = Route::new()
+    let mut route = Route::new()
         .nest("/openapi.json", api_service.spec_endpoint())
         .nest("/docs", api_service.swagger_ui())
-        .nest("/redoc", api_service.redoc())
+        .nest("/redoc", api_service.redoc());
+    if config.enable_metrics {
+        route = route.nest("/metrics", poem::get(metrics::endpoint));
+    }
+    let app = route
         .nest("/", api_service)
+        .data(metrics)
         .with(Tracing)
         .with(PanicHandler::middleware());
 

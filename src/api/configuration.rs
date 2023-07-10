@@ -5,7 +5,7 @@ use poem_openapi::OpenApi;
 use sandkasten_client::schemas::configuration::PublicConfig;
 
 use super::Tags;
-use crate::config::Config;
+use crate::{config::Config, metrics::MetricsData};
 
 pub struct ConfigurationApi {
     pub config: Arc<Config>,
@@ -15,7 +15,8 @@ pub struct ConfigurationApi {
 impl ConfigurationApi {
     /// Return the public configuration of Sandkasten.
     #[oai(path = "/config", method = "get")]
-    async fn get_config(&self) -> GetConfig::Response {
+    async fn get_config(&self, metrics: MetricsData<'_>) -> GetConfig::Response {
+        metrics.0.requests.config.inc();
         GetConfig::ok(PublicConfig {
             program_ttl: self.config.program_ttl,
             max_concurrent_jobs: self.config.max_concurrent_jobs,

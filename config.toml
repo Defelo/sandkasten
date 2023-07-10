@@ -5,6 +5,8 @@ server = "/"
 redis_url = "redis://127.0.0.1:6379/0"
 cache_ttl = 3600
 
+enable_metrics = false
+
 programs_dir = "/programs"
 jobs_dir = "/jobs"
 
