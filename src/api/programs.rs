@@ -16,6 +16,7 @@ use super::Tags;
 use crate::{
     config::Config,
     environments::Environments,
+    metrics::MetricsData,
     program::{
         build::{build_program, BuildProgramError},
         run::{run_program, RunProgramError},
@@ -34,7 +35,19 @@ pub struct ProgramsApi {
 impl ProgramsApi {
     /// Build and immediately run a program.
     #[oai(path = "/run", method = "post", transform = "shield")]
-    async fn run(&self, data: Json<BuildRunRequest>) -> BuildRun::Response {
+    async fn run(
+        &self,
+        metrics: MetricsData<'_>,
+        data: Json<BuildRunRequest>,
+    ) -> BuildRun::Response {
+        let environment = data.0.build.environment.clone();
+        metrics
+            .0
+            .requests
+            .build_run
+            .with_label_values(&[&environment])
+            .inc();
+
         if !check_mainfile(&data.0.build.main_file)
             || !check_files(&data.0.build.files)
             || !check_files(&data.0.run.files)
@@ -51,6 +64,7 @@ impl ProgramsApi {
             BuildResult {
                 program_id,
                 ttl,
+                cached,
                 compile_result,
             },
             read_guard,
@@ -77,6 +91,15 @@ impl ProgramsApi {
             Err(err) => return Err(err.into()),
         };
 
+        if cached {
+            metrics
+                .0
+                .cache_hits
+                .build_run
+                .with_label_values(&[&environment])
+                .inc();
+        }
+
         match run_program(
             Arc::clone(&self.config),
             program_id,
@@ -89,6 +112,7 @@ impl ProgramsApi {
             Ok(run_result) => BuildRun::ok(BuildRunResult {
                 program_id,
                 ttl,
+                cached,
                 build: compile_result,
                 run: run_result,
             }),
@@ -99,7 +123,19 @@ impl ProgramsApi {
 
     /// Upload and compile a program.
     #[oai(path = "/programs", method = "post", transform = "shield")]
-    async fn build_program(&self, data: Json<BuildRequest>) -> Build::Response {
+    async fn build_program(
+        &self,
+        metrics: MetricsData<'_>,
+        data: Json<BuildRequest>,
+    ) -> Build::Response {
+        let environment = data.0.environment.clone();
+        metrics
+            .0
+            .requests
+            .build
+            .with_label_values(&[&environment])
+            .inc();
+
         if !check_mainfile(&data.0.main_file) || !check_files(&data.0.files) {
             return Build::invalid_file_names();
         }
@@ -118,7 +154,17 @@ impl ProgramsApi {
         )
         .await
         {
-            Ok((result, _)) => Build::ok(result),
+            Ok((result, _)) => {
+                if result.cached {
+                    metrics
+                        .0
+                        .cache_hits
+                        .build
+                        .with_label_values(&[&environment])
+                        .inc();
+                }
+                Build::ok(result)
+            }
             Err(BuildProgramError::EnvironmentNotFound(_)) => Build::environment_not_found(),
             Err(BuildProgramError::CompilationFailed(result)) => Build::compile_error(result),
             Err(BuildProgramError::ConflictingFilenames) => Build::invalid_file_names(),
@@ -133,7 +179,14 @@ impl ProgramsApi {
         method = "post",
         transform = "shield"
     )]
-    async fn run_program(&self, program_id: Path<Uuid>, data: Json<RunRequest>) -> Run::Response {
+    async fn run_program(
+        &self,
+        metrics: MetricsData<'_>,
+        program_id: Path<Uuid>,
+        data: Json<RunRequest>,
+    ) -> Run::Response {
+        metrics.0.requests.run.inc();
+
         if !check_files(&data.0.files) {
             return Run::invalid_file_names();
         }

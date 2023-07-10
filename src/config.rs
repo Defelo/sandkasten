@@ -47,6 +47,9 @@ pub struct Config {
     /// The default time to live for cache entries in seconds.
     pub cache_ttl: u64,
 
+    /// Whether to expose Prometheus metrics on `/metrics`.
+    pub enable_metrics: bool,
+
     /// The directory where programs are stored.
     pub programs_dir: PathBuf,
     /// The directory where files for jobs are stored.

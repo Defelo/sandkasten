@@ -7,6 +7,7 @@ use redis::aio::ConnectionManager;
 pub mod api;
 pub mod config;
 pub mod environments;
+pub mod metrics;
 pub mod program;
 pub mod sandbox;
 

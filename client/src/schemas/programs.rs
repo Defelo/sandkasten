@@ -116,6 +116,8 @@ pub struct BuildRunResult {
     /// The number of seconds after the last execution of the program before it
     /// is removed.
     pub ttl: u64,
+    /// Whether the program has already been built before.
+    pub cached: bool,
     /// The results of compiling the program. Empty iff programs don't need to
     /// be compiled in this environment.
     pub build: Option<RunResult>,
@@ -151,6 +153,8 @@ pub struct BuildResult {
     /// The number of seconds after the last execution of the program before it
     /// is removed.
     pub ttl: u64,
+    /// Whether the program has already been built before.
+    pub cached: bool,
     /// The results of compiling the program. Empty iff programs don't need to
     /// be compiled in this environment.
     pub compile_result: Option<RunResult>,

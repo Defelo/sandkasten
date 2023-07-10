@@ -55,6 +55,7 @@
         host = "127.0.0.1";
         port = 8000;
         server = "/";
+        enable_metrics = true;
         programs_dir = "programs";
         jobs_dir = "jobs";
         program_ttl = 60;

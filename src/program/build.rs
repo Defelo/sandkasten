@@ -89,6 +89,7 @@ pub async fn build_program(
                 BuildResult {
                     program_id: id,
                     ttl: config.program_ttl,
+                    cached: false,
                     compile_result: result,
                 },
                 _guard.downgrade(),
@@ -125,6 +126,7 @@ async fn get_cached_program(
     Ok(Some(BuildResult {
         program_id,
         ttl: config.program_ttl,
+        cached: true,
         compile_result,
     }))
 }

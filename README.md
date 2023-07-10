@@ -43,6 +43,7 @@ the program.
 - [x] Specify stdin, command line arguments and files in the working directory for run steps.
 - [x] Specify environment variables for both compile and run steps.
 - [x] Client library for Rust ([crate](https://crates.io/crates/sandkasten-client), [documentation](https://docs.rs/sandkasten-client))
+- [x] Optional [Prometheus](https://prometheus.io/docs/introduction/overview/) metrics on `/metrics`
 
 ### Planned/Ideas
 - [ ] Communicate with running programs via websockets.

@@ -1,4 +1,7 @@
-use std::sync::Arc;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 
 use fnct::key;
 use key_rwlock::KeyRwLock;
@@ -15,6 +18,7 @@ use super::Tags;
 use crate::{
     config::Config,
     environments::{self, Environments},
+    metrics::MetricsData,
     program::{build::build_program, run::run_program},
     Cache,
 };
@@ -36,7 +40,8 @@ impl EnvironmentsApi {
     /// The keys represent the environment ids and the values contain additional
     /// information about the environments.
     #[oai(path = "/environments", method = "get")]
-    async fn list_environments(&self) -> ListEnvironments::Response {
+    async fn list_environments(&self, metrics: MetricsData<'_>) -> ListEnvironments::Response {
+        metrics.0.requests.environments.inc();
         ListEnvironments::ok(ListEnvironmentsResponse(
             self.environments
                 .iter()
@@ -66,15 +71,29 @@ impl EnvironmentsApi {
         method = "get",
         transform = "shield"
     )]
-    async fn get_base_resource_usage(&self, name: Path<String>) -> GetBaseResourceUsage::Response {
+    async fn get_base_resource_usage(
+        &self,
+        metrics: MetricsData<'_>,
+        name: Path<String>,
+    ) -> GetBaseResourceUsage::Response {
+        metrics
+            .0
+            .requests
+            .resource_usage
+            .with_label_values(&[&name.0])
+            .inc();
+
         let Some(environment) = self.environments.get(&name.0) else {
             return GetBaseResourceUsage::environment_not_found();
         };
 
+        let cache_hit = AtomicBool::new(true);
         let _guard = self.base_resource_usage_lock.write(name.0.clone()).await;
         let result = self
             .cache
             .cached_result(key!(&name.0), &[], None, || async {
+                cache_hit.store(false, Ordering::Relaxed);
+
                 let _guard = self
                     .request_semaphore
                     .acquire_many(self.config.base_resource_usage_permits)
@@ -91,6 +110,16 @@ impl EnvironmentsApi {
                 .await
             })
             .await??;
+
+        if cache_hit.load(Ordering::Relaxed) {
+            metrics
+                .0
+                .cache_hits
+                .resource_usage
+                .with_label_values(&[&name.0])
+                .inc();
+        }
+
         GetBaseResourceUsage::ok(result)
     }
 }
