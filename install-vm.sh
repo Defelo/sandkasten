@@ -21,6 +21,7 @@ mkfs.ext4 $ROOT
 mount $ROOT /mnt
 mkdir /mnt/root
 nix flake new --template "$FLAKE" /mnt/root/sandkasten
+sed -i -E "s|github:Defelo/sandkasten/latest|${FLAKE%#*}|" /mnt/root/sandkasten/flake.nix
 
 nixos-generate-config --root /mnt --show-hardware-config > /mnt/root/sandkasten/hardware-configuration.nix
 sed -i -E "s#boot.loader.grub.device = \"/dev/sda\";#boot.loader.grub.device = \"$DISK\";#" /mnt/root/sandkasten/configuration.nix

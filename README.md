@@ -79,10 +79,15 @@ libvirtd 9.4.0 x86_64.
 6. Use `lsblk` or `fdisk -l` to find the name of your hard disk.
 7. Run the following commands to download the installation script from GitHub and start the
     installation. Replace `[disk]` with the path to your hard disk (e.g. `/dev/sda`). Note that
-    this will erase all data on the disk you specify.
+    this will erase all data on the disk you specify!
     ```bash
     curl -o install.sh https://raw.githubusercontent.com/Defelo/sandkasten/latest/install-vm.sh
     bash install.sh [disk]
+    ```
+    Alternatively you can run the following commands to install the development version.
+    ```bash
+    curl -o install.sh https://raw.githubusercontent.com/Defelo/sandkasten/develop/install-vm.sh
+    FLAKE=github:Defelo/sandkasten/develop#vm bash install.sh [disk]
     ```
 8. After the script is done, the vm will reboot into the new NixOS installation. The initial root
     password is `sandkasten` if you want to login via ssh. The Sandkasten server is started

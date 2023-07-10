@@ -1,7 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
-    sandkasten.url = "github:Defelo/sandkasten";
+    sandkasten.url = "github:Defelo/sandkasten/latest";
   };
 
   outputs = {
