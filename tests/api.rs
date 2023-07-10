@@ -193,7 +193,7 @@ fn test_build_cached() {
             environment: "rust".into(),
             main_file: MainFile {
                 name: Some("test.rs".into()),
-                content: "fn main() { println!(\"test\"); }".into(),
+                content: "fn main() { println!(\"test_build_cached\"); }".into(),
             },
             ..Default::default()
         },
@@ -203,22 +203,25 @@ fn test_build_cached() {
     let BuildRunResult {
         program_id,
         ttl: _,
+        cached,
         build,
         run,
     }: BuildRunResult = client.build_and_run(&request).unwrap();
     let build = build.unwrap();
     assert_eq!(run.status, 0);
-    assert_eq!(run.stdout, "test\n");
+    assert_eq!(run.stdout, "test_build_cached\n");
+    assert!(!cached);
 
     let response: BuildRunResult = client.build_and_run(&request).unwrap();
     assert_eq!(response.program_id, program_id);
     assert_eq!(response.build.unwrap(), build);
     assert_eq!(response.run.status, 0);
-    assert_eq!(response.run.stdout, "test\n");
+    assert_eq!(response.run.stdout, "test_build_cached\n");
+    assert!(response.cached);
 
     let response: RunResult = client.run(program_id, &RunRequest::default()).unwrap();
     assert_eq!(response.status, 0);
-    assert_eq!(response.stdout, "test\n");
+    assert_eq!(response.stdout, "test_build_cached\n");
 }
 
 #[test]
