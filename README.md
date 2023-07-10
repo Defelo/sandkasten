@@ -120,12 +120,14 @@ installation:
         environments = p: with p; [
           rust python typescript  # use `all` to install all environments
         ];
-        # example config:
-        host = "0.0.0.0";
-        port = 8080;
-        max_concurrent_jobs = 16;
-        run_limits.time = 10;
-        # for a full list of configuration options, see `config.toml`
+
+        # example config (for a full list of configuration options, see `config.toml`)
+        settings = {
+          host = "0.0.0.0";
+          port = 8080;
+          max_concurrent_jobs = 16;
+          run_limits.time = 10;
+        };
       };
     }
     ```
