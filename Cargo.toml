@@ -19,7 +19,7 @@ lto = true
 codegen-units = 1
 
 [dependencies]
-anyhow = { version = "1.0.71", default-features = false, features = ["std"] }
+anyhow = { version = "1.0.72", default-features = false, features = ["std"] }
 config = { version = "0.13.3", default-features = false, features = ["toml", "json"] }
 fnct = { version = "0.6.0", default-features = false }
 key-rwlock = { version = "0.1.1", default-features = false }
