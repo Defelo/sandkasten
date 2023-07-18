@@ -20,4 +20,4 @@ jobs:
       - name: Notify release
         uses: nearform-actions/github-action-notify-release@v1
         with:
-          notify-after: '7d'
+          notify-after: '14d'
