@@ -4,6 +4,9 @@ on:
   push:
     branches: [develop]
   pull_request:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -59,8 +62,15 @@ jobs:
       - name: install packages
         run: nix profile install --profile pkgs .#packages.all
       - name: integration tests
-        run: nix develop .#test --command sh -c "setup-nsjail && integration-tests"
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" = "schedule" ]] || [[ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]]; then
+            proptests=1024
+          else
+            proptests=32
+          fi
+          nix develop .#test --command sh -c "setup-nsjail && integration-tests $proptests"
       - name: Upload to codecov.io
+        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
         uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
