@@ -11,6 +11,12 @@
   default_main_file_name = "code.js";
   compile_script = null;
   run_script = ''${pkgs.nodejs}/bin/node /program/"$@"'';
+  example = ''
+    let fs = require("fs");
+
+    let name = fs.readFileSync(0).toString();
+    console.log("Hello, " + name + "!");
+  '';
   test.main_file.content = ''
     let fs = require("fs");
     let foo = require("./foo.js");

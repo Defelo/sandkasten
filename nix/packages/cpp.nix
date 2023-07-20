@@ -11,6 +11,16 @@
   default_main_file_name = "code.cpp";
   compile_script = ''${pkgs.gcc}/bin/g++ -std=c++20 -O2 -o /program/binary "$1"'';
   run_script = ''shift; /program/binary "$@"'';
+  example = ''
+    #include <bits/stdc++.h>
+
+    int main() {
+      std::string name;
+      std::cin >> name;
+      std::cout << "Hello, " << name << "!";
+      return 0;
+    }
+  '';
   test.main_file.content = ''
     #include "foo.cpp"
 

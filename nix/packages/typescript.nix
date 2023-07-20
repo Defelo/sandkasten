@@ -34,6 +34,12 @@ in {
     shift
     ${pkgs.nodejs}/bin/node "$main" "$@"
   '';
+  example = ''
+    import * as fs from "fs";
+
+    let name = fs.readFileSync(0).toString();
+    console.log("Hello, " + name + "!");
+  '';
   test.main_file.content = ''
     import { bar } from "./foo";
     import * as fs from "fs";

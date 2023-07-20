@@ -19,12 +19,13 @@
       default_main_file_name,
       compile_script,
       run_script,
+      example ? null,
       test,
       ...
     } @ v: let
       manifest = pkgs.writeText "sandkasten-${id}-${version}-manifest.json" (builtins.toJSON rec {
         sandkasten_version = cargotoml.package.version;
-        inherit name version meta default_main_file_name test;
+        inherit name version meta default_main_file_name example test;
         compile_script =
           if builtins.isNull v.compile_script
           then null

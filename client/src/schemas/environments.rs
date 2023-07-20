@@ -20,6 +20,8 @@ pub struct Environment {
     /// The default name of the main file that is used if no filename is
     /// specified.
     pub default_main_file_name: String,
+    /// An example program for this environment.
+    pub example: Option<String>,
     /// Additional metadata specific to the environment.
     pub meta: Value,
 }
@@ -89,6 +91,7 @@ impl Example for ListEnvironmentsResponse {
                     name: "Rust".into(),
                     version: "1.64.0".into(),
                     default_main_file_name: "code.rs".into(),
+                    example: None,
                     meta: json!({
                         "homepage": "https://www.rust-lang.org/"
                     }),
@@ -100,6 +103,7 @@ impl Example for ListEnvironmentsResponse {
                     name: "Python".into(),
                     version: "3.11.1".into(),
                     default_main_file_name: "code.py".into(),
+                    example: Some("name = input()\nprint(f\"Hello, {name}!\")".into()),
                     meta: json!({
                         "packages": ["numpy", "pandas"]
                     }),

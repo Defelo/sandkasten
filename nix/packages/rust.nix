@@ -7,6 +7,13 @@
   default_main_file_name = "code.rs";
   compile_script = ''PATH=${pkgs.gcc}/bin/ ${pkgs.rustc}/bin/rustc -O -o /program/binary "$1"'';
   run_script = ''shift; /program/binary "$@"'';
+  example = ''
+    fn main() {
+      let mut name = String::new();
+      std::io::stdin().read_line(&mut name).unwrap();
+      println!("Hello, {name}!");
+    }
+  '';
   test.main_file.content = ''
     mod foo;
     fn main() {

@@ -14,6 +14,11 @@
         fn test_${pkg}() {
           test_package("${pkg}");
         }
+        #[test]
+        #[ignore]
+        fn example_${pkg}() {
+          test_example("${pkg}");
+        }
       '') "" (builtins.attrNames packages));
     ENVIRONMENTS_LIST_SRC = pkgs.writeText "environments_list_src.rs" ''
       const ENVIRONMENTS: &[&str] = &[${builtins.foldl' (acc: x: acc + ''"${x}", '') "" (builtins.attrNames packages)}];
