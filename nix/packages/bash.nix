@@ -18,6 +18,10 @@
       yq
     ];
   in ''PATH='/program/:${pkgs.lib.makeBinPath path}' ${pkgs.bash}/bin/bash /program/"$@"'';
+  example = ''
+    read name
+    echo "Hello, ''${name}!"
+  '';
   test.main_file.content = ''
     set -e
 

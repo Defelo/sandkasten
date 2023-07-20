@@ -27,6 +27,17 @@
     mem=$((mem/128))
     ${pkgs.jdk}/bin/java -Xms$mem -Xmx$mem -cp /program "$(${pkgs.coreutils}/bin/cat /program/.main)" "$@"
   '';
+  example = ''
+    import java.util.Scanner;
+
+    class Example {
+      public static void main(String[] args) {
+        Scanner s = new Scanner(System.in);
+        String name = s.next();
+        System.out.println("Hello, " + name + "!");
+      }
+    }
+  '';
   test.main_file.content = ''
     import java.io.IOException;
     import java.util.Scanner;

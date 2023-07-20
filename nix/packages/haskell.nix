@@ -15,6 +15,12 @@
     PATH=${pkgs.gcc}/bin ${pkgs.ghc}/bin/ghc -O -o /program/binary --make "$1"
   '';
   run_script = ''shift; /program/binary "$@"'';
+  example = ''
+    main :: IO ()
+    main = do
+      name <- getLine
+      putStrLn $ "Hello, " ++ name ++ "!"
+  '';
   test.main_file.content = ''
     import System.Environment
     import System.Exit

@@ -9,6 +9,10 @@ in {
   default_main_file_name = "code.lua";
   compile_script = null;
   run_script = ''LUA_PATH=/program/?.lua ${lua}/bin/lua /program/"$@"'';
+  example = ''
+    local name = io.read()
+    print("Hello, " .. name .. "!")
+  '';
   test.main_file.content = ''
     require "foo"
 

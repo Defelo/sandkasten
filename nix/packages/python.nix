@@ -10,6 +10,10 @@ in {
   default_main_file_name = "code.py";
   compile_script = null;
   run_script = ''${pkgs.python311.withPackages py-pkgs}/bin/python /program/"$@"'';
+  example = ''
+    name = input()
+    print(f"Hello, {name}!")
+  '';
   test.main_file.content = ''
     import sys
     import foo

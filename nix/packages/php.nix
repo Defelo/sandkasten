@@ -7,6 +7,14 @@
   default_main_file_name = "code.php";
   compile_script = null;
   run_script = ''${pkgs.php}/bin/php /program/"$@"'';
+  example = ''
+    <?php
+
+    $name = fgets(STDIN);
+    echo "Hello, " . $name . "!";
+
+    ?>
+  '';
   test.main_file.content = ''
     <?php
 

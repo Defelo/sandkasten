@@ -21,6 +21,10 @@
     export DOTNET_CLI_TELEMETRY_OPTOUT=1
     ${pkgs.dotnet-sdk}/bin/dotnet /program/*.dll "$@"
   '';
+  example = ''
+    string name = Console.In.ReadLine();
+    Console.WriteLine("Hello, " + name + "!");
+  '';
   test.main_file.content = ''
     using System;
 

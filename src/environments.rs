@@ -22,6 +22,7 @@ pub struct Environment {
     pub compile_script: Option<String>,
     pub run_script: String,
     pub closure: PathBuf,
+    pub example: Option<String>,
     pub test: Test,
     pub sandkasten_version: String,
 }

@@ -11,6 +11,14 @@
   default_main_file_name = "code.c";
   compile_script = ''${pkgs.gcc}/bin/gcc -std=c17 -O2 -o /program/binary "$1"'';
   run_script = ''shift; /program/binary "$@"'';
+  example = ''
+    int main() {
+      char name[32];
+      scanf("%s", name);
+      printf("Hello, %s!", name);
+      return 0;
+    }
+  '';
   test.main_file.content = ''
     #define  _GNU_SOURCE
     #include <stdlib.h>
