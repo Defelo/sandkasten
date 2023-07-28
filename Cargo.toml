@@ -29,7 +29,7 @@ poem-ext = { version = "0.9.0", default-features = false, features = ["shield"] 
 poem-openapi = { version = "3.0.0", default-features = false, features = ["swagger-ui", "redoc", "uuid"] }
 postcard = { version = "1.0.6", default-features = false, features = ["use-std"] }
 prometheus = { version = "0.13.3", default-features = false }
-redis = { version = "0.23.0", default-features = false, features = ["tokio-comp", "connection-manager"] }
+redis = { version = "0.23.1", default-features = false, features = ["tokio-comp", "connection-manager"] }
 regex = "1.9.1"
 sandkasten-client = { path = "client", default-features = false, features = ["poem-openapi"] }
 serde.workspace = true
