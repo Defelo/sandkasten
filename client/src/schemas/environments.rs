@@ -5,7 +5,7 @@ use std::collections::HashMap;
 #[cfg(feature = "poem-openapi")]
 use poem_openapi::{types::Example, NewType, Object};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::Value;
 
 use super::programs::ResourceUsage;
 
@@ -92,7 +92,7 @@ impl Example for ListEnvironmentsResponse {
                     version: "1.64.0".into(),
                     default_main_file_name: "code.rs".into(),
                     example: None,
-                    meta: json!({
+                    meta: serde_json::json!({
                         "homepage": "https://www.rust-lang.org/"
                     }),
                 },
@@ -104,7 +104,7 @@ impl Example for ListEnvironmentsResponse {
                     version: "3.11.1".into(),
                     default_main_file_name: "code.py".into(),
                     example: Some("name = input()\nprint(f\"Hello, {name}!\")".into()),
-                    meta: json!({
+                    meta: serde_json::json!({
                         "packages": ["numpy", "pandas"]
                     }),
                 },
