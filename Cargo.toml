@@ -9,7 +9,7 @@ uuid = { version = "1.4.1", default-features = false, features = ["v4", "fast-rn
 
 [package]
 name = "sandkasten"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 publish = false
 
