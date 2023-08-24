@@ -238,7 +238,7 @@ async fn compile_program(
         .collect::<Vec<_>>();
 
     with_tempdir(config.jobs_dir.join(job_id.to_string()), |tmpdir| async {
-        let tmpdir = tmpdir; // move tmpdir into async block
+        let tmpdir = { tmpdir }; // move tmpdir into async block
 
         // create working directory for compile script and copy files from build request
         // into it

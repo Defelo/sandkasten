@@ -66,7 +66,7 @@ pub async fn run_program(
     let job_id = Uuid::new_v4();
     let _guard = job_lock.write(job_id).await;
     with_tempdir(config.jobs_dir.join(job_id.to_string()), |tmpdir| async {
-        let tmpdir = tmpdir; // move tmpdir into async block
+        let tmpdir = { tmpdir }; // move tmpdir into async block
 
         // create working directory and copy files from run request into it
         fs::create_dir_all(tmpdir.join("box")).await?;
