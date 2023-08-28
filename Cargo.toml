@@ -2,7 +2,7 @@
 members = [".", "client"]
 
 [workspace.dependencies]
-serde = { version = "1.0.186", default-features = false, features = ["std", "derive"] }
+serde = { version = "1.0.188", default-features = false, features = ["std", "derive"] }
 serde_json = { version = "1.0.105", default-features = false, features = ["std"] }
 thiserror = { version = "1.0.47", default-features = false }
 uuid = { version = "1.4.1", default-features = false, features = ["v4", "fast-rng", "serde"] }
@@ -30,7 +30,7 @@ poem-openapi = { version = "3.0.3", default-features = false, features = ["swagg
 postcard = { version = "1.0.6", default-features = false, features = ["use-std"] }
 prometheus = { version = "0.13.3", default-features = false }
 redis = { version = "0.23.2", default-features = false, features = ["tokio-comp", "connection-manager"] }
-regex = "1.9.3"
+regex = "1.9.4"
 sandkasten-client = { path = "client", default-features = false, features = ["poem-openapi"] }
 serde.workspace = true
 serde_json.workspace = true
