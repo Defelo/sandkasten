@@ -21,7 +21,7 @@ reqwest = { version = "0.11.20", default-features = false, optional = true, feat
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-url = { version = "2.4.0", default-features = false, optional = true }
+url = { version = "2.4.1", default-features = false, optional = true }
 uuid.workspace = true
 
 [dev-dependencies]
