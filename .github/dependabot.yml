@@ -13,9 +13,6 @@ updates:
     schedule:
       interval: daily
     groups:
-      rust-major:
-        patterns: ["*"]
-        update-types: ["major"]
       rust-minor-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
