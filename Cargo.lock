@@ -1221,9 +1221,9 @@ dependencies = [
 
 [[package]]
 name = "postcard"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9ee729232311d3cd113749948b689627618133b1c5012b77342c1950b25eaeb"
+checksum = "d534c6e61df1c7166e636ca612d9820d486fe96ddad37f7abc671517b297488e"
 dependencies = [
  "cobs",
  "serde",
