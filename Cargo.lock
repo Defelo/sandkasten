@@ -128,12 +128,6 @@ checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 
 [[package]]
 name = "base64"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ea22880d78093b0cbe17c89f64a7d457941e65759157ec6cb31a31d652b05e5"
-
-[[package]]
-name = "base64"
 version = "0.21.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "604178f6c5c21f02dc555784810edfb88d34ac2c73b2eae109655649ee73ce3d"
@@ -263,12 +257,12 @@ checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
 
 [[package]]
 name = "cookie"
-version = "0.16.2"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e859cd57d0710d9e06c381b550c06e76992472a8c6d527aecd2fc673dcc231fb"
+checksum = "7efb37c3e1ccb1ff97164ad95ac1606e8ccd35b3fa0a7d99a304c7f4a428cc24"
 dependencies = [
  "aes-gcm",
- "base64 0.20.0",
+ "base64 0.21.2",
  "hkdf",
  "hmac",
  "percent-encoding",
@@ -1102,9 +1096,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "poem"
-version = "1.3.57"
+version = "1.3.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0d92c532a37a9e98c0e9a0411e6852b8acccf9ec07d5e6e450b01cbf947d90b"
+checksum = "ebc7ae19f3e791ae8108b08801abb3708d64d3a16490c720e0b81040cae87b5d"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1140,9 +1134,9 @@ dependencies = [
 
 [[package]]
 name = "poem-derive"
-version = "1.3.57"
+version = "1.3.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5dd58846a1f582215370384c3090c62c9ef188e9d798ffc67ea90d0a1a8a3b8"
+checksum = "2550a0bce7273b278894ef3ccc5a6869e7031b6870042f3cc6826ed9faa980a6"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -1166,14 +1160,15 @@ dependencies = [
 
 [[package]]
 name = "poem-openapi"
-version = "3.0.3"
+version = "3.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70785cb25ddec58ad38e9ec0f39aeecb3e47ff1b4ad72999b8bc5eba0592d02b"
+checksum = "ebc9663e1e8909b1dbd47bc99314f0b876c26f9194543e58cdfbdc942d821ed3"
 dependencies = [
  "base64 0.21.2",
  "bytes",
  "derive_more",
  "futures-util",
+ "indexmap 2.0.0",
  "mime",
  "num-traits",
  "poem",
@@ -1191,9 +1186,9 @@ dependencies = [
 
 [[package]]
 name = "poem-openapi-derive"
-version = "3.0.3"
+version = "3.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "455c685d6d023da7e515f98bcf7c1b9106d43a855fae3e288c51292d02c762c9"
+checksum = "57567361a96136b8143a18a98e1bcfa482368edef1c2d7d564d87cba5d03646b"
 dependencies = [
  "darling",
  "http",
@@ -1296,9 +1291,9 @@ checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
 
 [[package]]
 name = "quick-xml"
-version = "0.29.0"
+version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81b9228215d82c7b61490fec1de287136b5de6f5700f6e58ea9ad61a7964ca51"
+checksum = "eff6510e86862b57b210fd8cbe8ed3f0d7d600b9c2863cd4549a2e033c66e956"
 dependencies = [
  "memchr",
  "serde",
@@ -1354,9 +1349,9 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "0.23.2"
+version = "0.23.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffd6543a7bc6428396845f6854ccf3d1ae8823816592e2cbe74f20f50f209d02"
+checksum = "4f49cdc0bb3f412bf8e7d1bd90fe1d9eb10bc5c399ba90973c14662a27b3f8ba"
 dependencies = [
  "arc-swap",
  "async-trait",
