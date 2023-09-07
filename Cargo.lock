@@ -1160,9 +1160,9 @@ dependencies = [
 
 [[package]]
 name = "poem-openapi"
-version = "3.0.4"
+version = "3.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebc9663e1e8909b1dbd47bc99314f0b876c26f9194543e58cdfbdc942d821ed3"
+checksum = "c62659dcc7ca09a525881300646f3b28e319889072e83cd16a2865ba024a185e"
 dependencies = [
  "base64 0.21.2",
  "bytes",
