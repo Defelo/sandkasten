@@ -420,9 +420,9 @@ dependencies = [
 
 [[package]]
 name = "fnct"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e32dc113ffb8ec5fb834fe93e31aece2b8ddffa960596834f4456575d793fbea"
+checksum = "153cc90926a44a0b4ce9081e7aab3fbb23878e020335b14afa9dde1eaca94e00"
 dependencies = [
  "async-trait",
  "postcard",
@@ -1146,9 +1146,9 @@ dependencies = [
 
 [[package]]
 name = "poem-ext"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2e7b8409be202699b7cca995bc720452547e6709cf8d201f1a543eddbe3b7e0"
+checksum = "6bdbd601810df4590c4f9bdf8f4c567ad9979d296bb3ebd75190a45fb8f22a21"
 dependencies = [
  "itertools",
  "paste",
