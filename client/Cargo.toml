@@ -1,6 +1,6 @@
 [package]
 name = "sandkasten-client"
-version = "0.1.5"
+version = "0.1.6"
 description = "Sandkasten client library for running untrusted code"
 license = "MIT"
 documentation = "https://docs.rs/sandkasten-client/"
