@@ -1559,7 +1559,7 @@ checksum = "1ad4cc8da4ef723ed60bced201181d83791ad433213d8c24efffda1eec85d741"
 
 [[package]]
 name = "sandkasten"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "anyhow",
  "config",
@@ -1589,7 +1589,7 @@ dependencies = [
 
 [[package]]
 name = "sandkasten-client"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "poem-openapi",
  "reqwest",
