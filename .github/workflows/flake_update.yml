@@ -18,7 +18,7 @@ jobs:
         with:
           submodules: true
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v6
+        uses: DeterminateSystems/nix-installer-action@v7
       - name: Update flake.lock
         uses: DeterminateSystems/update-flake-lock@v20
         with:
