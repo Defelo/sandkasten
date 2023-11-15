@@ -13,11 +13,6 @@ version = "0.1.7"
 edition = "2021"
 publish = false
 
-[profile.release]
-strip = true
-lto = true
-codegen-units = 1
-
 [dependencies]
 anyhow = { version = "1.0.75", default-features = false, features = ["std"] }
 config = { version = "0.13.3", default-features = false, features = ["toml", "json"] }
