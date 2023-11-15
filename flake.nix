@@ -13,6 +13,7 @@
   };
 
   outputs = {
+    self,
     nixpkgs,
     nixpkgs-old,
     fenix,
@@ -24,10 +25,10 @@
     pkgs-old = import nixpkgs-old {inherit system;};
     lib = import ./nix/lib.nix {inherit pkgs pkgs-old;};
   in rec {
-    packages.${system} = rec {
+    packages.${system} = {
       inherit (lib) packages;
-      rust = import ./nix/rust.nix {inherit system pkgs fenix naersk;};
-      default = import ./nix/default.nix {inherit pkgs lib rust;};
+      sandkasten = import ./nix/sandkasten.nix {inherit system pkgs fenix naersk;};
+      default = self.packages.${system}.sandkasten;
     };
     nixosModules.sandkasten = import ./nix/nixos/module.nix {
       inherit lib;
