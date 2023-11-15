@@ -1,9 +1,11 @@
 {
-  pkgs,
-  pkgs-old,
-  cargotoml,
-  ...
+  system,
+  inputs,
+  lib,
 }: let
+  pkgs = import inputs.nixpkgs {inherit system;};
+  pkgs-old = import inputs.nixpkgs-old {inherit system;};
+
   removeSuffix = pkgs.lib.removeSuffix ".nix";
   isPackage = name: name != "default.nix" && pkgs.lib.hasSuffix ".nix" name;
   packageNames = builtins.filter isPackage (builtins.attrNames (builtins.readDir ./.));
@@ -24,7 +26,7 @@
       ...
     } @ v: let
       manifest = pkgs.writeText "sandkasten-${id}-${version}-manifest.json" (builtins.toJSON rec {
-        sandkasten_version = cargotoml.package.version;
+        sandkasten_version = lib.cargotoml.package.version;
         inherit name version meta default_main_file_name example test;
         compile_script =
           if builtins.isNull v.compile_script

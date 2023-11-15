@@ -3,7 +3,6 @@
   self,
   ...
 }: let
-  inherit (lib) packages;
   conf = lib.config;
 in
   {
@@ -47,7 +46,7 @@ in
               {
                 nsjail_path = "${pkgs.nsjail}/bin/nsjail";
                 time_path = "${self.packages.${pkgs.system}.time}/bin/time";
-                environments_path = ["${packages.combined cfg.environments}/share/sandkasten/packages"];
+                environments_path = ["${self.packages.${pkgs.system}.packages.combined cfg.environments}/share/sandkasten/packages"];
                 programs_dir = "/var/lib/sandkasten/programs";
                 jobs_dir = "/tmp/sandkasten/jobs";
                 base_resource_usage_permits = (conf // cfg.settings).max_concurrent_jobs;

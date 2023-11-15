@@ -7,24 +7,35 @@
   outputs = {
     self,
     nixpkgs,
-    nixpkgs-old,
     ...
-  }: let
-    system = "x86_64-linux";
-    pkgs = import nixpkgs {inherit system;};
-    pkgs-old = import nixpkgs-old {inherit system;};
-    lib = import ./nix/lib.nix {inherit pkgs pkgs-old;};
+  } @ inputs: let
+    defaultSystems = [
+      "x86_64-linux"
+      "x86_64-darwin"
+      "aarch64-linux"
+      "aarch64-darwin"
+    ];
+    eachDefaultSystem = f:
+      builtins.listToAttrs (map (system: {
+          name = system;
+          value = f (import nixpkgs {inherit system;});
+        })
+        defaultSystems);
+    lib = import ./nix/lib.nix;
   in {
-    packages.${system} = {
-      inherit (lib) packages;
-      time = pkgs.callPackage ./nix/time {};
+    packages = eachDefaultSystem (pkgs: {
+      default = self.packages.${pkgs.system}.sandkasten;
       sandkasten = pkgs.callPackage ./nix/sandkasten.nix {};
-      default = self.packages.${system}.sandkasten;
-    };
+      packages = import ./nix/packages {
+        inherit inputs lib;
+        inherit (pkgs) system;
+      };
+      time = pkgs.callPackage ./nix/time {};
+    });
     nixosModules.sandkasten = import ./nix/nixos/module.nix {
       inherit self lib;
     };
-    devShells.${system} = import ./nix/dev/shell.nix {inherit self pkgs lib;};
+    devShells = eachDefaultSystem (pkgs: import ./nix/dev/shell.nix {inherit self pkgs lib;});
     templates.vm.path = ./nix/nixos/vm;
   };
 }

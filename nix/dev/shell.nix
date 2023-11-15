@@ -5,7 +5,7 @@
   ...
 }: let
   inherit (lib) config limits;
-  packages = builtins.removeAttrs lib.packages ["all" "combined"];
+  packages = builtins.removeAttrs self.packages.${pkgs.system}.packages ["all" "combined"];
   test-env = {
     PACKAGES_TEST_SRC = pkgs.writeText "packages_test_src.rs" (builtins.foldl' (acc: pkg:
       acc
