@@ -1,9 +1,10 @@
 {
   pkgs,
   lib,
+  self,
   ...
 }: let
-  inherit (lib) time config limits;
+  inherit (lib) config limits;
   packages = builtins.removeAttrs lib.packages ["all" "combined"];
   test-env = {
     PACKAGES_TEST_SRC = pkgs.writeText "packages_test_src.rs" (builtins.foldl' (acc: pkg:
@@ -67,7 +68,7 @@
         prune_programs_interval = 30;
         run_limits = config.run_limits // {network = true;};
         nsjail_path = ".nsjail";
-        time_path = "${lib.time}/bin/time";
+        time_path = "${self.packages.${pkgs.system}.time}/bin/time";
       }));
   };
   test-script = pkgs.writeShellScript "integration-tests.sh" ''
@@ -113,7 +114,7 @@
   };
 in {
   default = pkgs.mkShell ({
-      packages = [pkgs.cargo-llvm-cov pkgs.lcov pkgs.redis time scripts];
+      packages = [pkgs.cargo-llvm-cov pkgs.lcov pkgs.redis self.packages.${pkgs.system}.time scripts];
       RUST_LOG = "info,sandkasten=trace,difft=off";
     }
     // test-env);

@@ -3,7 +3,6 @@
   pkgs-old,
   ...
 }: rec {
-  time = pkgs.callPackage ./time {};
   cargotoml = builtins.fromTOML (builtins.readFile ../Cargo.toml);
   config = builtins.fromTOML (builtins.readFile ../config.toml);
   packages = import ./packages {inherit pkgs pkgs-old cargotoml;};

@@ -1,9 +1,9 @@
 {
-  default,
   lib,
+  self,
   ...
 }: let
-  inherit (lib) packages time;
+  inherit (lib) packages;
   conf = lib.config;
 in
   {
@@ -35,7 +35,7 @@ in
         systemd.services.sandkasten = {
           wantedBy = ["multi-user.target"];
           serviceConfig = {
-            ExecStart = "${default}/bin/sandkasten";
+            ExecStart = "${self.packages.${pkgs.system}.sandkasten}/bin/sandkasten";
             StateDirectory = "sandkasten";
             PrivateTmp = true;
             Restart = lib.mkDefault "always";
@@ -46,7 +46,7 @@ in
             opts =
               {
                 nsjail_path = "${pkgs.nsjail}/bin/nsjail";
-                time_path = "${time}/bin/time";
+                time_path = "${self.packages.${pkgs.system}.time}/bin/time";
                 environments_path = ["${packages.combined cfg.environments}/share/sandkasten/packages"];
                 programs_dir = "/var/lib/sandkasten/programs";
                 jobs_dir = "/tmp/sandkasten/jobs";

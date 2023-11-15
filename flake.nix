@@ -22,7 +22,7 @@
     pkgs = import nixpkgs {inherit system;};
     pkgs-old = import nixpkgs-old {inherit system;};
     lib = import ./nix/lib.nix {inherit pkgs pkgs-old;};
-  in rec {
+  in {
     packages.${system} = {
       inherit (lib) packages;
       time = pkgs.callPackage ./nix/time {};
@@ -30,10 +30,9 @@
       default = self.packages.${system}.sandkasten;
     };
     nixosModules.sandkasten = import ./nix/nixos/module.nix {
-      inherit lib;
-      inherit (packages.${system}) default;
+      inherit self lib;
     };
-    devShells.${system} = import ./nix/dev/shell.nix {inherit pkgs lib;};
+    devShells.${system} = import ./nix/dev/shell.nix {inherit self pkgs lib;};
     templates.vm.path = ./nix/nixos/vm;
   };
 }
