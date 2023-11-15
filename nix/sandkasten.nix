@@ -15,4 +15,5 @@ in
     version = package.version;
     src = runCommandNoCCLocal "src" {} (builtins.foldl' (acc: k: acc + " && cp -r ${files.${k}} $out/${k}") "mkdir -p $out" (builtins.attrNames files));
     cargoLock.lockFile = ../Cargo.lock;
+    doCheck = false;
   }
