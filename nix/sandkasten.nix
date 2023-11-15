@@ -1,23 +1,21 @@
 {
+  stdenv,
   system,
-  pkgs,
-  fenix,
-  naersk,
-  ...
+  inputs,
 }: let
-  toolchain = with fenix.packages.${system};
+  toolchain = with inputs.fenix.packages.${system};
     combine [
       stable.rustc
       stable.cargo
       targets.x86_64-unknown-linux-musl.stable.rust-std
     ];
 in
-  (naersk.lib.${system}.override {
+  (inputs.naersk.lib.${system}.override {
     cargo = toolchain;
     rustc = toolchain;
   })
   .buildPackage {
-    src = pkgs.stdenv.mkDerivation {
+    src = stdenv.mkDerivation {
       name = "src";
       unpackPhase = "true";
       installPhase = let

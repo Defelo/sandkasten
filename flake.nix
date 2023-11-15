@@ -16,10 +16,8 @@
     self,
     nixpkgs,
     nixpkgs-old,
-    fenix,
-    naersk,
     ...
-  }: let
+  } @ inputs: let
     system = "x86_64-linux";
     pkgs = import nixpkgs {inherit system;};
     pkgs-old = import nixpkgs-old {inherit system;};
@@ -27,7 +25,8 @@
   in rec {
     packages.${system} = {
       inherit (lib) packages;
-      sandkasten = import ./nix/sandkasten.nix {inherit system pkgs fenix naersk;};
+      time = pkgs.callPackage ./nix/time {};
+      sandkasten = pkgs.callPackage ./nix/sandkasten.nix {inherit inputs;};
       default = self.packages.${system}.sandkasten;
     };
     nixosModules.sandkasten = import ./nix/nixos/module.nix {
