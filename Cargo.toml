@@ -2,10 +2,10 @@
 members = [".", "client"]
 
 [workspace.dependencies]
-serde = { version = "1.0.192", default-features = false, features = ["std", "derive"] }
+serde = { version = "1.0.193", default-features = false, features = ["std", "derive"] }
 serde_json = { version = "1.0.108", default-features = false, features = ["std"] }
 thiserror = { version = "1.0.50", default-features = false }
-uuid = { version = "1.6.0", default-features = false, features = ["v4", "fast-rng", "serde"] }
+uuid = { version = "1.6.1", default-features = false, features = ["v4", "fast-rng", "serde"] }
 
 [package]
 name = "sandkasten"
