@@ -5,13 +5,14 @@
 }: let
   pkgs = import inputs.nixpkgs {inherit system;};
   pkgs-old = import inputs.nixpkgs-old {inherit system;};
+  pkgs-unstable = import inputs.nixpkgs-unstable {inherit system;};
 
   removeSuffix = pkgs.lib.removeSuffix ".nix";
   isPackage = name: name != "default.nix" && pkgs.lib.hasSuffix ".nix" name;
   packageNames = builtins.filter isPackage (builtins.attrNames (builtins.readDir ./.));
   packages = builtins.listToAttrs (map (name: {
       name = removeSuffix name;
-      value = import (./. + "/${name}") {inherit pkgs pkgs-old;};
+      value = import (./. + "/${name}") {inherit pkgs pkgs-old pkgs-unstable;};
     })
     packageNames);
   derivations = builtins.mapAttrs (id: {

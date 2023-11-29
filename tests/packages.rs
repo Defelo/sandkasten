@@ -12,7 +12,7 @@ mod common;
 fn test_package(id: &str) {
     let environment = get_environment(id);
 
-    match client().build_and_run(&BuildRunRequest {
+    match dbg!(client().build_and_run(&BuildRunRequest {
         build: BuildRequest {
             environment: id.to_owned(),
             main_file: environment.test.main_file,
@@ -28,7 +28,7 @@ fn test_package(id: &str) {
             }],
             ..Default::default()
         },
-    }) {
+    })) {
         Ok(response) => {
             if environment.compile_script.is_some() {
                 let build = response.build.unwrap();
@@ -54,7 +54,7 @@ fn test_example(id: &str) {
         return;
     };
 
-    match client().build_and_run(&BuildRunRequest {
+    match dbg!(client().build_and_run(&BuildRunRequest {
         build: BuildRequest {
             environment: id.to_owned(),
             main_file: MainFile {
@@ -67,7 +67,7 @@ fn test_example(id: &str) {
             stdin: Some("Foo42".into()),
             ..Default::default()
         },
-    }) {
+    })) {
         Ok(response) => {
             assert_eq!(response.run.status, 0);
             assert_eq!(response.run.stdout.trim(), "Hello, Foo42!");
