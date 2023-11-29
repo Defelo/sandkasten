@@ -5,7 +5,7 @@
     inherit (pkgs.rustc.meta) description homepage;
   };
   default_main_file_name = "code.rs";
-  compile_script = ''PATH=${pkgs.gcc}/bin/ ${pkgs.rustc}/bin/rustc -O -o /program/binary "$1"'';
+  compile_script = ''PATH=${pkgs.gcc}/bin/ ${pkgs.rustc}/bin/rustc --edition=2021 -O -o /program/binary "$1"'';
   run_script = ''shift; /program/binary "$@"'';
   example = ''
     fn main() {
@@ -23,9 +23,9 @@
 
       let mut args = std::env::args();
       args.next().unwrap();
-      assert_eq!(args.next().unwrap(), "foo");
-      assert_eq!(args.next().unwrap(), "bar");
-      assert_eq!(args.next().unwrap(), "baz");
+      for x in ["foo", "bar", "baz"].into_iter().map(|x: &str| x) {
+        assert_eq!(args.next().unwrap(), x);
+      }
 
       let s = std::fs::read_to_string("test.txt").unwrap();
       assert_eq!(s, "hello world");
