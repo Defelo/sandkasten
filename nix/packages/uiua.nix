@@ -1,5 +1,5 @@
-{pkgs-unstable, ...}: let
-  uiua = pkgs-unstable.uiua;
+{pkgs-master, ...}: let
+  uiua = pkgs-master.uiua;
 in {
   name = "Uiua";
   version = uiua.version;
