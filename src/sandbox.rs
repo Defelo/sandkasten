@@ -130,6 +130,9 @@ impl RunConfig<'_> {
         cmd.arg("-R").arg("/dev/null");
         cmd.arg("-R").arg("/dev/urandom");
         cmd.arg("-s").arg("/proc/self/fd:/dev/fd");
+        cmd.arg("-s").arg("/proc/self/fd/0:/dev/stdin");
+        cmd.arg("-s").arg("/proc/self/fd/1:/dev/stdout");
+        cmd.arg("-s").arg("/proc/self/fd/2:/dev/stderr");
         cmd.arg("-s").arg("/dev/null:/etc/passwd");
 
         if self.limits.network {
