@@ -14,7 +14,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-anyhow = { version = "1.0.75", default-features = false, features = ["std"] }
+anyhow = { version = "1.0.76", default-features = false, features = ["std"] }
 config = { version = "0.13.4", default-features = false, features = ["toml", "json"] }
 fnct = { version = "0.6.2", default-features = false }
 key-rwlock = { version = "0.1.2", default-features = false }
