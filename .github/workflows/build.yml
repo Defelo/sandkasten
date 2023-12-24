@@ -1,0 +1,34 @@
+name: build
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: build (${{ matrix.system }})
+    strategy:
+      matrix:
+        system: [x86_64-linux, aarch64-linux]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - run: sudo apt-get install -y qemu-user-static
+      - name: Setup Nix
+        uses: cachix/install-nix-action@v24
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: |
+            system = ${{ matrix.system }}
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v13
+        with:
+          name: sandkasten
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - run: nix build
