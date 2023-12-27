@@ -32,3 +32,6 @@ jobs:
             ```
             {{ env.GIT_COMMIT_MESSAGE }}
             ```
+          token: ${{ secrets.GH_PAT }}
+          sign-commits: true
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
