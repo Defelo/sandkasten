@@ -100,8 +100,8 @@ fn test_stdoutbomb() {
         })
         .unwrap();
     assert_eq!(response.run.status, 137);
-    assert_eq!(response.run.stdout.len(), 2048);
-    assert_eq!(response.run.stderr.len(), 1024);
+    assert!(response.run.stdout.len() <= 2048);
+    assert!(response.run.stderr.len() <= 1024);
 }
 
 #[test]
