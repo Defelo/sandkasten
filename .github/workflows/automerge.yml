@@ -9,7 +9,7 @@ permissions:
 jobs:
   automerge:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: github.actor == 'dependabot[bot]' || (github.event.pull_request.user.id == github.repository.owner.id && github.event.pull_request.title == 'Update flake.lock'
     steps:
       - name: Enable Pull Request Automerge
         run: gh pr merge --squash --auto --repo "${{ github.repository }}" "${{ github.event.pull_request.number }}"
