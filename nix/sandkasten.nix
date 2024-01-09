@@ -1,8 +1,14 @@
 {
   runCommandNoCCLocal,
-  rustPlatform,
+  makeRustPlatform,
+  fenix,
+  system,
 }: let
   inherit (fromTOML (builtins.readFile ../Cargo.toml)) package;
+  toolchain = fenix.packages.${system}.stable;
+  rustPlatform = makeRustPlatform {
+    inherit (toolchain) cargo rustc;
+  };
   files = {
     "Cargo.toml" = ../Cargo.toml;
     "Cargo.lock" = ../Cargo.lock;

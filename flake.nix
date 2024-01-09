@@ -3,11 +3,13 @@
     nixpkgs.url = "github:NixOS/nixpkgs/release-23.11";
     nixpkgs-old.url = "github:NixOS/nixpkgs/release-22.11";
     nixpkgs-master.url = "github:NixOS/nixpkgs";
+    fenix.url = "github:nix-community/fenix";
   };
 
   outputs = {
     self,
     nixpkgs,
+    fenix,
     ...
   } @ inputs: let
     defaultSystems = [
@@ -26,7 +28,7 @@
   in {
     packages = eachDefaultSystem (pkgs: {
       default = self.packages.${pkgs.system}.sandkasten;
-      sandkasten = pkgs.callPackage ./nix/sandkasten.nix {};
+      sandkasten = pkgs.callPackage ./nix/sandkasten.nix {inherit fenix;};
       packages = import ./nix/packages {
         inherit inputs lib;
         inherit (pkgs) system;
