@@ -21,13 +21,13 @@ jobs:
           submodules: true
       - run: sudo apt-get update && sudo apt-get install -y qemu-user-static
       - name: Setup Nix
-        uses: cachix/install-nix-action@v24
+        uses: cachix/install-nix-action@v25
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           extra_nix_config: |
             system = ${{ matrix.system }}
       - name: Setup Cachix
-        uses: cachix/cachix-action@v13
+        uses: cachix/cachix-action@v14
         with:
           name: sandkasten
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
