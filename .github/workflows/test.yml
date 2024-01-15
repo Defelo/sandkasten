@@ -51,11 +51,11 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
       - name: Setup Nix
-        uses: cachix/install-nix-action@v24
+        uses: cachix/install-nix-action@v25
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup Cachix
-        uses: cachix/cachix-action@v13
+        uses: cachix/cachix-action@v14
         with:
           name: sandkasten
           skipPush: true
