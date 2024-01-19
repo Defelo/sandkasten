@@ -5,7 +5,7 @@ members = [".", "client"]
 serde = { version = "1.0.195", default-features = false, features = ["std", "derive"] }
 serde_json = { version = "1.0.111", default-features = false, features = ["std"] }
 thiserror = { version = "1.0.56", default-features = false }
-uuid = { version = "1.6.1", default-features = false, features = ["v4", "fast-rng", "serde"] }
+uuid = { version = "1.7.0", default-features = false, features = ["v4", "fast-rng", "serde"] }
 
 [package]
 name = "sandkasten"
