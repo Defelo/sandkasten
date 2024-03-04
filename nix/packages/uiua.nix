@@ -13,7 +13,7 @@ in {
     &p $"Hello, _!" &fras "/dev/stdin"
   '';
   test.main_file.content = ''
-    Bar ← &i "foo.ua" "Bar"
+    ~ "foo.ua" ~ Bar
     ⍤"stdin" ≍"stdin" &fras "/dev/stdin"
     ⍤"args" ≍{"foo" "bar" "baz"} ↘1 &args
     ⍤"file" ≍"hello world" &fras "test.txt"
