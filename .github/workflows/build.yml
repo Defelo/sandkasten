@@ -31,4 +31,5 @@ jobs:
         with:
           name: sandkasten
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          useDaemon: false
       - run: nix build
