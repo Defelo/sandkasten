@@ -8,7 +8,7 @@
   pkgs-master = import inputs.nixpkgs-master {inherit system;};
 
   removeSuffix = pkgs.lib.removeSuffix ".nix";
-  isPackage = name: name != "default.nix" && pkgs.lib.hasSuffix ".nix" name;
+  isPackage = name: name != "default.nix";
   packageNames = builtins.filter isPackage (builtins.attrNames (builtins.readDir ./.));
   packages = builtins.listToAttrs (map (name: {
       name = removeSuffix name;
