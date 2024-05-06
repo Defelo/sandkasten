@@ -23,7 +23,7 @@ poem = { version = "3.0.0", default-features = false, features = ["server", "any
 poem-ext = { version = "0.12.0", default-features = false, features = ["shield"] }
 poem-openapi = { version = "5.0.0", default-features = false, features = ["swagger-ui", "redoc", "uuid"] }
 postcard = { version = "1.0.8", default-features = false, features = ["use-std"] }
-prometheus = { version = "0.13.3", default-features = false }
+prometheus = { version = "0.13.4", default-features = false }
 redis = { version = "0.25.3", default-features = false, features = ["tokio-comp", "connection-manager"] }
 regex = "1.10.4"
 sandkasten-client = { path = "client", default-features = false, features = ["poem-openapi"] }
