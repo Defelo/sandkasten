@@ -2,8 +2,8 @@
 members = [".", "client"]
 
 [workspace.dependencies]
-serde = { version = "1.0.200", default-features = false, features = ["std", "derive"] }
-serde_json = { version = "1.0.116", default-features = false, features = ["std"] }
+serde = { version = "1.0.201", default-features = false, features = ["std", "derive"] }
+serde_json = { version = "1.0.117", default-features = false, features = ["std"] }
 thiserror = { version = "1.0.60", default-features = false }
 uuid = { version = "1.8.0", default-features = false, features = ["v4", "fast-rng", "serde"] }
 
