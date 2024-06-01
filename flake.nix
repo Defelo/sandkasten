@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/release-23.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/release-24.05";
     nixpkgs-old.url = "github:NixOS/nixpkgs/release-22.11";
     nixpkgs-master.url = "github:NixOS/nixpkgs";
     fenix.url = "github:nix-community/fenix";
