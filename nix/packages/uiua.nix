@@ -1,7 +1,5 @@
 {pkgs-master, ...}: let
-  uiua = pkgs-master.uiua.overrideAttrs ({patches ? [], ...}: {
-    patches = patches ++ [./fix-reading-readonly-files.patch];
-  });
+  inherit (pkgs-master) uiua;
 in {
   name = "Uiua";
   version = uiua.version;
