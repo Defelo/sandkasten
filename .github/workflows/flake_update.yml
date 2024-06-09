@@ -18,9 +18,9 @@ jobs:
         with:
           submodules: true
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v11
+        uses: DeterminateSystems/nix-installer-action@v12
       - name: Update flake.lock
-        uses: DeterminateSystems/update-flake-lock@v21
+        uses: DeterminateSystems/update-flake-lock@v22
         with:
           pr-title: "Update flake.lock"
           pr-labels: |
