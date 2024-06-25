@@ -3,9 +3,9 @@ members = [".", "client"]
 
 [workspace.dependencies]
 serde = { version = "1.0.202", default-features = false, features = ["std", "derive"] }
-serde_json = { version = "1.0.117", default-features = false, features = ["std"] }
+serde_json = { version = "1.0.118", default-features = false, features = ["std"] }
 thiserror = { version = "1.0.60", default-features = false }
-uuid = { version = "1.8.0", default-features = false, features = ["v4", "fast-rng", "serde"] }
+uuid = { version = "1.9.1", default-features = false, features = ["v4", "fast-rng", "serde"] }
 
 [package]
 name = "sandkasten"
@@ -39,7 +39,7 @@ uuid.workspace = true
 
 [dev-dependencies]
 indoc = { version = "2.0.5", default-features = false }
-proptest = "1.4.0"
+proptest = "1.5.0"
 sandkasten-client = { path = "client", default-features = false, features = ["reqwest", "blocking"] }
 
 [features]
