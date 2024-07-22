@@ -76,7 +76,7 @@
     rm -rf programs jobs
     echo 'save ""' | ${pkgs.redis}/bin/redis-server - &
     redis_pid=$!
-    RUST_LOG=info,poem::middleware::tracing_mw=off cargo llvm-cov run --lcov --output-path lcov-server.info --release --locked -F test_api &
+    RUST_LOG=info,poem::middleware::tracing_mw=off RUN_LIMITS__TIME=10 cargo llvm-cov run --lcov --output-path lcov-server.info --release --locked -F test_api &
     pid=$!
     while ! ${pkgs.curl}/bin/curl -so/dev/null localhost:8000; do
       sleep 1
