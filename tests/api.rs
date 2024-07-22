@@ -375,7 +375,7 @@ fn test_build_run_errors() {
     };
     let le = les.pop().unwrap();
     assert_eq!(le.name, "time");
-    assert_eq!(le.max_value, 5);
+    assert_eq!(le.max_value, client.get_config().unwrap().run_limits.time);
     assert!(les.pop().is_none());
 }
 
