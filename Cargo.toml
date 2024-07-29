@@ -3,7 +3,7 @@ members = [".", "client"]
 
 [workspace.dependencies]
 serde = { version = "1.0.204", default-features = false, features = ["std", "derive"] }
-serde_json = { version = "1.0.120", default-features = false, features = ["std"] }
+serde_json = { version = "1.0.121", default-features = false, features = ["std"] }
 thiserror = { version = "1.0.63", default-features = false }
 uuid = { version = "1.10.0", default-features = false, features = ["v4", "fast-rng", "serde"] }
 
@@ -16,22 +16,22 @@ publish = false
 [dependencies]
 anyhow = { version = "1.0.83", default-features = false, features = ["std"] }
 config = { version = "0.14.0", default-features = false, features = ["toml", "json"] }
-fnct = { version = "0.6.3", default-features = false }
+fnct = { version = "0.6.5", default-features = false }
 key-rwlock = { version = "0.1.2", default-features = false }
 once_cell = { version = "1.19.0", default-features = false }
-poem = { version = "3.0.3", default-features = false, features = ["server", "anyhow"] }
+poem = { version = "3.0.4", default-features = false, features = ["server", "anyhow"] }
 poem-ext = { version = "0.12.0", default-features = false, features = ["shield"] }
 poem-openapi = { version = "5.0.3", default-features = false, features = ["swagger-ui", "redoc", "uuid"] }
 postcard = { version = "1.0.8", default-features = false, features = ["use-std"] }
 prometheus = { version = "0.13.4", default-features = false }
-redis = { version = "0.25.4", default-features = false, features = ["tokio-comp", "connection-manager"] }
+redis = { version = "0.26.0", default-features = false, features = ["tokio-comp", "connection-manager"] }
 regex = "1.10.5"
 sandkasten-client = { path = "client", default-features = false, features = ["poem-openapi"] }
 serde.workspace = true
 serde_json.workspace = true
 sha2 = { version = "0.10.8", default-features = false }
 thiserror.workspace = true
-tokio = { version = "1.39.1", default-features = false, features = ["rt-multi-thread", "macros", "process", "time"] }
+tokio = { version = "1.39.2", default-features = false, features = ["rt-multi-thread", "macros", "process", "time"] }
 tracing = { version = "0.1.40", default-features = false }
 tracing-subscriber = { version = "0.3.18", default-features = false, features = ["fmt", "ansi"] }
 url = { version = "2.5.2", default-features = false, features = ["serde"] }
