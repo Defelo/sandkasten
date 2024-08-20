@@ -2,7 +2,7 @@
 
 use sandkasten::environments::{self, Environment};
 use sandkasten_client::schemas::programs::{
-    BuildRequest, BuildRunRequest, File, MainFile, RunRequest,
+    BuildRequest, BuildRunRequest, BuildRunResult, File, MainFile, RunRequest,
 };
 
 use crate::common::client;
@@ -30,19 +30,11 @@ fn test_package(id: &str) {
         },
     })) {
         Ok(response) => {
-            if environment.compile_script.is_some() {
-                let build = response.build.unwrap();
-                assert_eq!(build.status, 0);
-                assert!(build.stderr.is_empty());
-            } else {
-                assert!(response.build.is_none());
-            }
-            assert_eq!(response.run.status, 0);
+            assert_ok(&response, environment.compile_script.is_some());
             assert_eq!(
                 response.run.stdout.trim(),
                 environment.test.expected.as_deref().unwrap_or("OK")
             );
-            assert!(response.run.stderr.is_empty());
         }
         Err(_) => panic!("request failed"),
     }
@@ -69,7 +61,7 @@ fn test_example(id: &str) {
         },
     })) {
         Ok(response) => {
-            assert_eq!(response.run.status, 0);
+            assert_ok(&response, environment.compile_script.is_some());
             assert_eq!(response.run.stdout.trim(), "Hello, Foo42!");
         }
         Err(_) => panic!("request failed"),
@@ -81,6 +73,18 @@ fn get_environment(id: &str) -> Environment {
     let mut environments = environments::load(&conf.environments_path).unwrap();
 
     environments.remove(id).unwrap()
+}
+
+fn assert_ok(response: &BuildRunResult, compiled: bool) {
+    if compiled {
+        let build = response.build.as_ref().unwrap();
+        assert_eq!(build.status, 0);
+        assert!(build.stderr.is_empty());
+    } else {
+        assert!(response.build.is_none());
+    }
+    assert_eq!(response.run.status, 0);
+    assert!(response.run.stderr.is_empty());
 }
 
 include!(env!("PACKAGES_TEST_SRC"));
