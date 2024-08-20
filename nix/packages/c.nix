@@ -12,6 +12,8 @@
   compile_script = ''${pkgs.gcc}/bin/gcc -std=c17 -O2 -o /program/binary "$1"'';
   run_script = ''shift; /program/binary "$@"'';
   example = ''
+    #include <stdio.h>
+
     int main() {
       char name[32];
       scanf("%s", name);
