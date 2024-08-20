@@ -81,7 +81,7 @@
     while ! ${pkgs.curl}/bin/curl -so/dev/null localhost:8000; do
       sleep 1
     done
-    cargo llvm-cov test --lcov --output-path lcov-tests.info --locked --all-features --all-targets --no-fail-fast -- --include-ignored
+    cargo llvm-cov test --lcov --output-path lcov-tests.info --locked --all-features --all-targets -- --include-ignored
     out=$?
     ${pkgs.curl}/bin/curl -X POST localhost:8000/test/exit
     wait $pid
