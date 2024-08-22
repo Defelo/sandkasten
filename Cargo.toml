@@ -2,7 +2,7 @@
 members = [".", "client"]
 
 [workspace.dependencies]
-serde = { version = "1.0.207", default-features = false, features = ["std", "derive"] }
+serde = { version = "1.0.208", default-features = false, features = ["std", "derive"] }
 serde_json = { version = "1.0.125", default-features = false, features = ["std"] }
 thiserror = { version = "1.0.63", default-features = false }
 uuid = { version = "1.10.0", default-features = false, features = ["v4", "fast-rng", "serde"] }
@@ -22,7 +22,7 @@ once_cell = { version = "1.19.0", default-features = false }
 poem = { version = "3.0.4", default-features = false, features = ["server", "anyhow"] }
 poem-ext = { version = "0.12.0", default-features = false, features = ["shield"] }
 poem-openapi = { version = "5.0.3", default-features = false, features = ["swagger-ui", "redoc", "uuid"] }
-postcard = { version = "1.0.8", default-features = false, features = ["use-std"] }
+postcard = { version = "1.0.10", default-features = false, features = ["use-std"] }
 prometheus = { version = "0.13.4", default-features = false }
 redis = { version = "0.26.1", default-features = false, features = ["tokio-comp", "connection-manager"] }
 regex = "1.10.6"
@@ -31,7 +31,7 @@ serde.workspace = true
 serde_json.workspace = true
 sha2 = { version = "0.10.8", default-features = false }
 thiserror.workspace = true
-tokio = { version = "1.39.2", default-features = false, features = ["rt-multi-thread", "macros", "process", "time"] }
+tokio = { version = "1.39.3", default-features = false, features = ["rt-multi-thread", "macros", "process", "time"] }
 tracing = { version = "0.1.40", default-features = false }
 tracing-subscriber = { version = "0.3.18", default-features = false, features = ["fmt", "ansi"] }
 url = { version = "2.5.2", default-features = false, features = ["serde"] }
