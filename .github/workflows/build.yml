@@ -25,6 +25,8 @@ jobs:
       - name: Setup Nix
         uses: cachix/install-nix-action@V27
         with:
+          # newer versions result in different store paths
+          install_url: https://releases.nixos.org/nix/nix-2.18.5/install
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           extra_nix_config: |
             system = ${{ matrix.system }}

@@ -1,25 +1,36 @@
 {
-  runCommandNoCCLocal,
-  makeRustPlatform,
+  crate2nix,
   fenix,
+  lib,
+  pkgs,
   system,
 }: let
-  inherit (fromTOML (builtins.readFile ../Cargo.toml)) package;
   toolchain = fenix.packages.${system}.stable;
-  rustPlatform = makeRustPlatform {
-    inherit (toolchain) cargo rustc;
+
+  src = builtins.path {
+    name = "sandkasten";
+    path = lib.fileset.toSource {
+      root = ../.;
+      fileset = lib.fileset.unions [
+        ../Cargo.toml
+        ../Cargo.lock
+        ../src
+        ../client
+      ];
+    };
   };
-  files = {
-    "Cargo.toml" = ../Cargo.toml;
-    "Cargo.lock" = ../Cargo.lock;
-    src = ../src;
-    client = ../client;
+
+  generated = crate2nix.tools.${system}.generatedCargoNix {
+    name = "sandkasten";
+    inherit src;
+  };
+
+  cargoNix = pkgs.callPackage generated {
+    pkgs = pkgs.extend (final: prev: {
+      inherit (toolchain) cargo;
+      # workaround for https://github.com/NixOS/nixpkgs/blob/d80a3129b239f8ffb9015473c59b09ac585b378b/pkgs/build-support/rust/build-rust-crate/default.nix#L19-L23
+      rustc = toolchain.rustc // {unwrapped = {configureFlags = ["--target="];};};
+    });
   };
 in
-  rustPlatform.buildRustPackage {
-    pname = package.name;
-    version = package.version;
-    src = runCommandNoCCLocal "src" {} (builtins.foldl' (acc: k: acc + " && cp -r ${files.${k}} $out/${k}") "mkdir -p $out" (builtins.attrNames files));
-    cargoLock.lockFile = ../Cargo.lock;
-    doCheck = false;
-  }
+  cargoNix.workspaceMembers.sandkasten.build
