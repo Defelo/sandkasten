@@ -2,7 +2,7 @@
 members = [".", "client"]
 
 [workspace.dependencies]
-serde = { version = "1.0.209", default-features = false, features = ["std", "derive"] }
+serde = { version = "1.0.210", default-features = false, features = ["std", "derive"] }
 serde_json = { version = "1.0.128", default-features = false, features = ["std"] }
 thiserror = { version = "1.0.63", default-features = false }
 uuid = { version = "1.10.0", default-features = false, features = ["v4", "fast-rng", "serde"] }
@@ -14,13 +14,13 @@ edition = "2021"
 publish = false
 
 [dependencies]
-anyhow = { version = "1.0.83", default-features = false, features = ["std"] }
+anyhow = { version = "1.0.88", default-features = false, features = ["std"] }
 config = { version = "0.14.0", default-features = false, features = ["toml", "json"] }
 key-rwlock = { version = "0.1.2", default-features = false }
 once_cell = { version = "1.19.0", default-features = false }
-poem = { version = "3.0.4", default-features = false, features = ["server", "anyhow"] }
+poem = { version = "3.1.0", default-features = false, features = ["server", "anyhow"] }
 poem-ext = { version = "0.12.0", default-features = false, features = ["shield"] }
-poem-openapi = { version = "5.0.3", default-features = false, features = ["swagger-ui", "redoc", "uuid"] }
+poem-openapi = { version = "5.1.0", default-features = false, features = ["swagger-ui", "redoc", "uuid"] }
 postcard = { version = "1.0.10", default-features = false, features = ["use-std"] }
 prometheus = { version = "0.13.4", default-features = false }
 regex = "1.10.6"
