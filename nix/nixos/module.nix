@@ -21,10 +21,6 @@ in
           type = types.anything;
           default = _: [];
         };
-        redis = mkOption {
-          type = types.bool;
-          default = true;
-        };
         settings = mkOption {
           type = types.attrs;
           default = {};
@@ -42,26 +38,16 @@ in
             OOMPolicy = lib.mkDefault "continue";
           };
           environment = let
-            opts =
-              {
-                nsjail_path = "${pkgs.nsjail}/bin/nsjail";
-                time_path = "${self.packages.${pkgs.system}.time}/bin/time";
-                environments_path = ["${self.packages.${pkgs.system}.packages.combined cfg.environments}/share/sandkasten/packages"];
-                programs_dir = "/var/lib/sandkasten/programs";
-                jobs_dir = "/tmp/sandkasten/jobs";
-                base_resource_usage_permits = (conf // cfg.settings).max_concurrent_jobs;
-              }
-              // lib.optionalAttrs cfg.redis {
-                redis_url = "redis+unix:///${config.services.redis.servers.sandkasten.unixSocket}";
-              };
+            opts = {
+              nsjail_path = "${pkgs.nsjail}/bin/nsjail";
+              time_path = "${self.packages.${pkgs.system}.time}/bin/time";
+              environments_path = ["${self.packages.${pkgs.system}.packages.combined cfg.environments}/share/sandkasten/packages"];
+              programs_dir = "/var/lib/sandkasten/programs";
+              jobs_dir = "/tmp/sandkasten/jobs";
+              base_resource_usage_permits = (conf // cfg.settings).max_concurrent_jobs;
+            };
           in {
             CONFIG_PATH = pkgs.writeText "sandkasten-config.json" (builtins.toJSON (builtins.foldl' lib.recursiveUpdate {} [conf opts cfg.settings]));
-          };
-        };
-        services.redis = mkIf cfg.redis {
-          servers.sandkasten = {
-            enable = true;
-            save = [];
           };
         };
       };

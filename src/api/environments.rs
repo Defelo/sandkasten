@@ -1,9 +1,5 @@
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
+use std::{collections::HashMap, sync::Arc, time::Instant};
 
-use fnct::key;
 use key_rwlock::KeyRwLock;
 use poem_ext::{response, responses::ErrorResponse, shield_mw::shield};
 use poem_openapi::{param::Path, OpenApi};
@@ -11,7 +7,7 @@ use sandkasten_client::schemas::{
     environments::{BaseResourceUsage, Environment, ListEnvironmentsResponse, RunResourceUsage},
     programs::BuildRequest,
 };
-use tokio::sync::Semaphore;
+use tokio::sync::{RwLock, Semaphore};
 use uuid::Uuid;
 
 use super::Tags;
@@ -20,7 +16,6 @@ use crate::{
     environments::{self, Environments},
     metrics::MetricsData,
     program::{build::build_program, run::run_program},
-    Cache,
 };
 
 pub struct EnvironmentsApi {
@@ -29,9 +24,10 @@ pub struct EnvironmentsApi {
     pub config: Arc<Config>,
     pub program_lock: Arc<KeyRwLock<Uuid>>,
     pub job_lock: Arc<KeyRwLock<Uuid>>,
-    pub cache: Arc<Cache>,
-    pub base_resource_usage_lock: Arc<KeyRwLock<String>>,
+    pub base_resource_usage_cache: Arc<BaseResourceUsageCache>,
 }
+
+pub type BaseResourceUsageCache = HashMap<String, RwLock<Option<(BaseResourceUsage, Instant)>>>;
 
 #[OpenApi(tag = "Tags::Environments")]
 impl EnvironmentsApi {
@@ -88,38 +84,48 @@ impl EnvironmentsApi {
             return GetBaseResourceUsage::environment_not_found();
         };
 
-        let cache_hit = AtomicBool::new(true);
-        let _guard = self.base_resource_usage_lock.write(name.0.clone()).await;
-        let result = self
-            .cache
-            .cached_result(key!(&name.0), &[], None, || async {
-                cache_hit.store(false, Ordering::Relaxed);
-
-                let _guard = self
-                    .request_semaphore
-                    .acquire_many(self.config.base_resource_usage_permits)
-                    .await?;
-
-                get_base_resource_usage(
-                    Arc::clone(&self.config),
-                    Arc::clone(&self.environments),
-                    Arc::clone(&self.program_lock),
-                    Arc::clone(&self.job_lock),
-                    &name.0,
-                    environment,
-                )
-                .await
-            })
-            .await??;
-
-        if cache_hit.load(Ordering::Relaxed) {
+        let lock = self.base_resource_usage_cache.get(&name.0).unwrap();
+        if let Some((result, _)) = lock.read().await.filter(|(_, timestamp)| {
+            timestamp.elapsed().as_secs() < self.config.base_resource_usage_cache_ttl
+        }) {
             metrics
                 .0
                 .cache_hits
                 .resource_usage
                 .with_label_values(&[&name.0])
                 .inc();
+            return GetBaseResourceUsage::ok(result);
         }
+
+        let mut guard = lock.write().await;
+        if let Some((result, _)) = guard.filter(|(_, timestamp)| {
+            timestamp.elapsed().as_secs() < self.config.base_resource_usage_cache_ttl
+        }) {
+            metrics
+                .0
+                .cache_hits
+                .resource_usage
+                .with_label_values(&[&name.0])
+                .inc();
+            return GetBaseResourceUsage::ok(result);
+        }
+
+        let _guard = self
+            .request_semaphore
+            .acquire_many(self.config.base_resource_usage_permits)
+            .await?;
+
+        let result = get_base_resource_usage(
+            Arc::clone(&self.config),
+            Arc::clone(&self.environments),
+            Arc::clone(&self.program_lock),
+            Arc::clone(&self.job_lock),
+            &name.0,
+            environment,
+        )
+        .await?;
+
+        *guard = Some((result, Instant::now()));
 
         GetBaseResourceUsage::ok(result)
     }

@@ -2,9 +2,6 @@ host = "0.0.0.0"
 port = 8000
 server = "/"
 
-redis_url = "redis://127.0.0.1:6379/0"
-cache_ttl = 3600
-
 enable_metrics = false
 
 programs_dir = "/programs"
@@ -17,6 +14,7 @@ max_concurrent_jobs = 16
 
 base_resource_usage_runs = 20
 base_resource_usage_permits = 16
+base_resource_usage_cache_ttl = 3600  # seconds
 
 use_cgroup = true
 # nsjail_path = ...

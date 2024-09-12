@@ -5,7 +5,6 @@ use config::{Environment, File};
 use sandkasten_client::schemas::programs::Limits;
 use serde::{Deserialize, Deserializer};
 use tracing::info;
-use url::Url;
 
 pub fn load() -> Result<Config, anyhow::Error> {
     let path = env::var("CONFIG_PATH").unwrap_or("config.toml".to_owned());
@@ -42,11 +41,6 @@ pub struct Config {
     /// a reverse proxy.
     pub server: String,
 
-    /// The url of the redis server (see https://docs.rs/redis/latest/redis/#connection-parameters).
-    pub redis_url: Url,
-    /// The default time to live for cache entries in seconds.
-    pub cache_ttl: u64,
-
     /// Whether to expose Prometheus metrics on `/metrics`.
     pub enable_metrics: bool,
 
@@ -76,6 +70,8 @@ pub struct Config {
     /// set to the value of `max_concurrent_jobs`, no other jobs can run at the
     /// same time.
     pub base_resource_usage_permits: u32,
+    /// The time to live for base resource usage cache entries in seconds.
+    pub base_resource_usage_cache_ttl: u64,
 
     /// Whether to use cgroup to set resource limits where possible. It is
     /// strongly recommended to set this to true in production environments!

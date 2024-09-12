@@ -41,7 +41,7 @@ pub struct Environment {
 pub struct ListEnvironmentsResponse(pub HashMap<String, Environment>);
 
 /// The base resource usage of an environment.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct BaseResourceUsage {
     /// The base resource usage of the build step.
@@ -51,7 +51,7 @@ pub struct BaseResourceUsage {
 }
 
 /// The base resource usage of the run step.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct RunResourceUsage {
     /// The number of **milliseconds** the process ran.
@@ -61,7 +61,7 @@ pub struct RunResourceUsage {
 }
 
 /// Accumulated benchmark results.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct BenchmarkResult {
     /// The minimum of the measured values.

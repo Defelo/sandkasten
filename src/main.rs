@@ -4,12 +4,10 @@
 use std::{path::Path, sync::Arc, time::Duration};
 
 use anyhow::{ensure, Context};
-use fnct::{backend::AsyncRedisBackend, format::PostcardFormatter, AsyncCache};
 use key_rwlock::KeyRwLock;
 use poem::{listener::TcpListener, middleware::Tracing, EndpointExt, Route, Server};
 use poem_ext::panic_handler::PanicHandler;
 use poem_openapi::OpenApiService;
-use redis::{aio::ConnectionManager, Client};
 use sandkasten::{
     api::get_api,
     config::{self, Config},
@@ -63,18 +61,6 @@ async fn main() -> anyhow::Result<()> {
     );
     info!("Loaded {} environments", environments.len());
 
-    info!("Connecting to redis");
-    let redis = ConnectionManager::new(
-        Client::open(config.redis_url.clone()).context("Failed to connect to redis")?,
-    )
-    .await
-    .context("Failed to connect to redis")?;
-    let cache = AsyncCache::new(
-        AsyncRedisBackend::new(redis, "sandkasten".into()),
-        PostcardFormatter,
-        Duration::from_secs(config.cache_ttl),
-    );
-
     let program_lock = Arc::new(KeyRwLock::new());
     let job_lock = Arc::new(KeyRwLock::new());
 
@@ -91,7 +77,6 @@ async fn main() -> anyhow::Result<()> {
             Arc::clone(&environments),
             program_lock,
             job_lock,
-            Arc::new(cache),
         ),
         "Sandkasten",
         VERSION,

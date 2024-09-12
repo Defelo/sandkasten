@@ -207,7 +207,7 @@ pub enum RunError {
 }
 
 /// The amount of resources a process used.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "poem-openapi", derive(Object))]
 pub struct ResourceUsage {
     /// The number of **milliseconds** the process ran.

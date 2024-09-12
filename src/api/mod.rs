@@ -6,7 +6,7 @@ use tokio::sync::Semaphore;
 use uuid::Uuid;
 
 use self::{configuration::ConfigurationApi, environments::EnvironmentsApi, programs::ProgramsApi};
-use crate::{config::Config, environments::Environments, Cache};
+use crate::{config::Config, environments::Environments};
 
 mod configuration;
 mod environments;
@@ -24,7 +24,6 @@ pub fn get_api(
     environments: Arc<Environments>,
     program_lock: Arc<KeyRwLock<Uuid>>,
     job_lock: Arc<KeyRwLock<Uuid>>,
-    cache: Arc<Cache>,
 ) -> impl OpenApi {
     let request_semaphore = Arc::new(Semaphore::new(config.max_concurrent_jobs));
     (
@@ -37,8 +36,12 @@ pub fn get_api(
             program_lock: Arc::clone(&program_lock),
             job_lock: Arc::clone(&job_lock),
             config: Arc::clone(&config),
-            cache,
-            base_resource_usage_lock: Arc::new(KeyRwLock::new()),
+            base_resource_usage_cache: Arc::new(
+                environments
+                    .iter()
+                    .map(|(id, _)| (id.clone(), Default::default()))
+                    .collect(),
+            ),
         },
         ProgramsApi {
             request_semaphore,

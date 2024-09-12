@@ -74,8 +74,6 @@
   test-script = pkgs.writeShellScript "integration-tests.sh" ''
     export PROPTEST_CASES=''${1:-256}
     rm -rf programs jobs
-    echo 'save ""' | ${pkgs.redis}/bin/redis-server - &
-    redis_pid=$!
     RUST_LOG=info,poem::middleware::tracing_mw=off RUN_LIMITS__TIME=20 cargo llvm-cov run --lcov --output-path lcov-server.info --release --locked -F test_api &
     pid=$!
     while ! ${pkgs.curl}/bin/curl -so/dev/null localhost:8000; do
@@ -85,7 +83,6 @@
     out=$?
     ${pkgs.curl}/bin/curl -X POST localhost:8000/test/exit
     wait $pid
-    kill $redis_pid
     ${pkgs.lcov}/bin/lcov -a lcov-server.info -a lcov-tests.info -o lcov.info
     ${pkgs.gnugrep}/bin/grep -E -o '^cc [0-9a-f]{64}' tests/proptests.proptest-regressions
     exit $out
@@ -114,7 +111,7 @@
   };
 in {
   default = pkgs.mkShell ({
-      packages = [pkgs.cargo-llvm-cov pkgs.lcov pkgs.redis self.packages.${pkgs.system}.time scripts];
+      packages = [pkgs.cargo-llvm-cov pkgs.lcov self.packages.${pkgs.system}.time scripts];
       RUST_LOG = "info,sandkasten=trace,difft=off";
     }
     // test-env);
