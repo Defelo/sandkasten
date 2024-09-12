@@ -14,7 +14,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-anyhow = { version = "1.0.83", default-features = false, features = ["std"] }
+anyhow = { version = "1.0.88", default-features = false, features = ["std"] }
 config = { version = "0.14.0", default-features = false, features = ["toml", "json"] }
 fnct = { version = "0.6.5", default-features = false }
 key-rwlock = { version = "0.1.2", default-features = false }
@@ -24,7 +24,7 @@ poem-ext = { version = "0.12.0", default-features = false, features = ["shield"]
 poem-openapi = { version = "5.0.3", default-features = false, features = ["swagger-ui", "redoc", "uuid"] }
 postcard = { version = "1.0.10", default-features = false, features = ["use-std"] }
 prometheus = { version = "0.13.4", default-features = false }
-redis = { version = "0.26.1", default-features = false, features = ["tokio-comp", "connection-manager"] }
+redis = { version = "0.27.0", default-features = false, features = ["tokio-comp", "connection-manager"] }
 regex = "1.10.6"
 sandkasten-client = { path = "client", default-features = false, features = ["poem-openapi"] }
 serde.workspace = true

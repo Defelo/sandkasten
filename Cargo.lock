@@ -78,9 +78,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.87"
+version = "1.0.88"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10f00e1f6e58a40e807377c75c6a7f97bf9044fab57816f2414e6f5f4499d7b8"
+checksum = "4e1496f8fb1fbf272686b8d37f523dab3e4a7443300055e74cdaa449f3114356"
 
 [[package]]
 name = "arc-swap"
@@ -449,7 +449,7 @@ checksum = "4264a92a1d8fd9e5f6f19aad6cdcfc7c4906aad6d64e0ccc37f339272c328366"
 dependencies = [
  "async-trait",
  "postcard",
- "redis",
+ "redis 0.26.1",
  "serde",
  "sha2",
  "thiserror",
@@ -1466,6 +1466,27 @@ dependencies = [
  "async-trait",
  "bytes",
  "combine",
+ "futures-util",
+ "itoa",
+ "num-bigint",
+ "percent-encoding",
+ "pin-project-lite",
+ "ryu",
+ "tokio",
+ "tokio-util",
+ "url",
+]
+
+[[package]]
+name = "redis"
+version = "0.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6408b7e62e108fa36b8e44cffa98ae36570cf32cbc996cc3af1f5ecde8782c37"
+dependencies = [
+ "arc-swap",
+ "async-trait",
+ "bytes",
+ "combine",
  "futures",
  "futures-util",
  "itoa",
@@ -1684,7 +1705,7 @@ dependencies = [
  "postcard",
  "prometheus",
  "proptest",
- "redis",
+ "redis 0.27.0",
  "regex",
  "sandkasten-client",
  "serde",
