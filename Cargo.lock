@@ -1576,7 +1576,6 @@ dependencies = [
  "config",
  "indoc",
  "key-rwlock",
- "once_cell",
  "poem",
  "poem-ext",
  "poem-openapi",

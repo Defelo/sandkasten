@@ -1,10 +1,8 @@
 use std::{collections::HashSet, sync::Arc};
 
 use key_rwlock::KeyRwLock;
-use once_cell::unsync::Lazy;
 use poem_ext::{response, shield_mw::shield};
 use poem_openapi::{param::Path, payload::Json, OpenApi};
-use regex::Regex;
 use sandkasten_client::schemas::programs::{
     BuildRequest, BuildResult, BuildRunRequest, BuildRunResult, EnvVar, File, LimitExceeded,
     MainFile, RunRequest, RunResult,
@@ -259,8 +257,7 @@ response!(Run = {
 });
 
 fn check_filename(name: &str) -> bool {
-    let invalid_names = Lazy::new(|| Regex::new(r"^\.*$").unwrap());
-    !invalid_names.is_match(name)
+    name.chars().any(|c| c != '.')
 }
 
 fn check_files(files: &[File]) -> bool {

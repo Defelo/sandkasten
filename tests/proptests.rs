@@ -7,9 +7,7 @@ use std::{
 
 use common::client;
 use indoc::formatdoc;
-use once_cell::unsync::Lazy;
 use proptest::{collection, option, prelude::*, string::string_regex};
-use regex::Regex;
 use sandkasten_client::schemas::programs::{
     BuildRequest, BuildRunRequest, EnvVar, File, LimitsOpt, MainFile, RunRequest,
 };
@@ -182,8 +180,7 @@ proptest! {
 
 prop_compose! {
     fn filename() (name in "[a-zA-Z0-9._-]{1,32}".prop_filter("Invalid filename", |x| {
-        let invalid_names = Lazy::new(|| Regex::new(r"^\.*$").unwrap());
-        !invalid_names.is_match(x)
+        !x.chars().all(|c| c == '.')
     })) -> String {
         name
     }
