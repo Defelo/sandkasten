@@ -17,9 +17,9 @@ publish = false
 anyhow = { version = "1.0.89", default-features = false, features = ["std"] }
 config = { version = "0.14.0", default-features = false, features = ["toml", "json"] }
 key-rwlock = { version = "0.1.2", default-features = false }
-poem = { version = "3.1.0", default-features = false, features = ["server", "anyhow"] }
+poem = { version = "3.1.1", default-features = false, features = ["server", "anyhow"] }
 poem-ext = { version = "0.12.0", default-features = false, features = ["shield"] }
-poem-openapi = { version = "5.1.1", default-features = false, features = ["swagger-ui", "redoc", "uuid"] }
+poem-openapi = { version = "5.1.2", default-features = false, features = ["swagger-ui", "redoc", "uuid"] }
 postcard = { version = "1.0.10", default-features = false, features = ["use-std"] }
 prometheus = { version = "0.13.4", default-features = false }
 sandkasten-client = { path = "client", default-features = false, features = ["poem-openapi"] }

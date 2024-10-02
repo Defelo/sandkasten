@@ -1048,9 +1048,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "poem"
-version = "3.1.0"
+version = "3.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5419c612a492fce4961c521dca0c2249b5c48dc46eb5c8048063843f37a711d"
+checksum = "6c9fcee941710d865ef966f817f023565a60ac70c936644e535f77d79e0dd6ef"
 dependencies = [
  "anyhow",
  "bytes",
@@ -1116,9 +1116,9 @@ dependencies = [
 
 [[package]]
 name = "poem-openapi"
-version = "5.1.1"
+version = "5.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14030b69ff6d0414dd0d0f8c8482cc1c53f316b4bacb1e46b9d68fa24a863aa1"
+checksum = "5c354a706a81a17657da8441869c6ce3d486ef5e72705919d6035fb038a6f7b5"
 dependencies = [
  "base64 0.22.1",
  "bytes",
