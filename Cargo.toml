@@ -15,7 +15,7 @@ publish = false
 
 [dependencies]
 anyhow = { version = "1.0.91", default-features = false, features = ["std"] }
-config = { version = "0.14.0", default-features = false, features = ["toml", "json"] }
+config = { version = "0.14.1", default-features = false, features = ["toml", "json"] }
 key-rwlock = { version = "0.1.2", default-features = false }
 poem = { version = "3.1.3", default-features = false, features = ["server", "anyhow"] }
 poem-ext = { version = "0.12.0", default-features = false, features = ["shield"] }
